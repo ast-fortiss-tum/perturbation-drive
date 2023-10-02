@@ -36,5 +36,5 @@ setup(
     ],
     packages=["perturbationdrive"],
     include_package_data=True,
-    install_requires=["numpy, cv2"]
+    install_requires=["numpy", "cv2", "scipy", "io"]
 )
