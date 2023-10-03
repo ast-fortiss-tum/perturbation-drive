@@ -1,4 +1,7 @@
 numpy
 opencv-python
 scipy
-io
+sys
+pyperg
+pytest
+unittest

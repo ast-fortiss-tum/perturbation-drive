@@ -14,8 +14,8 @@ with open(path.join(HERE, 'README.md'), encoding='utf-8') as f:
 
 # This call to setup() does all the work
 setup(
-    name="PerturbationDrive",
-    version="0.1.0",
+    name="perturbationdrive",
+    version="0.0.1",
     description="A library to test the robstuness of Self-Driving-Cars",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -36,5 +36,6 @@ setup(
     ],
     packages=["perturbationdrive"],
     include_package_data=True,
-    install_requires=["numpy", "cv2", "scipy", "io"]
+    install_requires=["numpy", "opencv-python", "scipy"],
+    python_requires='>=3'
 )

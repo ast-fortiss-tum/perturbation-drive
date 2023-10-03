@@ -25,43 +25,43 @@ class ImagePerturbation:
         """
         pass
 
+    def increment_scale(self):
+        """Increments the scale by one"""
+        if self.scale < 4:
+            self.scale += 1
+
     def gaussian_noise(self, img):
-        c = [0.08, 0.12, 0.18, 0.26, 0.38]
+        factor = [0.06, 0.12, 0.22, 0.30, 0.42][self.scale]
         # scale to a number between 0 and 1
         x = np.array(img) / 255.0
         # add random between 0 and 1
-        return (
-            np.clip(x + np.random.normal(size=x.shape, scale=c[self.scale]), 0, 1) * 255
-        )
+        return np.clip(x + np.random.normal(size=x.shape, scale=factor), 0, 1) * 255
 
     def poisson_noise(self, img):
-        c = [60, 25, 12, 5, 3]
+        factor = [80, 30, 10, 5, 2][self.scale]
         x = np.array(img) / 255.0
-        return (
-            np.clip(np.random.poisson(x * c[self.scale]) / float(c[self.scale]), 0, 1)
-            * 255
-        )
+        return np.clip(np.random.poisson(x * factor) / float(factor), 0, 1) * 255
 
-    def impulse_noise(self, img, scale=0.008):
+    def impulse_noise(self, img):
         """
         Add salt and pepper noise to an image.
 
         Parameters:
             img (numpy array): The input image.
-            scale (float): Proportion of image pixels to change to salt and pepper noise.
 
         Returns:
             numpy array: Image with salt and pepper noise.
         """
+        factor = [0.02, 0.08, 0.10, 0.19, 0.30][self.scale]
         # Number of salt noise pixels
-        num_salt = np.ceil(scale * img.size * 0.5)
+        num_salt = np.ceil(factor * img.size * 0.5)
 
         # Add salt noise
         coords = [np.random.randint(0, i - 1, int(num_salt)) for i in img.shape]
         img[tuple(coords)] = 255
 
         # Number of pepper noise pixels
-        num_pepper = np.ceil(scale * img.size * 0.5)
+        num_pepper = np.ceil(factor * img.size * 0.5)
 
         # Add pepper noise
         coords = [np.random.randint(0, i - 1, int(num_pepper)) for i in img.shape]
@@ -79,22 +79,24 @@ class ImagePerturbation:
         kernel /= kernel.sum()
         return kernel
 
-    def defocus_blur(self, image, radius=10):
+    def defocus_blur(self, image):
+        factor = [2, 5, 6, 9, 12][self.scale]
         """Apply defocus blur to the given image using the disk kernel."""
         # Create the disk-shaped kernel.
-        kernel = self._create_disk_kernel(radius)
+        kernel = self._create_disk_kernel(factor)
         # Convolve the image with the kernel.
         blurred_image = cv2.filter2D(image, -1, kernel)
         return blurred_image
 
-    def glass_blur(self, image, radius=10):
+    def glass_blur(self, image):
         """Apply glass blur effect to the given image."""
+        factor = [2, 5, 6, 9, 12][self.scale]
         # Get the height and width of the image.
         height, width = image.shape[:2]
 
         # Generate random offsets for each pixel in the image.
-        rand_x = np.random.randint(-radius, radius + 1, size=(height, width))
-        rand_y = np.random.randint(-radius, radius + 1, size=(height, width))
+        rand_x = np.random.randint(-factor, factor + 1, size=(height, width))
+        rand_y = np.random.randint(-factor, factor + 1, size=(height, width))
 
         # Compute the new coordinates for each pixel after adding the random offsets.
         # Ensure that the new coordinates are within the image boundaries.
@@ -132,6 +134,7 @@ class ImagePerturbation:
         return kernel
 
     def motion_blur(self, image, size=10, angle=45):
+        size, angle = [(2, 5), (4, 12), (6, 20), (10, 30), (15, 45)][self.scale]
         """Apply motion blur to the given image."""
         # Create the motion blur kernel.
         kernel = self._create_motion_blur_kernel(size, angle)
@@ -159,7 +162,7 @@ class ImagePerturbation:
 
         return img[trim_top : trim_top + h, trim_right : trim_right + w]
 
-    def zoom_blur2(self, img):
+    def zoom_blur(self, img):
         c = [
             np.arange(1, 1.11, 0.01),
             np.arange(1, 1.16, 0.01),
@@ -176,27 +179,29 @@ class ImagePerturbation:
         img = (img + out) / (len(c) + 1)
         return np.clip(img, 0, 1) * 255
 
-    def increase_brightness(self, image, scale=1.5):
-        """Increase the brightness of the image using HSV color space. SCale is between 1 and 2"""
+    def increase_brightness(self, image):
+        """Increase the brightness of the image using HSV color space"""
+        factor = [1.1, 1.2, 1.3, 1.5, 1.7][self.scale]
         # Convert the image to HSV color space
         hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
 
         # Adjust the V channel
-        hsv_image[:, :, 2] = np.clip(hsv_image[:, :, 2] * scale, 0, 255)
+        hsv_image[:, :, 2] = np.clip(hsv_image[:, :, 2] * factor, 0, 255)
 
         # Convert the image back to RGB color space
         brightened_image = cv2.cvtColor(hsv_image, cv2.COLOR_HSV2RGB)
         return brightened_image
 
-    def contrast(self, img, scale=1.5):
+    def contrast(self, img):
         """
         Increase or decrease the conrast of the image using 127.5 as the midpoint
         gray channel
         """
+        factor = [1.1, 1.2, 1.3, 1.5, 1.7][self.scale]
         pivot = 127.5
-        return np.clip(pivot + (img - pivot) * scale, 0, 255)
+        return np.clip(pivot + (img - pivot) * factor, 0, 255)
 
-    def elastic(self, img, alpha=5, sigma=0.9):
+    def elastic(self, img):
         """
         Perform an elastic deformation on the image.
 
@@ -205,6 +210,7 @@ class ImagePerturbation:
         - alpha: A scaling factor that controls the intensity of the deformation.
         - sigma: The standard deviation of the Gaussian filter. It controls the scale of the deformation.
         """
+        alpha, sigma = [(2, 0.4), (3, 0.75), (5, 0.9), (7, 1.2), (10, 1.5)][self.scale]
         # Generate random displacement fields
         dx = np.random.uniform(-1, 1, img.shape[:2]) * alpha
         dy = np.random.uniform(-1, 1, img.shape[:2]) * alpha
@@ -229,17 +235,19 @@ class ImagePerturbation:
 
         return distorted_image
 
-    def pixelate(self, img, scale=0.2):
+    def pixelate(self, img):
         """Pixelates the image by resizing it back and forth in the rang of (1; 0)"""
+        factor = [0.85, 0.75, 0.55, 0.35, 0.2][self.scale]
         h, w = img.shape[:2]
-        img = cv2.resize(img, (int(w * scale), int(h * scale)), cv2.INTER_AREA)
+        img = cv2.resize(img, (int(w * factor), int(h * factor)), cv2.INTER_AREA)
         return cv2.resize(img, (w, h), cv2.INTER_NEAREST)
 
-    def jpeg_filter(self, image, quality=10):
+    def jpeg_filter(self, image):
         """Introduce JPEG compression artifacts to the image."""
+        factor = [30, 18, 15, 10, 5][self.scale]
         # Encode the image as JPEG with the specified quality
         _, jpeg_encoded_image = cv2.imencode(
-            ".jpg", image, [int(cv2.IMWRITE_JPEG_QUALITY), quality]
+            ".jpg", image, [int(cv2.IMWRITE_JPEG_QUALITY), factor]
         )
 
         # Convert the JPEG encoded bytes to an in-memory binary stream
@@ -252,7 +260,7 @@ class ImagePerturbation:
 
         return jpeg_artifact_image
 
-    def fog_filter(self, image, intensity=0.3, noise_amount=0.1):
+    def fog_filter(self, image):
         """
         Apply a fog effect to the image.
 
@@ -261,6 +269,13 @@ class ImagePerturbation:
         - intensity: The intensity of the fog effect. A value between 0 (no fog) and 1 (full fog).
         - noise_amount: Amount of noise to introduce to the fog for a more natural look.
         """
+        intensity, noise_amount = [
+            (0.1, 0.05),
+            (0.2, 0.1),
+            (0.3, 0.2),
+            (0.45, 0.3),
+            (0.65, 0.45),
+        ][self.scale]
         # Create a white overlay of the same size as the image
         fog_overlay = np.ones_like(image) * 255
 
@@ -277,7 +292,7 @@ class ImagePerturbation:
 
         return foggy_image
 
-    def frost_filter(self, image, intensity=0.3):
+    def frost_filter(self, image):
         """
         Apply a frost effect to the image using an overlay image (corrected version).
 
@@ -286,9 +301,13 @@ class ImagePerturbation:
         - frost_image_path: Path to the frost overlay image.
         - intensity: The intensity of the frost effect, ranging from 0 (no frost) to 1 (full frost).
         """
-        frost_image_path = "./OverlayImages/frostImg.png"
+        intensity = [0.05, 0.15, 0.275, 0.45, 0.6][self.scale]
+        frost_image_path = "./perturbationdrive/OverlayImages/frostImg.png"
         # Load the frost overlay image
         frost_overlay = cv2.imread(frost_image_path, cv2.IMREAD_UNCHANGED)
+        assert (
+            frost_overlay is not None
+        ), "file could not be read, check with os.path.exists()"
 
         # Resize the frost overlay to match the input image dimensions
         frost_overlay_resized = cv2.resize(
@@ -312,7 +331,7 @@ class ImagePerturbation:
 
         return frosted_image
 
-    def snow_filter(self, image, intensity=0.5):
+    def snow_filter(self, image):
         """
         Apply a frost effect to the image using an overlay image (corrected version).
 
@@ -321,9 +340,13 @@ class ImagePerturbation:
         - frost_image_path: Path to the frost overlay image.
         - intensity: The intensity of the frost effect, ranging from 0 (no frost) to 1 (full frost).
         """
-        frost_image_path = "./OverlayImages/snow.png"
+        intensity = [0.05, 0.15, 0.275, 0.45, 0.6][self.scale]
+        frost_image_path = "./perturbationdrive/OverlayImages/snow.png"
         # Load the frost overlay image
         frost_overlay = cv2.imread(frost_image_path, cv2.IMREAD_UNCHANGED)
+        assert (
+            frost_overlay is not None
+        ), "file could not be read, check with os.path.exists()"
 
         # Resize the frost overlay to match the input image dimensions
         frost_overlay_resized = cv2.resize(
@@ -347,16 +370,15 @@ class ImagePerturbation:
 
         return frosted_image
 
-    def object_overlay(self, img1, factor=2):
-        overlay_path = (
-            "./OverlayImages/Logo_of_the_Technical_University_of_Munichpng.png"
-        )
+    def object_overlay(self, img1):
+        c = [10, 5, 3, 2, 1.5]
+        overlay_path = "./perturbationdrive/OverlayImages/Logo_of_the_Technical_University_of_Munichpng.png"
         img2 = cv2.imread(overlay_path)
         assert img2 is not None, "file could not be read, check with os.path.exists()"
 
-        targetImageHeight = int(img1.shape[0] / factor)
+        targetImageHeight = int(img1.shape[0] / c[self.scale])
         # calculate scale factor
-        scalePercent = int(targetImageHeight * 100 / img2.shape[0])
+        scalePercent = targetImageHeight * 100. / img2.shape[0]
         targetImageWidth = int(img1.shape[1] * scalePercent / 100)
         img2 = cv2.resize(
             img2, (targetImageHeight, targetImageWidth), interpolation=cv2.INTER_LINEAR
@@ -366,7 +388,7 @@ class ImagePerturbation:
         height_roi = int((img1.shape[0] / 2) - (img2.shape[0] / 2))
         width_roi = int((img1.shape[1] / 2) - (img2.shape[1] / 2))
 
-        rows, cols, channels = img2.shape
+        rows, cols, _ = img2.shape
         roi = img1[height_roi : height_roi + rows, width_roi : width_roi + cols]
         # Now create a mask of logo and create its inverse mask also
         img2gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)  # convert image to gray
