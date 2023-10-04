@@ -33,9 +33,9 @@ class ImagePerturbation:
     def gaussian_noise(self, img):
         factor = [0.06, 0.12, 0.22, 0.30, 0.42][self.scale]
         # scale to a number between 0 and 1
-        x = np.array(img) / 255.0
+        x = np.array(img, dtype=np.float32) / 255.0
         # add random between 0 and 1
-        return np.clip(x + np.random.normal(size=x.shape, scale=factor), 0, 1) * 255
+        return np.clip(x + np.random.normal(size=x.shape, scale=factor), 0, 1).astype(np.float32) * 255
 
     def poisson_noise(self, img):
         factor = [80, 30, 10, 5, 2][self.scale]
