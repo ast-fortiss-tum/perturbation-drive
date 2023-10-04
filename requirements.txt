@@ -1,7 +1,10 @@
 numpy
 opencv-python
 scipy
-sys
-pyperg
+pyperf
 pytest
-unittest
+pillow
+h5py
+gym
+-e git+https://github.com/tawnkramer/gym-donkeycar.git#egg=gym_donkeycar
+pygame
