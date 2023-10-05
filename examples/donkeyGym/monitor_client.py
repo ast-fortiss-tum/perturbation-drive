@@ -3,6 +3,8 @@
 Predict Client
 Create a client to accept image inputs and run them against a trained neural network.
 This then sends the steering output back to the server.
+
+`python3 examples/donkeyGym/monitor_client.py`
 Author: Tawn Kramer
 '''
 from __future__ import print_function

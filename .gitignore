@@ -175,6 +175,7 @@ pyrightconfig.json
 
 ### VisualStudioCode ###
 .vscode/*
+.vscode
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
@@ -196,3 +197,8 @@ pyrightconfig.json
 
 ### DonkeyCar ###
 examples/donkeyGym/src/gym-donkeycar
+
+### Tests ###
+benchmark_perturbations.csv
+benchmark_perturbations.json
+benchmark_pert.json
