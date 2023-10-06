@@ -25,8 +25,10 @@ class ImagePerturbation:
             (range(600, 700), contrast),
             (range(700, 800), elastic),
             (range(800, 900), object_overlay),
-            (range(900, 1000), zoom_blur), # I believe that zoom_blur is too slow
+            (range(900, 1000), glass_blur),
         ]
+        frames = loadSnowFrames()
+        print(f"Length of all snow frames is {len(frames)}")
 
     def peturbate(self, image):
         """
@@ -45,7 +47,7 @@ class ImagePerturbation:
         if self._totalPerturbations == 1000:
             self._totalPerturbations = 0
             self.increment_scale
-        
+
         return image
 
     def increment_scale(self):
@@ -380,29 +382,68 @@ def object_overlay(scale, img1):
     overlay_path = "./perturbationdrive/OverlayImages/Logo_of_the_Technical_University_of_Munichpng.png"
     img2 = cv2.imread(overlay_path)
     assert img2 is not None, "file could not be read, check with os.path.exists()"
-    targetImageHeight = int(img1.shape[0] / c[scale])
-    # calculate scale factor
-    scalePercent = targetImageHeight * 100.0 / img2.shape[0]
-    targetImageWidth = int(img1.shape[1] * scalePercent / 100)
-    img2 = cv2.resize(
-        img2, (targetImageHeight, targetImageWidth), interpolation=cv2.INTER_LINEAR
+    img1_shape0_div_c_scale = int(img1.shape[0] / c[scale])
+    img1_shape1_div_2 = int(img1.shape[1] / 2)
+    img1_shape0_div_2 = int(img1.shape[0] / 2)
+
+    # Calculate scale factor and target image width directly without extra division
+    targetImageWidth = int(
+        img1.shape[1] * (img1_shape0_div_c_scale * 100.0 / img2.shape[0]) / 100
     )
-    # define the start of the roi
-    height_roi = int((img1.shape[0] / 2) - (img2.shape[0] / 2))
-    width_roi = int((img1.shape[1] / 2) - (img2.shape[1] / 2))
+
+    # Resize img2 in a more efficient manner
+    img2 = cv2.resize(
+        img2,
+        (img1_shape0_div_c_scale, targetImageWidth),
+        interpolation=cv2.INTER_NEAREST,
+    )
+
+    # Precompute reused expressions
+    img2_shape0_div_2 = int(img2.shape[0] / 2)
+    img2_shape1_div_2 = int(img2.shape[1] / 2)
+
+    # Calculate the start of the ROI
+    height_roi = img1_shape0_div_2 - img2_shape0_div_2
+    width_roi = img1_shape1_div_2 - img2_shape1_div_2
+
     rows, cols, _ = img2.shape
     roi = img1[height_roi : height_roi + rows, width_roi : width_roi + cols]
-    # Now create a mask of logo and create its inverse mask also
-    img2gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)  # convert image to gray
-    _, mask = cv2.threshold(
-        img2gray, 10, 255, cv2.THRESH_BINARY
-    )  # set image to two color
-    mask_inv = cv2.bitwise_not(mask)  # reverse color
-    # Now black-out the area of logo in ROI
+
+    # Now create a mask of the logo and create its inverse mask also
+    img2gray = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
+    _, mask = cv2.threshold(img2gray, 10, 255, cv2.THRESH_BINARY)
+    mask_inv = cv2.bitwise_not(mask)
+
+    # Now black-out the area of the logo in ROI
     img1_bg = cv2.bitwise_and(roi, roi, mask=mask_inv)
-    # Take only region of logo from logo image.
+
+    # Take only the region of the logo from the logo image.
     img2_fg = cv2.bitwise_and(img2, img2, mask=mask)
-    # Put logo in ROI and modify the main image
+
+    # Put the logo in ROI and modify the main image
     dst = cv2.add(img1_bg, img2_fg)
     img1[height_roi : height_roi + rows, width_roi : width_roi + cols] = dst
+
     return img1
+
+
+def loadSnowFrames():
+    """
+    Helper method to load all snow frames for quicker mask overlay later
+
+    This mask has a total of 69 frames
+
+    Credit for the mask
+    <a href="https://www.vecteezy.com/video/1803396-falling-snow-overlay-loop">Falling Snow Overlay Loop Stock Videos by Vecteezy</a>
+    """
+    cap = cv2.VideoCapture("./perturbationdrive/OverlayMasks/snowfall.mp4")
+
+    # extract frames
+    frames = []
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+        frames.append(frame)
+    cap.release()
+    return frames
