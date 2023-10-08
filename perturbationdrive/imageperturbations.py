@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from scipy.ndimage import zoom as scizoom
 from io import BytesIO
+import itertools
 
 
 class ImagePerturbation:
@@ -16,7 +17,7 @@ class ImagePerturbation:
         self.scale = scale
         self._totalPerturbations = 0
         self._fns = [
-            (range(0, 100), gaussian_noise),
+            (range(0, 100), dynamic_snow_filter),
             (range(100, 200), poisson_noise),
             (range(200, 300), jpeg_filter),
             (range(300, 400), motion_blur),
@@ -26,9 +27,15 @@ class ImagePerturbation:
             (range(700, 800), elastic),
             (range(800, 900), object_overlay),
             (range(900, 1000), glass_blur),
+            (range(1000, 1100), gaussian_noise),
         ]
-        frames = loadSnowFrames()
-        print(f"Length of all snow frames is {len(frames)}")
+        # we create an infinite iterator over the snow frames
+        snow_frames = _loadSnowFrames()
+        self._snow_iterator = itertools.cycle(snow_frames)
+        # marks how many frames of the currently used dynamic mask we have
+        # already used
+        self._dynamic_counter = 0
+        print(f"Length of all snow frames is {len(snow_frames)}")
 
     def peturbate(self, image):
         """
@@ -40,17 +47,21 @@ class ImagePerturbation:
         # call the image perturbation
         for condition, func in self._fns:
             if self._totalPerturbations in condition:
-                image = func(self.scale, image)
+                # if we have a special dynamic overlay we need to pass the iterator as param
+                if func is dynamic_snow_filter:
+                    image = func(self.scale, image, self._snow_iterator)
+                else:
+                    image = func(self.scale, image)
 
         # increment perturbations and scale
         self._totalPerturbations += 1
-        if self._totalPerturbations == 1000:
+        if self._totalPerturbations == 1100:
             self._totalPerturbations = 0
-            self.increment_scale
+            self._increment_scale
 
         return image
 
-    def increment_scale(self):
+    def _increment_scale(self):
         """Increments the scale by one"""
         if self.scale < 4:
             self.scale += 1
@@ -377,6 +388,35 @@ def snow_filter(scale, image):
     return frosted_image
 
 
+def dynamic_snow_filter(scale, image, iterator):
+    """
+    Apply a frost effect to the image using an overlay image (corrected version).
+    Parameters:
+    - image: The input image.
+    - iterator: Cyclic iterator of the frames to apply to the image for a dynamic overlay effect
+    - scale: The intensity of the frost effect, ranging from 0 (no frost) to 1 (full frost).
+    """
+    intensity = [0.05, 0.15, 0.275, 0.45, 0.6][scale]
+    # Load the next frame from the iterator
+    snow_overlay = next(iterator)
+
+    # Resize the frost overlay to match the input image dimensions
+    frost_overlay_resized = cv2.resize(snow_overlay, (image.shape[1], image.shape[0]))
+    # Extract the 3 channels (BGR) and the alpha (transparency) channel
+    bgr = frost_overlay_resized[:, :, :3]
+    alpha = frost_overlay_resized[:, :, 3] / 255.0  # Normalize to [0, 1]
+    # Blend the frost overlay with the original image using the alpha channel for transparency
+    frosted_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (
+        intensity * bgr
+    )
+    frosted_image = np.clip(frosted_image, 0, 255).astype(np.uint8)
+    # Decrease saturation to give a cold appearance
+    hsv = cv2.cvtColor(frosted_image, cv2.COLOR_BGR2HSV)
+    hsv[:, :, 1] = hsv[:, :, 1] * 0.8
+    frosted_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    return frosted_image
+
+
 def object_overlay(scale, img1):
     c = [10, 5, 3, 2, 1.5]
     overlay_path = "./perturbationdrive/OverlayImages/Logo_of_the_Technical_University_of_Munichpng.png"
@@ -427,7 +467,7 @@ def object_overlay(scale, img1):
     return img1
 
 
-def loadSnowFrames():
+def _loadSnowFrames():
     """
     Helper method to load all snow frames for quicker mask overlay later
 
@@ -441,7 +481,13 @@ def loadSnowFrames():
     # extract frames
     frames = []
     while True:
+        # the image is rgb so we convert it to rgba
         ret, frame = cap.read()
+        if not ret or frame is None:
+            print("failed to read frame")
+            break
+        alpha_channel = np.ones(frame.shape[:2], dtype=frame.dtype) * 255
+        frame = cv2.merge((frame, alpha_channel))
         if not ret:
             break
         frames.append(frame)
