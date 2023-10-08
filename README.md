@@ -14,7 +14,7 @@ pip install perturbationdrive
 
 View the examples folder for examples on how to run this benchmarking library with different simulators.
 
-The perturbation object wukk automatically select the perturbation and the perturbation scale.
+The perturbation object will automatically select the perturbation and the perturbation scale.
 
 ```Python
 from perturbationdrive import ImagePerturbation
