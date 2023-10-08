@@ -36,6 +36,6 @@ setup(
     ],
     packages=["perturbationdrive"],
     include_package_data=True,
-    install_requires=["numpy", "opencv-python", "scipy"],
+    install_requires=["numpy", "opencv-python", "scipy", "itertools"],
     python_requires='>=3'
 )
