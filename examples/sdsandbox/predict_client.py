@@ -109,7 +109,6 @@ class DonkeySimMsgHandler(IMesgHandler):
     def predict(self, image_array):
         outputs = self.model.predict(image_array)
         self.parse_outputs(outputs)
-        # self.on_parsed_outputs([])
 
     def parse_outputs(self, outputs):
         res = []
@@ -122,9 +121,6 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def on_parsed_outputs(self, outputs):
         self.outputs = outputs
-        # slight right steering for demo purpose
-        self.steering_angle = np.random.uniform(-0.05, 0.9)  # 0.0
-        self.throttle = 0.2
 
         if len(outputs) > 0:
             self.steering_angle = outputs[self.STEERING]
@@ -187,7 +183,6 @@ def go(
     model = load_model(filename, compile=False)
 
     # In this mode, looks like we have to compile it
-    # opt = keras.Adam(learning_rate=0.0001)
     model.compile(loss="sgd", metrics=["mse"])
 
     clients = []
