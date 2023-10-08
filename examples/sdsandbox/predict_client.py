@@ -2,6 +2,7 @@
 Predict Server
 Create a server to accept image inputs and run them against a trained neural network.
 This then sends the steering output back to the client.
+
 Author: Tawn Kramer
 """
 from __future__ import print_function
@@ -38,8 +39,8 @@ class DonkeySimMsgHandler(IMesgHandler):
     STEERING = 0
     THROTTLE = 1
 
-    def __init__(self, constant_throttle, image_cb=None, rand_seed=0):
-        # self.model = model
+    def __init__(self, model, constant_throttle, image_cb=None, rand_seed=0):
+        self.model = model
         self.perturbation = ImagePerturbation(1)
         self.constant_throttle = constant_throttle
         self.client = None
@@ -61,9 +62,11 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.timer.reset()
 
     def on_aborted(self, msg):
+        self.perturbation.on_stop()
         self.stop()
 
     def on_disconnect(self):
+        self.perturbation.on_stop()
         pass
 
     def on_recv_message(self, message):
@@ -104,9 +107,9 @@ class DonkeySimMsgHandler(IMesgHandler):
             self.img_arr = None
 
     def predict(self, image_array):
-        # outputs = self.model.predict(image_array)
-        # self.parse_outputs(outputs)
-        self.on_parsed_outputs([])
+        outputs = self.model.predict(image_array)
+        self.parse_outputs(outputs)
+        # self.on_parsed_outputs([])
 
     def parse_outputs(self, outputs):
         res = []
@@ -181,17 +184,18 @@ def go(
     filename, address, constant_throttle=0, num_cars=1, image_cb=None, rand_seed=None
 ):
     print("loading model", filename)
-    # model = load_model(filename)
+    model = load_model(filename, compile=False)
 
     # In this mode, looks like we have to compile it
-    # model.compile("sgd", "mse")
+    # opt = keras.Adam(learning_rate=0.0001)
+    model.compile(loss="sgd", metrics=["mse"])
 
     clients = []
 
     for _ in range(0, num_cars):
         # setup the clients
         handler = DonkeySimMsgHandler(
-            constant_throttle, image_cb=image_cb, rand_seed=rand_seed
+            model, constant_throttle, image_cb=image_cb, rand_seed=rand_seed
         )
         client = SimClient(address, handler)
         clients.append(client)

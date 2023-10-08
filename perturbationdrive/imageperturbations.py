@@ -17,7 +17,7 @@ class ImagePerturbation:
         self.scale = scale
         self._totalPerturbations = 0
         self._fns = [
-            (range(0, 100), gaussian_noise),
+            (range(0, 100), dynamic_snow_filter),
             (range(100, 200), poisson_noise),
             (range(200, 300), jpeg_filter),
             (range(300, 400), motion_blur),
@@ -27,7 +27,7 @@ class ImagePerturbation:
             (range(700, 800), elastic),
             (range(800, 900), object_overlay),
             (range(900, 1000), glass_blur),
-            (range(1000, 1100), dynamic_snow_filter),
+            (range(1000, 1100), gaussian_noise),
         ]
         # we create an infinite iterator over the snow frames
         snow_frames = _loadSnowFrames()
@@ -397,9 +397,9 @@ def dynamic_snow_filter(scale, image, iterator):
     - scale: The intensity of the frost effect, ranging from 0 (no frost) to 1 (full frost).
     """
     intensity = [0.05, 0.15, 0.275, 0.45, 0.6][scale]
-    frost_image_path = "./perturbationdrive/OverlayImages/snow.png"
     # Load the next frame from the iterator
     snow_overlay = next(iterator)
+
     # Resize the frost overlay to match the input image dimensions
     frost_overlay_resized = cv2.resize(snow_overlay, (image.shape[1], image.shape[0]))
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
@@ -481,7 +481,13 @@ def _loadSnowFrames():
     # extract frames
     frames = []
     while True:
+        # the image is rgb so we convert it to rgba
         ret, frame = cap.read()
+        if not ret or frame is None:
+            print("failed to read frame")
+            break
+        alpha_channel = np.ones(frame.shape[:2], dtype=frame.dtype) * 255
+        frame = cv2.merge((frame, alpha_channel))
         if not ret:
             break
         frames.append(frame)
