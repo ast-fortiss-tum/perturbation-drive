@@ -10,7 +10,7 @@ class ImagePerturbation:
     Instanciates an image perturbation class
 
     :param scale: The scale of the perturbation in the range [1;5].
-    :type multiplier: int
+    :type scale: int
     """
 
     def __init__(self, scale: int):
@@ -29,17 +29,26 @@ class ImagePerturbation:
             (range(900, 1000), glass_blur),
             (range(1000, 1100), gaussian_noise),
         ]
+        # init xte for all perturbations as 0
+        self.xte = {}
+        for _, func in self._fns:
+            # tupple of average xte and amount of perturbations
+            self.xte[func.__name__] = (0, 0)
         # we create an infinite iterator over the snow frames
         snow_frames = _loadSnowFrames()
         self._snow_iterator = itertools.cycle(snow_frames)
         # marks how many frames of the currently used dynamic mask we have
         # already used
-        self._dynamic_counter = 0
         print(f"Length of all snow frames is {len(snow_frames)}")
 
-    def peturbate(self, image):
+    def peturbate(self, image, prev_xte = 0.0):
         """
         Perturbates an image based on the current perturbation
+
+        :param image: The input image for the perturbation
+        :type image: MatLike
+        :param prev_xte: The cross track error of the car, provided by the simulator
+        :type prev_xte: Float (default is 0)
 
         :return: the perturbed image
         :rtype: MatLike
@@ -52,13 +61,21 @@ class ImagePerturbation:
                     image = func(self.scale, image, self._snow_iterator)
                 else:
                     image = func(self.scale, image)
+                # update xte
+                curr_xte, num_perturbations = self.xte[func.__name__]
+                curr_xte = (curr_xte * num_perturbations + prev_xte) / (
+                    num_perturbations + 1
+                )
+                self.xte[func.__name__] = (curr_xte, num_perturbations + 1)
 
         # increment perturbations and scale
         self._totalPerturbations += 1
         if self._totalPerturbations == 1100:
             self._totalPerturbations = 0
             self._increment_scale
-
+            # print summary when incrementing scale
+            # we have ~20 fps, so we incremente the scale approx every 55 seconds
+            self.print_xte()
         return image
 
     def _increment_scale(self):
@@ -76,6 +93,23 @@ class ImagePerturbation:
         print(
             f"Intensity is {self.scale}\nPerturbations is {self._totalPerturbations}\n"
         )
+
+    def print_xte(self):
+        """Command line output for the xte measures of all funcs"""
+        print("\n" + "=" * 40)
+        print(f"    AVERAGE XTE ON SCALE {self.scale}")
+        print("=" * 40 + "\n")
+        total_average_xte = 0
+        count = 0
+        for key, value in self.xte.items():
+            count += 1
+            curr_xte, _ = value
+            total_average_xte += curr_xte
+            print(f"Average XTE for {key}: {value:.4f}")
+            print("-"*40)
+        total_average_xte = total_average_xte / count
+        print(f"Total average XTE: {total_average_xte:.4f}")
+        print("="*40 + "\n")
 
 
 def gaussian_noise(scale, img):

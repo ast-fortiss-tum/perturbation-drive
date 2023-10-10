@@ -89,12 +89,16 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def on_telemetry(self, data):
         imgString = data["image"]
+        xte = 0
+        # extract xte from telemtry message
+        if data["cte"]:
+            xte = data["cte"]
         # use opencv because it has faster image manipulation and conversion to numpy than PIL
         img_data = base64.b64decode(imgString)
         img_array = np.frombuffer(img_data, dtype=np.uint8)
         image = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
         # perturb the image
-        image = self.perturbation.peturbate(image)
+        image = self.perturbation.peturbate(image, xte)
         # convert the image into dtype and dimensions needed for NN
         img_arr = np.asarray(image, dtype=np.float32)
         self.img_arr = img_arr.reshape((1,) + img_arr.shape)
