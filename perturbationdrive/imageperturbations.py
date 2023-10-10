@@ -16,6 +16,11 @@ class ImagePerturbation:
     def __init__(self, scale: int):
         self.scale = scale
         self._totalPerturbations = 0
+        # fot the first scale we randomly shuffle the filters
+        # after the first scale we select the filter next with the loweset xte
+        # we only iterate to the next filter if the average xte for this filter is
+        # less than x, where we set x here to 2, but plan on having x as param
+        # later on
         self._fns = [
             (range(0, 100), dynamic_snow_filter),
             (range(100, 200), poisson_noise),
@@ -93,6 +98,7 @@ class ImagePerturbation:
         print(
             f"Intensity is {self.scale}\nPerturbations is {self._totalPerturbations}\n"
         )
+        self.print_xte()
 
     def print_xte(self):
         """Command line output for the xte measures of all funcs"""
@@ -105,7 +111,7 @@ class ImagePerturbation:
             count += 1
             curr_xte, _ = value
             total_average_xte += curr_xte
-            print(f"Average XTE for {key}: {value:.4f}")
+            print(f"Average XTE for {key}: {curr_xte:.4f}")
             print("-"*40)
         total_average_xte = total_average_xte / count
         print(f"Total average XTE: {total_average_xte:.4f}")
