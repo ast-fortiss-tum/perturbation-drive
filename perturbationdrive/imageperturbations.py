@@ -3,7 +3,7 @@ import cv2
 from scipy.ndimage import zoom as scizoom
 from io import BytesIO
 import itertools
-
+import random
 
 class ImagePerturbation:
     """
@@ -22,31 +22,29 @@ class ImagePerturbation:
         # less than x, where we set x here to 2, but plan on having x as param
         # later on
         self._fns = [
-            (range(0, 100), dynamic_snow_filter),
-            (range(100, 200), poisson_noise),
-            (range(200, 300), jpeg_filter),
-            (range(300, 400), motion_blur),
-            (range(400, 500), frost_filter),
-            (range(500, 600), fog_filter),
-            (range(600, 700), contrast),
-            (range(700, 800), elastic),
-            (range(800, 900), object_overlay),
-            (range(900, 1000), glass_blur),
-            (range(1000, 1100), gaussian_noise),
+            dynamic_snow_filter,
+            poisson_noise,
+            jpeg_filter,
+            motion_blur,
+            frost_filter,
+            fog_filter,
+            contrast,
+            elastic,
+            object_overlay,
+            glass_blur,
+            gaussian_noise,
         ]
+        self._shuffle_perturbations()
         # init xte for all perturbations as 0
         self.xte = {}
-        for _, func in self._fns:
+        for func in self._fns:
             # tupple of average xte and amount of perturbations
-            self.xte[func.__name__] = (0, 0)
+            self.xte[func.__name__] = (0, 0, 0)
         # we create an infinite iterator over the snow frames
         snow_frames = _loadSnowFrames()
         self._snow_iterator = itertools.cycle(snow_frames)
-        # marks how many frames of the currently used dynamic mask we have
-        # already used
-        print(f"Length of all snow frames is {len(snow_frames)}")
 
-    def peturbate(self, image, prev_xte = 0.0):
+    def peturbate(self, image, prev_xte=0.0, model_pred=0.0):
         """
         Perturbates an image based on the current perturbation
 
@@ -57,24 +55,28 @@ class ImagePerturbation:
 
         :return: the perturbed image
         :rtype: MatLike
+        :return: states if we stop the benchmark because the car is stuck or done
+        :rtype: bool
         """
-        # call the image perturbation
-        for condition, func in self._fns:
-            if self._totalPerturbations in condition:
-                # if we have a special dynamic overlay we need to pass the iterator as param
-                if func is dynamic_snow_filter:
-                    image = func(self.scale, image, self._snow_iterator)
-                else:
-                    image = func(self.scale, image)
-                # update xte
-                curr_xte, num_perturbations = self.xte[func.__name__]
-                curr_xte = (curr_xte * num_perturbations + prev_xte) / (
-                    num_perturbations + 1
-                )
-                self.xte[func.__name__] = (curr_xte, num_perturbations + 1)
-
-        # increment perturbations and scale
-        self._totalPerturbations += 1
+        # calculate the filter index
+        condition = int(self._totalPerturbations / 100)
+        func = self._fns[condition]
+        # if we have a special dynamic overlay we need to pass the iterator as param
+        if func is dynamic_snow_filter:
+            image = func(self.scale, image, self._snow_iterator)
+        else:
+            image = func(self.scale, image)
+        # update xte
+        curr_xte, num_perturbations = self.xte[func.__name__]
+        curr_xte = (curr_xte * num_perturbations + prev_xte) / (num_perturbations + 1)
+        self.xte[func.__name__] = (curr_xte, num_perturbations + 1)
+        # we only move to the next perturbation if the xte is below or equal to 2
+        if (self._totalPerturbations + 1) % 100 == 0:
+            if np.abs(curr_xte) <= 2:
+                self._totalPerturbations += 1
+        else:
+            self._totalPerturbations += 1
+        # check if we increment the scale
         if self._totalPerturbations == 1100:
             self._totalPerturbations = 0
             self._increment_scale
@@ -94,17 +96,16 @@ class ImagePerturbation:
 
         :rtype: void
         """
-        print("Finished image perturbations\n")
-        print(
-            f"Intensity is {self.scale}\nPerturbations is {self._totalPerturbations}\n"
-        )
+        print("\n" + "=" * 45)
+        print("    STOPED BENCHMARKING")
+        print("=" * 45 + "\n")
         self.print_xte()
 
     def print_xte(self):
         """Command line output for the xte measures of all funcs"""
-        print("\n" + "=" * 40)
+        print("\n" + "=" * 45)
         print(f"    AVERAGE XTE ON SCALE {self.scale}")
-        print("=" * 40 + "\n")
+        print("=" * 45 + "\n")
         total_average_xte = 0
         count = 0
         for key, value in self.xte.items():
@@ -112,10 +113,18 @@ class ImagePerturbation:
             curr_xte, _ = value
             total_average_xte += curr_xte
             print(f"Average XTE for {key}: {curr_xte:.4f}")
-            print("-"*40)
+            print("-" * 45)
         total_average_xte = total_average_xte / count
         print(f"Total average XTE: {total_average_xte:.4f}")
-        print("="*40 + "\n")
+        print("=" * 45 + "\n")
+
+    def _shuffle_perturbations(self):
+        """randomly shuffles the perturbations"""
+        random.shuffle(self._fns)
+
+    def _sort_perturbations(self):
+        """sorts the perturbations according to their xte"""
+        self._fns = sorted(self._fns, key=lambda f: self.xte[f.__name__][0])
 
 
 def gaussian_noise(scale, img):

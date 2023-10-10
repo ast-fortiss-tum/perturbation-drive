@@ -71,7 +71,6 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def on_recv_message(self, message):
         self.timer.on_frame()
-        # print(f'Received message: {message}')
         if not "msg_type" in message:
             print("expected msg_type field")
             print("message:", message)
@@ -104,6 +103,9 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.img_arr = img_arr.reshape((1,) + img_arr.shape)
         if self.image_cb is not None:
             self.image_cb(img_arr, self.steering_angle)
+        print(f"hit is {data['hit']}")
+        if data["hit"]:
+            self.stop()
 
     def update(self):
         if self.img_arr is not None:
