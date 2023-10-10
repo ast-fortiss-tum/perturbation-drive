@@ -37,9 +37,12 @@ class ImagePerturbation:
         self._shuffle_perturbations()
         # init xte for all perturbations as 0
         self.xte = {}
+        # init steering angle diffs for all perturbations as 0
+        self.steering_angle = {}
         for func in self._fns:
             # tupple of average xte and amount of perturbations
-            self.xte[func.__name__] = (0, 0, 0)
+            self.xte[func.__name__] = (0, 0)
+            self.steering_angle[func.__name__] = (0, 0)
         # we create an infinite iterator over the snow frames
         snow_frames = _loadSnowFrames()
         self._snow_iterator = itertools.cycle(snow_frames)
@@ -59,8 +62,8 @@ class ImagePerturbation:
         :rtype: bool
         """
         # calculate the filter index
-        condition = int(self._totalPerturbations / 100)
-        func = self._fns[condition]
+        index = int(self._totalPerturbations / 100)
+        func = self._fns[index]
         # if we have a special dynamic overlay we need to pass the iterator as param
         if func is dynamic_snow_filter:
             image = func(self.scale, image, self._snow_iterator)
@@ -84,6 +87,16 @@ class ImagePerturbation:
             # we have ~20 fps, so we incremente the scale approx every 55 seconds
             self.print_xte()
         return image
+    
+    def updateSteeringPerformance(self, steeringAngleDiff):
+        # calculate the filter index
+        index = int((self._totalPerturbations - 1) / 100)
+        funcName = self._fns[index].__name__
+        # update steering angle diff
+        curr_diff, num_differences = self.steering_angle[funcName]
+        curr_diff = (curr_diff * num_differences + steeringAngleDiff) / (num_differences + 1)
+        self.steering_angle[funcName] = (curr_diff, num_differences + 1)
+
 
     def _increment_scale(self):
         """Increments the scale by one"""
@@ -108,14 +121,19 @@ class ImagePerturbation:
         print("=" * 45 + "\n")
         total_average_xte = 0
         count = 0
+        total_average_sad = 0
         for key, value in self.xte.items():
             count += 1
             curr_xte, _ = value
             total_average_xte += curr_xte
+            steering_diff, _ = self.steering_angle[key]
+            total_average_sad += steering_diff
             print(f"Average XTE for {key}: {curr_xte:.4f}")
+            print(f"Average Steering Angle Diff for {key}: {steering_diff:.4f}")
             print("-" * 45)
         total_average_xte = total_average_xte / count
         print(f"Total average XTE: {total_average_xte:.4f}")
+        print(f"Total average Steering Angle Diff: {total_average_sad:.4f}")
         print("=" * 45 + "\n")
 
     def _shuffle_perturbations(self):

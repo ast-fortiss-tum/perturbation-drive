@@ -46,6 +46,8 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.client = None
         self.timer = FPSTimer()
         self.img_arr = None
+        # we need this if we want to measure the diff in steering angles
+        self.unchanged_img_arr = None
         self.image_cb = image_cb
         self.steering_angle = 0.0
         self.throttle = 0.0
@@ -96,6 +98,9 @@ class DonkeySimMsgHandler(IMesgHandler):
         img_data = base64.b64decode(imgString)
         img_array = np.frombuffer(img_data, dtype=np.uint8)
         image = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
+        # if we want to measure the diff in steering angle
+        unchanged_img_arr = np.asarray(image, dtype=np.float32)
+        self.unchanged_img_arr = unchanged_img_arr.reshape((1,) + unchanged_img_arr.shape)
         # perturb the image
         image = self.perturbation.peturbate(image, xte)
         # convert the image into dtype and dimensions needed for NN
@@ -103,9 +108,6 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.img_arr = img_arr.reshape((1,) + img_arr.shape)
         if self.image_cb is not None:
             self.image_cb(img_arr, self.steering_angle)
-        print(f"hit is {data['hit']}")
-        if data["hit"]:
-            self.stop()
 
     def update(self):
         if self.img_arr is not None:
@@ -114,18 +116,21 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def predict(self, image_array):
         outputs = self.model.predict(image_array)
+        if self.unchanged_img_arr is not None:
+            unchanged_outputs = self.model.predict(self.unchanged_img_arr)
+            return self.parse_outputs(outputs, unchanged_outputs)
         self.parse_outputs(outputs)
 
-    def parse_outputs(self, outputs):
+    def parse_outputs(self, outputs, unchanged_outputs = []):
         res = []
 
         # Expects the model with final Dense(2) with steering and throttle
         for i in range(outputs.shape[1]):
             res.append(outputs[0][i])
 
-        self.on_parsed_outputs(res)
+        self.on_parsed_outputs(res, unchanged_outputs)
 
-    def on_parsed_outputs(self, outputs):
+    def on_parsed_outputs(self, outputs, unchanged_outputs):
         self.outputs = outputs
 
         if len(outputs) > 0:
@@ -135,7 +140,13 @@ class DonkeySimMsgHandler(IMesgHandler):
             self.throttle = self.constant_throttle
         elif len(outputs) > 1:
             self.throttle = outputs[self.THROTTLE] * conf.throttle_out_scale
-
+        
+        # get normal output
+        if len(unchanged_outputs) > 0:
+            unchanged_steering = unchanged_outputs[0][self.STEERING]
+            diff = abs(self.steering_angle - unchanged_steering)
+            self.perturbation.updateSteeringPerformance(diff)
+        
         self.send_control(self.steering_angle, self.throttle)
 
     def send_control(self, steer, throttle):
