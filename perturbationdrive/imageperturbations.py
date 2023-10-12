@@ -22,6 +22,10 @@ from perturbationdrive.perturbationfuncs import (
     impulse_noise,
     defocus_blur,
     zoom_blur,
+    dynamic_smoke_filter,
+    dynamic_lightning_filter,
+    dynamic_sun_filter,
+    dynamic_object_overlay,
 )
 
 
@@ -60,7 +64,6 @@ class ImagePerturbation:
                 fog_filter,
                 contrast,
                 elastic,
-                object_overlay,
                 glass_blur,
                 gaussian_noise,
                 dynamic_rain_filter,
@@ -69,6 +72,10 @@ class ImagePerturbation:
                 increase_brightness,
                 impulse_noise,
                 defocus_blur,
+                dynamic_smoke_filter,
+                dynamic_lightning_filter,
+                dynamic_sun_filter,
+                dynamic_object_overlay,
             ]
         else:
             # the user has given us perturbations to use
@@ -83,10 +90,19 @@ class ImagePerturbation:
             self.xte[func.__name__] = (0, 0)
             self.steering_angle[func.__name__] = (0, 0)
         # we create an infinite iterator over the snow frames
-        snow_frames = _loadMaskFrames("./perturbationdrive/OverlayMasks/snowfall.mp4")
-        rain_frames = _loadMaskFrames("./perturbationdrive/OverlayMasks/rain.mp4")
+        snow_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/snowfall.mp4")
+        rain_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/rain.mp4")
+        bird_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/birds.mp4")
+        lightning_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/lightning.mp4")
+        smoke_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/smoke.mp4")
+        sun_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/sun.mp4")
+
         self._snow_iterator = itertools.cycle(snow_frames)
         self._rain_iterator = itertools.cycle(rain_frames)
+        self._bird_iterator = itertools.cycle(bird_frames)
+        self._lightning_iterator = itertools.cycle(lightning_frames)
+        self._smoke_iterator = itertools.cycle(smoke_frames)
+        self._sun_iterator = itertools.cycle(sun_frames)
 
     def peturbate(self, image, data: dict):
         """
@@ -117,6 +133,14 @@ class ImagePerturbation:
             image = func(self.scale, image, self._snow_iterator)
         elif func is dynamic_rain_filter:
             image = func(self.scale, image, self._rain_iterator)
+        elif func is dynamic_sun_filter:
+            image = func(self.scale, image, self._sun_iterator)
+        elif func is dynamic_lightning_filter:
+            image = func(self.scale, image, self._lightning_iterator)
+        elif func is dynamic_object_overlay:
+            image = func(self.scale, image, self._bird_iterator)
+        elif func is dynamic_smoke_filter:
+            image = func(self.scale, image, self._smoke_iterator)
         else:
             image = func(self.scale, image)
         # update xte
@@ -242,11 +266,6 @@ def _loadMaskFramesGreenScreen(path: str) -> list:
         if not ret or frame is None:
             print("failed to read frame")
             break
-        if frame.shape[2] != 4:
-            # append alpha channel
-            alpha_channel = np.ones(frame.shape[:2], dtype=frame.dtype) * 255
-            frame = cv2.merge((frame, alpha_channel))
-            # Create a binary mask of the green areas.
         # Define a range for the green color and create a mask.
         lower_green = np.array([35, 40, 40])  # Lower bound for the green color
         upper_green = np.array([90, 255, 255])  # Upper bound for the green color
@@ -289,6 +308,10 @@ function_mapping = {
     "defocus_blur": defocus_blur,
     "pixelate": pixelate,
     "zoom_blur": zoom_blur,
+    "dynamic_smoke_filter": dynamic_smoke_filter,
+    "dynamic_lightning_filter": dynamic_lightning_filter,
+    "dynamic_sun_filter": dynamic_sun_filter,
+    "dynamic_object_overlay": dynamic_object_overlay,
 }
 
 

@@ -147,7 +147,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             unchanged_steering = unchanged_outputs[0][self.STEERING]
             diff = abs(self.steering_angle - unchanged_steering)
             self.perturbation.updateSteeringPerformance(diff)
-
+        self.throttle = 0.0
         self.send_control(self.steering_angle, self.throttle)
 
     def send_control(self, steer, throttle):
