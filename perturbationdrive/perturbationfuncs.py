@@ -5,6 +5,15 @@ from io import BytesIO
 
 
 def gaussian_noise(scale, img):
+    """
+    Adds unfirom distributed gausian noise to an image
+
+    Parameters: 
+        - img (numpy array): The input image.
+         - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array
+    """
     factor = [0.06, 0.12, 0.22, 0.30, 0.42][scale]
     # scale to a number between 0 and 1
     x = np.array(img, dtype=np.float32) / 255.0
@@ -26,10 +35,12 @@ def poisson_noise(scale, img):
 def impulse_noise(scale, img):
     """
     Add salt and pepper noise to an image.
-    Parameters:
-        img (numpy array): The input image.
-    Returns:
-        numpy array: Image with salt and pepper noise.
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array: Image with salt and pepper noise.
     """
     factor = [0.02, 0.08, 0.10, 0.19, 0.30][scale]
     # Number of salt noise pixels
@@ -57,8 +68,16 @@ def _create_disk_kernel(radius):
 
 
 def defocus_blur(scale, image):
+    """
+    Applies a defocus blur to the given image.
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
+    """
     factor = [2, 5, 6, 9, 12][scale]
-    """Apply defocus blur to the given image using the disk kernel."""
     # Create the disk-shaped kernel.
     kernel = _create_disk_kernel(factor)
     # Convolve the image with the kernel.
@@ -67,7 +86,15 @@ def defocus_blur(scale, image):
 
 
 def glass_blur(scale, image):
-    """Apply glass blur effect to the given image."""
+    """
+    Applies glass blur effect to the given image.
+    
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
+    """
     factor = [2, 5, 6, 9, 12][scale]
     # Get the height and width of the image.
     height, width = image.shape[:2]
@@ -84,7 +111,9 @@ def glass_blur(scale, image):
 
 
 def _create_motion_blur_kernel(size, angle):
-    """Create a motion blur kernel of the given size and angle."""
+    """
+    Create a motion blur kernel of the given size and angle.
+    """
     # Create an empty kernel
     kernel = np.zeros((size, size))
     # Convert angle to radian
@@ -104,8 +133,16 @@ def _create_motion_blur_kernel(size, angle):
 
 
 def motion_blur(scale, image, size=10, angle=45):
+    """
+    Apply motion blur to the given image.
+    
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
+    """
     size, angle = [(2, 5), (4, 12), (6, 20), (10, 30), (15, 45)][scale]
-    """Apply motion blur to the given image."""
     # Create the motion blur kernel.
     kernel = _create_motion_blur_kernel(size, angle)
     # Convolve the image with the kernel.
@@ -132,7 +169,16 @@ def _clipped_zoom(img, zoom_factor):
 
 
 def zoom_blur(scale, img):
-    """This filter is too slow"""
+    """
+    Applies a zoom blur effect on an image.\n
+    This perturbation has an avereage duration of 36ms on an input image of 256*256*3
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
+    """
     c = [
         np.arange(1, 1.11, 0.01),
         np.arange(1, 1.16, 0.01),
@@ -149,7 +195,15 @@ def zoom_blur(scale, img):
 
 
 def increase_brightness(scale, image):
-    """Increase the brightness of the image using HSV color space"""
+    """
+    Increase the brightness of the image using HSV color space
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
+    """
     factor = [1.1, 1.2, 1.3, 1.5, 1.7][scale]
     # Convert the image to HSV color space
     hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
@@ -162,8 +216,13 @@ def increase_brightness(scale, image):
 
 def contrast(scale, img):
     """
-    Increase or decrease the conrast of the image using 127.5 as the midpoint
-    gray channel
+    Increase or decrease the conrast of the image
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
     """
     factor = [1.1, 1.2, 1.3, 1.5, 1.7][scale]
     pivot = 127.5
@@ -172,11 +231,13 @@ def contrast(scale, img):
 
 def elastic(scale, img):
     """
-    Perform an elastic deformation on the image.
-    Parameters:
-    - image: The input image.
-    - alpha: A scaling factor that controls the intensity of the deformation.
-    - sigma: The standard deviation of the Gaussian filter. It controls the scale of the deformation.
+    Applies an elastic deformation on the image.
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
     """
     alpha, sigma = [(2, 0.4), (3, 0.75), (5, 0.9), (7, 1.2), (10, 1.5)][scale]
     # Generate random displacement fields
@@ -201,7 +262,15 @@ def elastic(scale, img):
 
 
 def pixelate(scale, img):
-    """Pixelates the image by resizing it back and forth in the rang of (1; 0)"""
+    """
+    Pixelates the image
+    
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
+    """
     factor = [0.85, 0.75, 0.55, 0.35, 0.2][scale]
     h, w = img.shape[:2]
     img = cv2.resize(img, (int(w * factor), int(h * factor)), cv2.INTER_AREA)
@@ -209,7 +278,15 @@ def pixelate(scale, img):
 
 
 def jpeg_filter(scale, image):
-    """Introduce JPEG compression artifacts to the image."""
+    """
+    Introduce JPEG compression artifacts to the image.
+    
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
+    """
     factor = [30, 18, 15, 10, 5][scale]
     # Encode the image as JPEG with the specified quality
     _, jpeg_encoded_image = cv2.imencode(
@@ -227,10 +304,12 @@ def jpeg_filter(scale, image):
 def fog_filter(scale, image):
     """
     Apply a fog effect to the image.
-    Parameters:
-    - image: The input image.
-    - intensity: The intensity of the fog effect. A value between 0 (no fog) and 1 (full fog).
-    - noise_amount: Amount of noise to introduce to the fog for a more natural look.
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
     """
     intensity, noise_amount = [
         (0.1, 0.05),
@@ -253,11 +332,13 @@ def fog_filter(scale, image):
 
 def frost_filter(scale, image):
     """
-    Apply a frost effect to the image using an overlay image (corrected version).
-    Parameters:
-    - image: The input image.
-    - frost_image_path: Path to the frost overlay image.
-    - intensity: The intensity of the frost effect, ranging from 0 (no frost) to 1 (full frost).
+    Apply a frost effect to the image using an overlay image.
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
     """
     intensity = [0.05, 0.15, 0.275, 0.45, 0.6][scale]
     frost_image_path = "./perturbationdrive/OverlayImages/frostImg.png"
@@ -285,11 +366,13 @@ def frost_filter(scale, image):
 
 def snow_filter(scale, image):
     """
-    Apply a frost effect to the image using an overlay image (corrected version).
-    Parameters:
-    - image: The input image.
-    - frost_image_path: Path to the frost overlay image.
-    - intensity: The intensity of the frost effect, ranging from 0 (no frost) to 1 (full frost).
+    Apply a snow effect to the image using an overlay image.
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+
+    Returns: numpy array:
     """
     intensity = [0.05, 0.15, 0.275, 0.45, 0.6][scale]
     frost_image_path = "./perturbationdrive/OverlayImages/snow.png"
@@ -317,11 +400,14 @@ def snow_filter(scale, image):
 
 def dynamic_snow_filter(scale, image, iterator):
     """
-    Apply a frost effect to the image using an overlay image (corrected version).
-    Parameters:
-    - image: The input image.
-    - iterator: Cyclic iterator of the frames to apply to the image for a dynamic overlay effect
-    - scale: The intensity of the frost effect, ranging from 0 (no frost) to 1 (full frost).
+    Apply a dynamic snow effect to the image using an overlay image iterator.
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - iterator cycle: Cyclic iterator over all the frames of the dynamic overlay mask
+
+    Returns: numpy array:
     """
     intensity = [0.05, 0.15, 0.275, 0.45, 0.6][scale]
     # Load the next frame from the iterator
@@ -346,11 +432,14 @@ def dynamic_snow_filter(scale, image, iterator):
 
 def dynamic_rain_filter(scale, image, iterator):
     """
-    Apply a frost effect to the image using an overlay image (corrected version).
-    Parameters:
-    - image: The input image.
-    - iterator: Cyclic iterator of the frames to apply to the image for a dynamic overlay effect
-    - scale: The intensity of the frost effect, ranging from 0 (no frost) to 1 (full frost).
+    Apply a dynamic rain effect to the image using an overlay image iterator.
+
+    Parameters: 
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - iterator cycle: Cyclic iterator over all the frames of the dynamic overlay mask
+
+    Returns: numpy array:
     """
     intensity = [0.05, 0.15, 0.275, 0.45, 0.6][scale]
     # Load the next frame from the iterator
