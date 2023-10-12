@@ -39,7 +39,9 @@ class DonkeySimMsgHandler(IMesgHandler):
     STEERING = 0
     THROTTLE = 1
 
-    def __init__(self, model, constant_throttle, image_cb=None, rand_seed=0, pert_funcs=[]):
+    def __init__(
+        self, model, constant_throttle, image_cb=None, rand_seed=0, pert_funcs=[]
+    ):
         self.model = model
         self.perturbation = ImagePerturbation(1, pert_funcs)
         self.constant_throttle = constant_throttle
@@ -90,10 +92,7 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def on_telemetry(self, data):
         imgString = data["image"]
-        xte = 0
-        # extract xte from telemtry message
-        if data["cte"]:
-            xte = data["cte"]
+        pert_data = {"lap": data["lap"], "sector": data["sector"], "xte": data["cte"]}
         # use opencv because it has faster image manipulation and conversion to numpy than PIL
         img_data = base64.b64decode(imgString)
         img_array = np.frombuffer(img_data, dtype=np.uint8)
@@ -104,7 +103,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             (1,) + unchanged_img_arr.shape
         )
         # perturb the image
-        image = self.perturbation.peturbate(image, xte)
+        image = self.perturbation.peturbate(image, pert_data)
         # convert the image into dtype and dimensions needed for NN
         img_arr = np.asarray(image, dtype=np.float32)
         self.img_arr = img_arr.reshape((1,) + img_arr.shape)
@@ -196,7 +195,13 @@ def clients_connected(arr):
 
 
 def go(
-    filename, address, constant_throttle=0, num_cars=1, image_cb=None, rand_seed=None, pert_funcs=[]
+    filename,
+    address,
+    constant_throttle=0,
+    num_cars=1,
+    image_cb=None,
+    rand_seed=None,
+    pert_funcs=[],
 ):
     print("loading model", filename)
     model = load_model(filename, compile=False)
@@ -209,7 +214,11 @@ def go(
     for _ in range(0, num_cars):
         # setup the clients
         handler = DonkeySimMsgHandler(
-            model, constant_throttle, image_cb=image_cb, rand_seed=rand_seed, pert_funcs=pert_funcs
+            model,
+            constant_throttle,
+            image_cb=image_cb,
+            rand_seed=rand_seed,
+            pert_funcs=pert_funcs,
         )
         client = SimClient(address, handler)
         clients.append(client)
@@ -251,7 +260,6 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
-    
 
     address = (args.host, args.port)
     go(
@@ -260,5 +268,5 @@ if __name__ == "__main__":
         args.constant_throttle,
         num_cars=args.num_cars,
         rand_seed=args.rand_seed,
-        pert_funcs=args.perturbation
+        pert_funcs=args.perturbation,
     )

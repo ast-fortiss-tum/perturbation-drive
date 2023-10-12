@@ -21,6 +21,7 @@ from perturbationdrive.perturbationfuncs import (
     increase_brightness,
     impulse_noise,
     defocus_blur,
+    zoom_blur,
 )
 
 
@@ -38,7 +39,11 @@ class ImagePerturbation:
 
     def __init__(self, scale: int, funcs=[]):
         self.scale = scale
-        self._totalPerturbations = 0
+        # marks which perturbation is selected next
+        self._index = 0
+        self._lap = 1
+        self._sector = 1
+        self.scale = 0
         # fot the first scale we randomly shuffle the filters
         # after the first scale we select the filter next with the loweset xte
         # we only iterate to the next filter if the average xte for this filter is
@@ -46,6 +51,7 @@ class ImagePerturbation:
         # later on
         if len(funcs) == 0:
             self._fns = [
+                dynamic_snow_filter,
                 dynamic_snow_filter,
                 poisson_noise,
                 jpeg_filter,
@@ -58,6 +64,11 @@ class ImagePerturbation:
                 glass_blur,
                 gaussian_noise,
                 dynamic_rain_filter,
+                snow_filter,
+                pixelate,
+                increase_brightness,
+                impulse_noise,
+                defocus_blur,
             ]
         else:
             # the user has given us perturbations to use
@@ -72,28 +83,35 @@ class ImagePerturbation:
             self.xte[func.__name__] = (0, 0)
             self.steering_angle[func.__name__] = (0, 0)
         # we create an infinite iterator over the snow frames
-        snow_frames = _loadSnowFrames()
-        rain_frames = _loadRainFrames()
+        snow_frames = _loadMaskFrames("./perturbationdrive/OverlayMasks/snowfall.mp4")
+        rain_frames = _loadMaskFrames("./perturbationdrive/OverlayMasks/rain.mp4")
         self._snow_iterator = itertools.cycle(snow_frames)
         self._rain_iterator = itertools.cycle(rain_frames)
 
-    def peturbate(self, image, prev_xte=0.0):
+    def peturbate(self, image, data: dict):
         """
         Perturbates an image based on the current perturbation
 
         :param image: The input image for the perturbation
         :type image: MatLike
-        :param prev_xte: The cross track error of the car, provided by the simulator
-        :type prev_xte: Float (default is 0)
+        :param data: The necessary information from the simulator to update the perturbation object.
+            It needs to contains the xte, the current lap
+        :type dict:
 
         :return: the perturbed image
         :rtype: MatLike
         :return: states if we stop the benchmark because the car is stuck or done
         :rtype: bool
         """
+        # check if we have finished the lap
+        if self._lap != data["lap"]:
+            self._index += 1
+        elif self._sector > data["sector"]:
+            self._index += 1
+        self._sector = data["sector"]
+        self._lap = data["lap"]
         # calculate the filter index
-        index = int(self._totalPerturbations / 100)
-        func = self._fns[index]
+        func = self._fns[self._index]
         # if we have a special dynamic overlay we need to pass the iterator as param
         if func is dynamic_snow_filter:
             image = func(self.scale, image, self._snow_iterator)
@@ -103,27 +121,21 @@ class ImagePerturbation:
             image = func(self.scale, image)
         # update xte
         curr_xte, num_perturbations = self.xte[func.__name__]
-        curr_xte = (curr_xte * num_perturbations + prev_xte) / (num_perturbations + 1)
+        curr_xte = (curr_xte * num_perturbations + data["xte"]) / (
+            num_perturbations + 1
+        )
         self.xte[func.__name__] = (curr_xte, num_perturbations + 1)
-        # we only move to the next perturbation if the xte is below or equal to 2
-        if (self._totalPerturbations + 1) % 100 == 0:
-            if np.abs(curr_xte) <= 2:
-                self._totalPerturbations += 1
-        else:
-            self._totalPerturbations += 1
         # check if we increment the scale
-        if self._totalPerturbations == len(self._fns) * 100:
-            self._totalPerturbations = 0
+        if self._index == len(self._fns) - 1:
+            self._index = 0
             self._increment_scale()
             # print summary when incrementing scale
-            # we have ~20 fps, so we incremente the scale approx every 55 seconds
             self.print_xte()
         return image
 
     def updateSteeringPerformance(self, steeringAngleDiff):
         # calculate the filter index
-        index = int((self._totalPerturbations - 1) / 100)
-        funcName = self._fns[index].__name__
+        funcName = self._fns[self._index].__name__
         # update steering angle diff
         curr_diff, num_differences = self.steering_angle[funcName]
         curr_diff = (curr_diff * num_differences + steeringAngleDiff) / (
@@ -133,6 +145,8 @@ class ImagePerturbation:
 
     def _increment_scale(self):
         """Increments the scale by one"""
+        if self.scale == 0:
+            self._sort_perturbations()
         if self.scale < 4:
             self.scale += 1
 
@@ -178,44 +192,15 @@ class ImagePerturbation:
         self._fns = sorted(self._fns, key=lambda f: self.xte[f.__name__][0])
 
 
-def _loadSnowFrames():
-    """
-    Helper method to load all snow frames for quicker mask overlay later
-
-    This mask has a total of 69 frames
-
-    Credit for the mask
-    <a href="https://www.vecteezy.com/video/1803396-falling-snow-overlay-loop">Falling Snow Overlay Loop Stock Videos by Vecteezy</a>
-    """
-    cap = cv2.VideoCapture("./perturbationdrive/OverlayMasks/snowfall.mp4")
-
-    # extract frames
-    frames = []
-    while True:
-        # the image is rgb so we convert it to rgba
-        ret, frame = cap.read()
-        if not ret or frame is None:
-            print("failed to read frame")
-            break
-        alpha_channel = np.ones(frame.shape[:2], dtype=frame.dtype) * 255
-        frame = cv2.merge((frame, alpha_channel))
-        if not ret:
-            break
-        frames.append(frame)
-    cap.release()
-    return frames
-
-
-def _loadRainFrames():
+def _loadMaskFrames(path: str) -> list:
     """
     Helper method to load all rain frames for quicker mask overlay later
 
-    This mask has a total of x frames
-
-    Credit for the mask
+    Credits for video masks
     <a href="https://www.vecteezy.com/video/9265242-green-screen-rain-effect">Green Screen Rain Effect Stock Videos by Vecteezy</a>
+    <a href="https://www.vecteezy.com/video/1803396-falling-snow-overlay-loop">Falling Snow Overlay Loop Stock Videos by Vecteezy</a>
     """
-    cap = cv2.VideoCapture("./perturbationdrive/OverlayMasks/rain.mp4")
+    cap = cv2.VideoCapture(path)
 
     # extract frames
     frames = []
@@ -229,9 +214,56 @@ def _loadRainFrames():
             # append alpha channel
             alpha_channel = np.ones(frame.shape[:2], dtype=frame.dtype) * 255
             frame = cv2.merge((frame, alpha_channel))
-        if not ret:
-            break
+
         frames.append(frame)
+    cap.release()
+    return frames
+
+
+def _loadMaskFramesGreenScreen(path: str) -> list:
+    """
+    Helper method to load all rain frames for quicker mask overlay later
+
+    Credits for video masks
+    - <a href="https://www.vecteezy.com/video/25444944-flying-black-birds-flock-animation-on-green-screen-background">Flying black birds flock animation on green screen background Stock Videos by Vecteezy</a>
+    - <a href="https://www.vecteezy.com/video/9265242-green-screen-rain-effect">Green Screen Rain Effect Stock Videos by Vecteezy</a>
+    - <a href="https://www.vecteezy.com/video/1803396-falling-snow-overlay-loop">Falling Snow Overlay Loop Stock Videos by Vecteezy</a>
+    - <a href="https://www.vecteezy.com/video/29896285-fly-through-dark-cloud-or-smoke-effect-animation-moving-forward-through-dark-cloud-or-smoke-effect-on-green-screen-background">Fly through dark cloud or smoke effect animation, moving forward through dark cloud or smoke effect on green screen background Stock Videos by Vecteezy</a>
+    - <a href="https://www.vecteezy.com/video/16627335-realistic-lightning-strike-on-green-screen-background-blue-lightning-thunderstorm-effect-over-green-background-for-video-projects-3d-loop-animation-of-electric-thunderstorm-lightning-strike-multi">Realistic Lightning Strike On Green Screen Background , Blue Lightning Thunderstorm Effect Over Green Background For Video Projects,3d Loop Animation Of Electric Thunderstorm Lightning Strike, Multi Stock Videos by Vecteezy</a>
+    - <a href="https://www.vecteezy.com/video/20614326-green-lens-flare-red-bright-glow-sun-light-lens-flares-art-animation-on-green-free-video">Green lens flare red bright glow, sun light lens flares art animation on green Free video Stock Videos by Vecteezy</a>
+    """
+    cap = cv2.VideoCapture(path)
+
+    # extract frames
+    frames = []
+    while True:
+        # the image is rgb so we convert it to rgba
+        ret, frame = cap.read()
+        if not ret or frame is None:
+            print("failed to read frame")
+            break
+        if frame.shape[2] != 4:
+            # append alpha channel
+            alpha_channel = np.ones(frame.shape[:2], dtype=frame.dtype) * 255
+            frame = cv2.merge((frame, alpha_channel))
+            # Create a binary mask of the green areas.
+        # Define a range for the green color and create a mask.
+        lower_green = np.array([35, 40, 40])  # Lower bound for the green color
+        upper_green = np.array([90, 255, 255])  # Upper bound for the green color
+        hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+        mask = cv2.inRange(hsv_frame, lower_green, upper_green)
+
+        # Invert the mask to get the non-green areas
+        mask_inv = cv2.bitwise_not(mask)
+
+        # Split the original frame into its R, G, and B channels
+        r, g, b = cv2.split(frame)
+
+        # Create a new 4-channel image (B, G, R, alpha)
+        rgba = [b, g, r, mask_inv]
+        frame_with_alpha = cv2.merge(rgba, 4)
+
+        frames.append(frame_with_alpha)
     cap.release()
     return frames
 
@@ -256,6 +288,7 @@ function_mapping = {
     "impulse_noise": impulse_noise,
     "defocus_blur": defocus_blur,
     "pixelate": pixelate,
+    "zoom_blur": zoom_blur,
 }
 
 
