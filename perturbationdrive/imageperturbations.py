@@ -11,9 +11,13 @@ class ImagePerturbation:
 
     :param scale: The scale of the perturbation in the range [1;5].
     :type scale: int
+
+    :param funcs: List of the function names we want to use as perturbations
+    :type funcs: list string
+    :default funcs: If this list is empty we use all perturbations
     """
 
-    def __init__(self, scale: int):
+    def __init__(self, scale: int, funcs=[]):
         self.scale = scale
         self._totalPerturbations = 0
         # fot the first scale we randomly shuffle the filters
@@ -21,19 +25,24 @@ class ImagePerturbation:
         # we only iterate to the next filter if the average xte for this filter is
         # less than x, where we set x here to 2, but plan on having x as param
         # later on
-        self._fns = [
-            dynamic_snow_filter,
-            poisson_noise,
-            jpeg_filter,
-            motion_blur,
-            frost_filter,
-            fog_filter,
-            contrast,
-            elastic,
-            object_overlay,
-            glass_blur,
-            gaussian_noise,
-        ]
+        if len(funcs) == 0:
+            self._fns = [
+                dynamic_snow_filter,
+                poisson_noise,
+                jpeg_filter,
+                motion_blur,
+                frost_filter,
+                fog_filter,
+                contrast,
+                elastic,
+                object_overlay,
+                glass_blur,
+                gaussian_noise,
+                dynamic_rain_filter,
+            ]
+        else:
+            # the user has given us perturbations to use
+            self._fns = _convertStringToPertubation(funcs)
         self._shuffle_perturbations()
         # init xte for all perturbations as 0
         self.xte = {}
@@ -45,9 +54,11 @@ class ImagePerturbation:
             self.steering_angle[func.__name__] = (0, 0)
         # we create an infinite iterator over the snow frames
         snow_frames = _loadSnowFrames()
+        rain_frames = _loadRainFrames()
         self._snow_iterator = itertools.cycle(snow_frames)
+        self._rain_iterator = itertools.cycle(rain_frames)
 
-    def peturbate(self, image, prev_xte=0.0, model_pred=0.0):
+    def peturbate(self, image, prev_xte=0.0):
         """
         Perturbates an image based on the current perturbation
 
@@ -67,6 +78,8 @@ class ImagePerturbation:
         # if we have a special dynamic overlay we need to pass the iterator as param
         if func is dynamic_snow_filter:
             image = func(self.scale, image, self._snow_iterator)
+        elif func is dynamic_rain_filter:
+            image = func(self.scale, image, self._rain_iterator)
         else:
             image = func(self.scale, image)
         # update xte
@@ -80,9 +93,9 @@ class ImagePerturbation:
         else:
             self._totalPerturbations += 1
         # check if we increment the scale
-        if self._totalPerturbations == 1100:
+        if self._totalPerturbations == len(self._fns) * 100:
             self._totalPerturbations = 0
-            self._increment_scale
+            self._increment_scale()
             # print summary when incrementing scale
             # we have ~20 fps, so we incremente the scale approx every 55 seconds
             self.print_xte()
@@ -273,6 +286,7 @@ def _clipped_zoom(img, zoom_factor):
 
 
 def zoom_blur(scale, img):
+    """This filter is too slow"""
     c = [
         np.arange(1, 1.11, 0.01),
         np.arange(1, 1.16, 0.01),
@@ -483,6 +497,33 @@ def dynamic_snow_filter(scale, image, iterator):
     frosted_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     return frosted_image
 
+def dynamic_rain_filter(scale, image, iterator):
+    """
+    Apply a frost effect to the image using an overlay image (corrected version).
+    Parameters:
+    - image: The input image.
+    - iterator: Cyclic iterator of the frames to apply to the image for a dynamic overlay effect
+    - scale: The intensity of the frost effect, ranging from 0 (no frost) to 1 (full frost).
+    """
+    intensity = [0.05, 0.15, 0.275, 0.45, 0.6][scale]
+    # Load the next frame from the iterator
+    rain_overlay = next(iterator)
+    # Resize the frost overlay to match the input image dimensions
+    rain_overlay_resized = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
+    # Extract the 3 channels (BGR) and the alpha (transparency) channel
+    bgr = rain_overlay_resized[:, :, :3]
+    alpha = rain_overlay_resized[:, :, 3] / 255.0  # Normalize to [0, 1]
+    # Blend the frost overlay with the original image using the alpha channel for transparency
+    rain_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (
+        intensity * bgr
+    )
+    rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
+    # Decrease saturation to give a cold appearance
+    hsv = cv2.cvtColor(rain_image, cv2.COLOR_BGR2HSV)
+    hsv[:, :, 1] = hsv[:, :, 1] * 0.8
+    rain_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+    return rain_image
+
 
 def object_overlay(scale, img1):
     c = [10, 5, 3, 2, 1.5]
@@ -560,3 +601,59 @@ def _loadSnowFrames():
         frames.append(frame)
     cap.release()
     return frames
+
+def _loadRainFrames():
+    """
+    Helper method to load all rain frames for quicker mask overlay later
+
+    This mask has a total of x frames
+
+    Credit for the mask
+    <a href="https://www.vecteezy.com/video/9265242-green-screen-rain-effect">Green Screen Rain Effect Stock Videos by Vecteezy</a>
+    """
+    cap = cv2.VideoCapture("./perturbationdrive/OverlayMasks/rain.mp4")
+
+    # extract frames
+    frames = []
+    while True:
+        # the image is rgb so we convert it to rgba
+        ret, frame = cap.read()
+        if not ret or frame is None:
+            print("failed to read frame")
+            break
+        if frame.shape[2] != 4:
+            # append alpha channel
+            alpha_channel = np.ones(frame.shape[:2], dtype=frame.dtype) * 255
+            frame = cv2.merge((frame, alpha_channel))
+        if not ret:
+            break
+        frames.append(frame)
+    cap.release()
+    return frames
+
+# Mapping of function names to function objects
+function_mapping = {
+    'dynamic_snow_filter': dynamic_snow_filter,
+    'poisson_noise': poisson_noise,
+    'jpeg_filter': jpeg_filter,
+    'motion_blur': motion_blur,
+    'frost_filter': frost_filter,
+    'fog_filter': fog_filter,
+    'contrast': contrast,
+    'elastic': elastic,
+    'object_overlay': object_overlay,
+    'glass_blur': glass_blur,
+    'gaussian_noise': gaussian_noise,
+    'dynamic_rain_filter': dynamic_rain_filter,
+    'snow_filter': snow_filter,
+    'pixelate': pixelate,
+    'increase_brightness': increase_brightness,
+    'impulse_noise': impulse_noise,
+}
+
+def _convertStringToPertubation(func_names):
+    ret = []
+    for name in func_names:
+        if name in function_mapping:
+            ret.append(function_mapping[name])
+    return ret

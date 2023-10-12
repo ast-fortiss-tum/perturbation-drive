@@ -39,9 +39,9 @@ class DonkeySimMsgHandler(IMesgHandler):
     STEERING = 0
     THROTTLE = 1
 
-    def __init__(self, model, constant_throttle, image_cb=None, rand_seed=0):
+    def __init__(self, model, constant_throttle, image_cb=None, rand_seed=0, pert_funcs=[]):
         self.model = model
-        self.perturbation = ImagePerturbation(1)
+        self.perturbation = ImagePerturbation(1, pert_funcs)
         self.constant_throttle = constant_throttle
         self.client = None
         self.timer = FPSTimer()
@@ -100,7 +100,9 @@ class DonkeySimMsgHandler(IMesgHandler):
         image = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
         # if we want to measure the diff in steering angle
         unchanged_img_arr = np.asarray(image, dtype=np.float32)
-        self.unchanged_img_arr = unchanged_img_arr.reshape((1,) + unchanged_img_arr.shape)
+        self.unchanged_img_arr = unchanged_img_arr.reshape(
+            (1,) + unchanged_img_arr.shape
+        )
         # perturb the image
         image = self.perturbation.peturbate(image, xte)
         # convert the image into dtype and dimensions needed for NN
@@ -121,7 +123,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             return self.parse_outputs(outputs, unchanged_outputs)
         self.parse_outputs(outputs)
 
-    def parse_outputs(self, outputs, unchanged_outputs = []):
+    def parse_outputs(self, outputs, unchanged_outputs=[]):
         res = []
 
         # Expects the model with final Dense(2) with steering and throttle
@@ -140,13 +142,13 @@ class DonkeySimMsgHandler(IMesgHandler):
             self.throttle = self.constant_throttle
         elif len(outputs) > 1:
             self.throttle = outputs[self.THROTTLE] * conf.throttle_out_scale
-        
+
         # get normal output
         if len(unchanged_outputs) > 0:
             unchanged_steering = unchanged_outputs[0][self.STEERING]
             diff = abs(self.steering_angle - unchanged_steering)
             self.perturbation.updateSteeringPerformance(diff)
-        
+
         self.send_control(self.steering_angle, self.throttle)
 
     def send_control(self, steer, throttle):
@@ -194,7 +196,7 @@ def clients_connected(arr):
 
 
 def go(
-    filename, address, constant_throttle=0, num_cars=1, image_cb=None, rand_seed=None
+    filename, address, constant_throttle=0, num_cars=1, image_cb=None, rand_seed=None, pert_funcs=[]
 ):
     print("loading model", filename)
     model = load_model(filename, compile=False)
@@ -207,7 +209,7 @@ def go(
     for _ in range(0, num_cars):
         # setup the clients
         handler = DonkeySimMsgHandler(
-            model, constant_throttle, image_cb=image_cb, rand_seed=rand_seed
+            model, constant_throttle, image_cb=image_cb, rand_seed=rand_seed, pert_funcs=pert_funcs
         )
         client = SimClient(address, handler)
         clients.append(client)
@@ -220,6 +222,8 @@ def go(
         except KeyboardInterrupt:
             # unless some hits Ctrl+C and then we get this interrupt
             print("stopping")
+            for client in clients:
+                client.stop()
             break
 
 
@@ -237,7 +241,17 @@ if __name__ == "__main__":
     parser.add_argument(
         "--rand_seed", type=int, default=0, help="set road generation random seed"
     )
+    parser.add_argument(
+        "--perturbation",
+        dest="perturbation",
+        action="append",
+        type=str,
+        default=[],
+        help="perturbations to use on the model. by default all are used",
+    )
+
     args = parser.parse_args()
+    
 
     address = (args.host, args.port)
     go(
@@ -246,4 +260,5 @@ if __name__ == "__main__":
         args.constant_throttle,
         num_cars=args.num_cars,
         rand_seed=args.rand_seed,
+        pert_funcs=args.perturbation
     )
