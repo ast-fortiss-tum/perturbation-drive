@@ -20,6 +20,7 @@ from perturbationdrive.perturbationfuncs import (
     pixelate,
     increase_brightness,
     impulse_noise,
+    defocus_blur,
 )
 
 
@@ -253,6 +254,8 @@ function_mapping = {
     "pixelate": pixelate,
     "increase_brightness": increase_brightness,
     "impulse_noise": impulse_noise,
+    "defocus_blur": defocus_blur,
+    "pixelate": pixelate,
 }
 
 

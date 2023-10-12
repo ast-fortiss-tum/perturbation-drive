@@ -6,6 +6,7 @@ This then sends the steering output back to the server.
 
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5`
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5 --perturbation=dynamic_rain_filter`
+`python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5 --perturbation=defocus_blur --perturbation=increase_brightness --perturbation=pixelate --perturbation=contrast`
 Author: Tawn Kramer
 """
 from __future__ import print_function

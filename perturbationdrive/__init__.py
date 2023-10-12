@@ -19,4 +19,5 @@ from perturbationdrive.perturbationfuncs import (
     pixelate,
     increase_brightness,
     impulse_noise,
+    defocus_blur,
 )
