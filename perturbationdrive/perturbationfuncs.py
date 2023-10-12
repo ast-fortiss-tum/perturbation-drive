@@ -363,10 +363,6 @@ def dynamic_rain_filter(scale, image, iterator):
     # Blend the frost overlay with the original image using the alpha channel for transparency
     rain_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (intensity * bgr)
     rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
-    # Decrease saturation to give a cold appearance
-    hsv = cv2.cvtColor(rain_image, cv2.COLOR_BGR2HSV)
-    hsv[:, :, 1] = hsv[:, :, 1] * 0.8
-    rain_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     return rain_image
 
 

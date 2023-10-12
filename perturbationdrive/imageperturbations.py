@@ -257,6 +257,7 @@ function_mapping = {
 
 
 def _convertStringToPertubation(func_names):
+    """Converts a list of function names into a list of perturbation functions"""
     ret = []
     for name in func_names:
         if name in function_mapping:
