@@ -1,5 +1,8 @@
 from perturbationdrive.imageperturbations import (
     ImagePerturbation,
+)
+
+from perturbationdrive.perturbationfuncs import (
     dynamic_snow_filter,
     poisson_noise,
     jpeg_filter,
@@ -15,5 +18,5 @@ from perturbationdrive.imageperturbations import (
     snow_filter,
     pixelate,
     increase_brightness,
-    impulse_noise
+    impulse_noise,
 )
