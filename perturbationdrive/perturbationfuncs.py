@@ -504,7 +504,7 @@ def object_overlay(scale, img1):
 
     return img1
 
-def dynamic_object_overlay(image, scale, iterator):
+def dynamic_object_overlay(scale, image, iterator):
     """
     Apply a dynamic bird flying effect to the image using an overlay image iterator.
 
@@ -531,7 +531,7 @@ def dynamic_object_overlay(image, scale, iterator):
 def dynamic_frost_filter():
     pass
 
-def dynamic_sun_filter(image, scale, iterator):
+def dynamic_sun_filter(imascalege, image, iterator):
     """
     Apply a dynamic sun effect to the image using an overlay image iterator.
 
@@ -555,7 +555,7 @@ def dynamic_sun_filter(image, scale, iterator):
     rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
     return rain_image
 
-def dynamic_lightning_filter(image, scale, iterator):
+def dynamic_lightning_filter(scale, image, iterator):
     """
     Apply a dynamic lightning effect to the image using an overlay image iterator.
 
@@ -579,7 +579,7 @@ def dynamic_lightning_filter(image, scale, iterator):
     rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
     return rain_image
 
-def dynamic_smoke_filter(image, scale, iterator):
+def dynamic_smoke_filter(scale, image, iterator):
     """
     Apply a dynamic smoke effect to the image using an overlay image iterator.
 
