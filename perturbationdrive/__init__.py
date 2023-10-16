@@ -20,4 +20,6 @@ from perturbationdrive.perturbationfuncs import (
     increase_brightness,
     impulse_noise,
     defocus_blur,
+    perturb_high_attention_regions,
 )
+

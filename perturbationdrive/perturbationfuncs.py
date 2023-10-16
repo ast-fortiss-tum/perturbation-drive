@@ -8,9 +8,9 @@ def gaussian_noise(scale, img):
     """
     Adds unfirom distributed gausian noise to an image
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-         - scale int: The severity of the perturbation on a scale from 0 to 4 
+         - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array
     """
@@ -27,6 +27,15 @@ def gaussian_noise(scale, img):
 
 
 def poisson_noise(scale, img):
+    """
+    Adds poisson noise to an image.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array: Image with salt and pepper noise.
+    """
     factor = [80, 30, 10, 5, 2][scale]
     x = np.array(img) / 255.0
     return np.clip(np.random.poisson(x * factor) / float(factor), 0, 1) * 255
@@ -36,9 +45,9 @@ def impulse_noise(scale, img):
     """
     Add salt and pepper noise to an image.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array: Image with salt and pepper noise.
     """
@@ -71,9 +80,9 @@ def defocus_blur(scale, image):
     """
     Applies a defocus blur to the given image.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -88,10 +97,10 @@ def defocus_blur(scale, image):
 def glass_blur(scale, image):
     """
     Applies glass blur effect to the given image.
-    
-    Parameters: 
+
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -135,10 +144,10 @@ def _create_motion_blur_kernel(size, angle):
 def motion_blur(scale, image, size=10, angle=45):
     """
     Apply motion blur to the given image.
-    
-    Parameters: 
+
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -173,9 +182,9 @@ def zoom_blur(scale, img):
     Applies a zoom blur effect on an image.\n
     This perturbation has an avereage duration of 36ms on an input image of 256*256*3
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -198,9 +207,9 @@ def increase_brightness(scale, image):
     """
     Increase the brightness of the image using HSV color space
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -218,9 +227,9 @@ def contrast(scale, img):
     """
     Increase or decrease the conrast of the image
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -233,9 +242,9 @@ def elastic(scale, img):
     """
     Applies an elastic deformation on the image.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -264,10 +273,10 @@ def elastic(scale, img):
 def pixelate(scale, img):
     """
     Pixelates the image
-    
-    Parameters: 
+
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -280,10 +289,10 @@ def pixelate(scale, img):
 def jpeg_filter(scale, image):
     """
     Introduce JPEG compression artifacts to the image.
-    
-    Parameters: 
+
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -305,9 +314,9 @@ def fog_filter(scale, image):
     """
     Apply a fog effect to the image.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -334,9 +343,9 @@ def frost_filter(scale, image):
     """
     Apply a frost effect to the image using an overlay image.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -368,9 +377,9 @@ def snow_filter(scale, image):
     """
     Apply a snow effect to the image using an overlay image.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array:
     """
@@ -402,9 +411,9 @@ def dynamic_snow_filter(scale, image, iterator):
     """
     Apply a dynamic snow effect to the image using an overlay image iterator.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
         - iterator cycle: Cyclic iterator over all the frames of the dynamic overlay mask
 
     Returns: numpy array:
@@ -434,9 +443,9 @@ def dynamic_rain_filter(scale, image, iterator):
     """
     Apply a dynamic rain effect to the image using an overlay image iterator.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
         - iterator cycle: Cyclic iterator over all the frames of the dynamic overlay mask
 
     Returns: numpy array:
@@ -504,13 +513,14 @@ def object_overlay(scale, img1):
 
     return img1
 
+
 def dynamic_object_overlay(scale, image, iterator):
     """
     Apply a dynamic bird flying effect to the image using an overlay image iterator.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
         - iterator cycle: Cyclic iterator over all the frames of the dynamic overlay mask
 
     Returns: numpy array:
@@ -528,16 +538,18 @@ def dynamic_object_overlay(scale, image, iterator):
     rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
     return rain_image
 
+
 def dynamic_frost_filter():
     pass
+
 
 def dynamic_sun_filter(imascalege, image, iterator):
     """
     Apply a dynamic sun effect to the image using an overlay image iterator.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
         - iterator cycle: Cyclic iterator over all the frames of the dynamic overlay mask
 
     Returns: numpy array:
@@ -554,14 +566,15 @@ def dynamic_sun_filter(imascalege, image, iterator):
     rain_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (intensity * bgr)
     rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
     return rain_image
+
 
 def dynamic_lightning_filter(scale, image, iterator):
     """
     Apply a dynamic lightning effect to the image using an overlay image iterator.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
         - iterator cycle: Cyclic iterator over all the frames of the dynamic overlay mask
 
     Returns: numpy array:
@@ -578,14 +591,15 @@ def dynamic_lightning_filter(scale, image, iterator):
     rain_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (intensity * bgr)
     rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
     return rain_image
+
 
 def dynamic_smoke_filter(scale, image, iterator):
     """
     Apply a dynamic smoke effect to the image using an overlay image iterator.
 
-    Parameters: 
+    Parameters:
         - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4 
+        - scale int: The severity of the perturbation on a scale from 0 to 4
         - iterator cycle: Cyclic iterator over all the frames of the dynamic overlay mask
 
     Returns: numpy array:
@@ -603,6 +617,32 @@ def dynamic_smoke_filter(scale, image, iterator):
     rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
     return rain_image
 
+
 def dynamic_hail_filter():
     pass
 
+
+def perturb_high_attention_regions(
+    saliency_map, image, perturbation, boundary=0.5, scale=0
+):
+    """
+    Perturbs the regions of an image where the saliency map has an value greater than boundary
+
+    Parameters:
+        - saliency_map (numpy array): Two dimensional saliency map
+        - img (numpy array): The input image. Needs to have the same dimensions as the image
+        - perturbation func: The perturbation to apply to the image
+        - boundary float=0.5: The boundary value above which to perturb the image regions. Needs to be in the range of [0, 1]
+        - scale int=0: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    if boundary < 0 or boundary > 1:
+        raise ValueError("The boundary value needs to be in the range of [0, 1]")
+    # Create a binary mask from the array
+    mask = saliency_map > boundary
+    # Apply the gaussian noise to the whole image
+    noise_img = perturbation(scale, image)
+    # Now apply the mask: replace the original image pixels with noisy pixels where mask is True
+    image[mask] = noise_img[mask]
+    return image
