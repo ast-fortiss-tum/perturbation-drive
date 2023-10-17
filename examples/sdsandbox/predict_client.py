@@ -43,7 +43,7 @@ class DonkeySimMsgHandler(IMesgHandler):
         self, model, constant_throttle, image_cb=None, rand_seed=0, pert_funcs=[]
     ):
         self.model = model
-        self.perturbation = ImagePerturbation(1, pert_funcs)
+        self.perturbation = ImagePerturbation(5, pert_funcs)
         self.constant_throttle = constant_throttle
         self.client = None
         self.timer = FPSTimer()
@@ -103,7 +103,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             (1,) + unchanged_img_arr.shape
         )
         # perturb the image
-        image = self.perturbation.peturbate(image, pert_data)
+        # image = self.perturbation.peturbate(image, pert_data)
         # convert the image into dtype and dimensions needed for NN
         img_arr = np.asarray(image, dtype=np.float32)
         self.img_arr = img_arr.reshape((1,) + img_arr.shape)
@@ -136,7 +136,6 @@ class DonkeySimMsgHandler(IMesgHandler):
 
         if len(outputs) > 0:
             self.steering_angle = outputs[self.STEERING]
-
         if self.constant_throttle != 0.0:
             self.throttle = self.constant_throttle
         elif len(outputs) > 1:
@@ -147,7 +146,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             unchanged_steering = unchanged_outputs[0][self.STEERING]
             diff = abs(self.steering_angle - unchanged_steering)
             self.perturbation.updateSteeringPerformance(diff)
-        self.throttle = 0.0
+        # self.throttle = 0.0
         self.send_control(self.steering_angle, self.throttle)
 
     def send_control(self, steer, throttle):

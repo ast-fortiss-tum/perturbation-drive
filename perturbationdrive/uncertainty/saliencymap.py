@@ -1,5 +1,5 @@
 from tensorflow import Variable, GradientTape
-import tensorflow.math as tf_math
+import tensorflow as tf
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
@@ -25,7 +25,7 @@ def getSaliencyMap(img, model):
         loss = pred[0][class_idxs_sorted[0]]
 
     grads = tape.gradient(loss, images)
-    dgrad_abs = tf_math.abs(grads)
+    dgrad_abs = tf.math.abs(grads)
     # find the max of the absolutes values of the gradient along each RGB channel
     dgrad_max_ = np.max(dgrad_abs, axis=3)[0]
     # normalize to range between 0 and 1

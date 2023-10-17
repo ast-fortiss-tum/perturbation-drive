@@ -421,22 +421,15 @@ def dynamic_snow_filter(scale, image, iterator):
     intensity = [0.05, 0.15, 0.275, 0.45, 0.6][scale]
     # Load the next frame from the iterator
     snow_overlay = next(iterator)
-
-    # Resize the frost overlay to match the input image dimensions
-    frost_overlay_resized = cv2.resize(snow_overlay, (image.shape[1], image.shape[0]))
+    if rain_overlay.shape[0] != image.shape[0] and rain_overlay.shape[1] != image.shape[1]:
+        rain_overlay = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
-    bgr = frost_overlay_resized[:, :, :3]
-    alpha = frost_overlay_resized[:, :, 3] / 255.0  # Normalize to [0, 1]
-    # Blend the frost overlay with the original image using the alpha channel for transparency
-    frosted_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (
-        intensity * bgr
-    )
-    frosted_image = np.clip(frosted_image, 0, 255).astype(np.uint8)
-    # Decrease saturation to give a cold appearance
-    hsv = cv2.cvtColor(frosted_image, cv2.COLOR_BGR2HSV)
-    hsv[:, :, 1] = hsv[:, :, 1] * 0.8
-    frosted_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-    return frosted_image
+    bgr = rain_overlay[:, :, :3]
+    mask = rain_overlay[:,:,3] != 0
+    # mash the mask areas together
+    image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
+    image = np.clip(image, 0, 255).astype(np.uint8)
+    return image
 
 
 def dynamic_rain_filter(scale, image, iterator):
@@ -452,16 +445,15 @@ def dynamic_rain_filter(scale, image, iterator):
     """
     intensity = [0.05, 0.15, 0.275, 0.45, 0.6][scale]
     # Load the next frame from the iterator
-    rain_overlay = next(iterator)
-    # Resize the frost overlay to match the input image dimensions
-    rain_overlay_resized = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
+    if rain_overlay.shape[0] != image.shape[0] and rain_overlay.shape[1] != image.shape[1]:
+        rain_overlay = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
-    bgr = rain_overlay_resized[:, :, :3]
-    alpha = rain_overlay_resized[:, :, 3] / 255.0  # Normalize to [0, 1]
-    # Blend the frost overlay with the original image using the alpha channel for transparency
-    rain_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (intensity * bgr)
-    rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
-    return rain_image
+    bgr = rain_overlay[:, :, :3]
+    mask = rain_overlay[:,:,3] != 0
+    # mash the mask areas together
+    image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
+    image = np.clip(image, 0, 255).astype(np.uint8)
+    return image
 
 
 def object_overlay(scale, img1):
@@ -529,21 +521,22 @@ def dynamic_object_overlay(scale, image, iterator):
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
     # Resize the frost overlay to match the input image dimensions
-    rain_overlay_resized = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
+    if rain_overlay.shape[0] != image.shape[0] and rain_overlay.shape[1] != image.shape[1]:
+        rain_overlay = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
-    bgr = rain_overlay_resized[:, :, :3]
-    alpha = rain_overlay_resized[:, :, 3] / 255.0  # Normalize to [0, 1]
-    # Blend the frost overlay with the original image using the alpha channel for transparency
-    rain_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (intensity * bgr)
-    rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
-    return rain_image
+    bgr = rain_overlay[:, :, :3]
+    mask = rain_overlay[:,:,3] != 0
+    # mash the mask areas together
+    image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
+    image = np.clip(image, 0, 255).astype(np.uint8)
+    return image
 
 
 def dynamic_frost_filter():
     pass
 
 
-def dynamic_sun_filter(imascalege, image, iterator):
+def dynamic_sun_filter(scale, image, iterator):
     """
     Apply a dynamic sun effect to the image using an overlay image iterator.
 
@@ -558,14 +551,15 @@ def dynamic_sun_filter(imascalege, image, iterator):
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
     # Resize the frost overlay to match the input image dimensions
-    rain_overlay_resized = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
+    if rain_overlay.shape[0] != image.shape[0] and rain_overlay.shape[1] != image.shape[1]:
+        rain_overlay = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
-    bgr = rain_overlay_resized[:, :, :3]
-    alpha = rain_overlay_resized[:, :, 3] / 255.0  # Normalize to [0, 1]
-    # Blend the frost overlay with the original image using the alpha channel for transparency
-    rain_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (intensity * bgr)
-    rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
-    return rain_image
+    bgr = rain_overlay[:, :, :3]
+    mask = rain_overlay[:,:,3] != 0
+    # mash the mask areas together
+    image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
+    image = np.clip(image, 0, 255).astype(np.uint8)
+    return image
 
 
 def dynamic_lightning_filter(scale, image, iterator):
@@ -583,14 +577,15 @@ def dynamic_lightning_filter(scale, image, iterator):
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
     # Resize the frost overlay to match the input image dimensions
-    rain_overlay_resized = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
+    if rain_overlay.shape[0] != image.shape[0] and rain_overlay.shape[1] != image.shape[1]:
+        rain_overlay = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
-    bgr = rain_overlay_resized[:, :, :3]
-    alpha = rain_overlay_resized[:, :, 3] / 255.0  # Normalize to [0, 1]
-    # Blend the frost overlay with the original image using the alpha channel for transparency
-    rain_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (intensity * bgr)
-    rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
-    return rain_image
+    bgr = rain_overlay[:, :, :3]
+    mask = rain_overlay[:,:,3] != 0
+    # mash the mask areas together
+    image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
+    image = np.clip(image, 0, 255).astype(np.uint8)
+    return image
 
 
 def dynamic_smoke_filter(scale, image, iterator):
@@ -608,14 +603,15 @@ def dynamic_smoke_filter(scale, image, iterator):
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
     # Resize the frost overlay to match the input image dimensions
-    rain_overlay_resized = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
+    if rain_overlay.shape[0] != image.shape[0] and rain_overlay.shape[1] != image.shape[1]:
+        rain_overlay = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
-    bgr = rain_overlay_resized[:, :, :3]
-    alpha = rain_overlay_resized[:, :, 3] / 255.0  # Normalize to [0, 1]
-    # Blend the frost overlay with the original image using the alpha channel for transparency
-    rain_image = (1 - (intensity * alpha[:, :, np.newaxis])) * image + (intensity * bgr)
-    rain_image = np.clip(rain_image, 0, 255).astype(np.uint8)
-    return rain_image
+    bgr = rain_overlay[:, :, :3]
+    mask = rain_overlay[:,:,3] != 0
+    # mash the mask areas together
+    image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
+    image = np.clip(image, 0, 255).astype(np.uint8)
+    return image
 
 
 def dynamic_hail_filter():
