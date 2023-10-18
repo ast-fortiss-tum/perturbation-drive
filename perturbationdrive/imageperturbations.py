@@ -3,6 +3,7 @@ import cv2
 import itertools
 import random
 import skimage.exposure
+import logging
 from perturbationdrive.perturbationfuncs import (
     dynamic_snow_filter,
     poisson_noise,
@@ -28,6 +29,7 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_object_overlay,
 )
 from .utils.data_utils import CircularBuffer
+from .utils.logger import CSVLogHandler
 
 
 class ImagePerturbation:
@@ -54,6 +56,13 @@ class ImagePerturbation:
         self.scale = 0
         self.drop_boundary = drop_boundary
         self.is_stopped = False
+        # setup logger
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.setLevel(logging.INFO)
+
+        csv_handler = CSVLogHandler("logs.csv", mode="w")
+        self.logger.addHandler(csv_handler)
+
         # for the first scale we randomly shuffle the filters
         # after the first scale we select the filter next with the loweset xte
         # we only iterate to the next filter if the average xte for this filter is
@@ -104,6 +113,16 @@ class ImagePerturbation:
                 setattr(self, iterator_name, itertools.cycle(frames))
         # circular buffer to stop after 10 frames of crash
         self._crash_buffer = CircularBuffer(10)
+        self.logger.info(
+            (
+                "pertubation_name",
+                "xte",
+                "steering_diff",
+                "frames",
+                "highest_scale",
+                "is_dropped",
+            )
+        )
 
     def peturbate(self, image, data: dict):
         """
