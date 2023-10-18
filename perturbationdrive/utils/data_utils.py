@@ -22,3 +22,9 @@ class CircularBuffer(deque):
         Checks if all elements are equal in the ring buffer
         """
         return len(set(self)) == 1
+    
+    def length(self):
+        """
+        Returns the length of the crash buffer
+        """
+        return len(self)

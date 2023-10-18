@@ -34,7 +34,7 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Operating System :: OS Independent",
     ],
-    packages=["perturbationdrive"],
+    packages=find_packages(),
     include_package_data=True,
     install_requires=["numpy", "opencv-python", "scipy", "matplotlib", "scikit-image"],
     python_requires=">=3",

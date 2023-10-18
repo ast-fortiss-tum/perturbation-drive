@@ -27,7 +27,7 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_sun_filter,
     dynamic_object_overlay,
 )
-from utils.data_utils import CircularBuffer
+from .utils.data_utils import CircularBuffer
 
 
 class ImagePerturbation:
@@ -46,14 +46,15 @@ class ImagePerturbation:
     :default image_size=(240,320): If this list is empty we use all perturbations
     """
 
-    def __init__(self, scale: int, funcs=[], image_size=(240, 320)):
-        self.scale = scale
+    def __init__(self, funcs=[], image_size=(240, 320), drop_boundary=3.0):
         # marks which perturbation is selected next
         self._index = 0
         self._lap = 1
-        self._sector = 1
-        self.scale = scale - 1
-        # fot the first scale we randomly shuffle the filters
+        self._sector = 0
+        self.scale = 0
+        self.drop_boundary = drop_boundary
+        self.is_stopped = False
+        # for the first scale we randomly shuffle the filters
         # after the first scale we select the filter next with the loweset xte
         # we only iterate to the next filter if the average xte for this filter is
         # less than x, where we set x here to 2, but plan on having x as param
@@ -85,14 +86,17 @@ class ImagePerturbation:
             # the user has given us perturbations to use
             self._fns = _convertStringToPertubation(funcs)
         self._shuffle_perturbations()
-        # init xte for all perturbations as 0
-        self.xte = {}
-        # init steering angle diffs for all perturbations as 0
-        self.steering_angle = {}
+        # measures for all perturbations
+        self.measures = {}
         for func in self._fns:
-            # tupple of average xte and amount of perturbations
-            self.xte[func.__name__] = (0, 0)
-            self.steering_angle[func.__name__] = (0, 0)
+            self.measures[func.__name__] = {
+                "pertubation_name": func.__name__,
+                "xte": 0,
+                "steering_diff": 0,
+                "frames": 0,
+                "highest_scale": 0,
+                "is_dropped": False,
+            }
         # Load iterators for dynamic masks if we have dynamic masks
         for filter, (path, iterator_name) in FILTER_PATHS.items():
             if filter in self._fns:
@@ -104,6 +108,9 @@ class ImagePerturbation:
     def peturbate(self, image, data: dict):
         """
         Perturbates an image based on the current perturbation
+        If we the car is stuck, we reset the lap and move on to the next perturbation.
+        If at any time the XTE is larger than 3, the car is fully of the raod and we will not
+        move on to the next intensity stage for this perturbation
 
         :param image: The input image for the perturbation
         :type image: MatLike
@@ -116,53 +123,77 @@ class ImagePerturbation:
         :return: states if we stop the benchmark because the car is stuck or done
         :rtype: bool
         """
+        if self.is_stopped:
+            return {"image": "image", "func": "quit_app"}
         self._crash_buffer.add((data["pos_x"], data["pos_y"]))
-        if self._crash_buffer.all_elements_equal():
+        if self._crash_buffer.all_elements_equal() and self._crash_buffer.length() > 9:
             print("Crash buffer is full")
             return {"image": image, "func": "reset_car"}
         # check if we have finished the lap
         if self._lap != data["lap"] or self._sector > data["sector"]:
+            self._sector = data["sector"]
+            self._lap = data["lap"]
             # we need to move to the next perturbation
+            print(
+                f"current index {self._index},\nfunctions {len(self._fns)},\n new index {(self._index + 1) % len(self._fns)}"
+            )
             self._index = (self._index + 1) % len(self._fns)
             # check if we should increment the scale
             if self._index == 0:
                 self._increment_scale()
                 # print summary when incrementing scale
-                self.print_xte()
+                self.print_performance()
+                return {"image": image, "func": "reset_car"}
+            else:
+                return {"image": image, "func": "reset_car"}
+
         self._sector = data["sector"]
         self._lap = data["lap"]
         # calculate the filter index
         func = self._fns[self._index]
         # if we have a special dynamic overlay we need to pass the iterator as param
-        iterator = getattr(self, ITERATOR_MAPPING.get(func, None))
-        if iterator:
+        iterator_name = ITERATOR_MAPPING.get(func, "")
+        if iterator_name != "":
+            iterator = getattr(self, ITERATOR_MAPPING.get(func, ""))
             image = func(self.scale, image, iterator)
         else:
             image = func(self.scale, image)
         # update xte
-        curr_xte, num_perturbations = self.xte[func.__name__]
+        curr_xte = self.measures[func.__name__]["xte"]
+        num_perturbations = self.measures[func.__name__]["frames"]
         curr_xte = (curr_xte * num_perturbations + data["xte"]) / (
             num_perturbations + 1
         )
-        self.xte[func.__name__] = (curr_xte, num_perturbations + 1)
+        self.measures[func.__name__]["xte"] = curr_xte
+        self.measures[func.__name__]["xte"] = num_perturbations + 1
+        if data["xte"] > self.drop_boundary:
+            self.measures[func.__name__]["highest_scale"] = self.scale
+            self.measures[func.__name__]["is_dropped"] = True
+
         return {"image": image, "func": "update"}
 
     def updateSteeringPerformance(self, steeringAngleDiff):
         # calculate the filter index
         funcName = self._fns[self._index].__name__
         # update steering angle diff
-        curr_diff, num_differences = self.steering_angle[funcName]
+        curr_diff = self.measures[funcName]["steering_diff"]
+        num_differences = self.measures[funcName]["frames"]
         curr_diff = (curr_diff * num_differences + steeringAngleDiff) / (
-            num_differences + 1
+            num_differences
         )
-        self.steering_angle[funcName] = (curr_diff, num_differences + 1)
+        self.measures[funcName]["steering_diff"] = curr_diff
 
     def _increment_scale(self):
-        """Increments the scale by one"""
-        if self.scale == 0:
-            self._sort_perturbations()
+        """
+        Increments the scale by one and drops all perturbations which have been droped
+        """
+        self._sort_perturbations()
+        self._update_fncs_scale()
         if self.scale < 4:
             self.scale += 1
+        else:
+            # we are done
+            self.on_stop()
 
     def on_stop(self):
         """
@@ -173,24 +204,34 @@ class ImagePerturbation:
         print("\n" + "=" * 45)
         print("    STOPED BENCHMARKING")
         print("=" * 45 + "\n")
-        self.print_xte()
+        self.print_performance()
+        self.is_stopped = True
 
-    def print_xte(self):
+    def _update_fncs_scale(self):
+        for fnc in self._fns:
+            self.measures[fnc.__name__]["highest_scale"] = self.scale
+
+    def print_performance(self):
         """Command line output for the xte measures of all funcs"""
         print("\n" + "=" * 45)
-        print(f"    AVERAGE XTE ON SCALE {self.scale}")
+        print(f"    AVERAGE PERFORMANCE ON SCALE {self.scale}")
         print("=" * 45 + "\n")
         total_average_xte = 0
         count = 0
         total_average_sad = 0
-        for key, value in self.xte.items():
+        for key, value_dict in self.measures.items():
             count += 1
-            curr_xte, _ = value
+            curr_xte = value_dict["xte"]
             total_average_xte += curr_xte
-            steering_diff, _ = self.steering_angle[key]
+            steering_diff, _ = value_dict["steering_diff"]
             total_average_sad += steering_diff
-            print(f"Average XTE for {key}: {curr_xte:.4f}")
-            print(f"Average Steering Angle Diff for {key}: {steering_diff:.4f}")
+            is_droped = value_dict["is_dropped"]
+            highest_scale = value_dict["highest_scale"]
+            print(f"Perturbation: {key}")
+            print(f"Average XTE: {curr_xte:.4f}")
+            print(f"Average Steering Angle Diff: {steering_diff:.4f}")
+            print(f"Is Dropped: {is_droped}")
+            print(f"Highest scale achieved: {highest_scale}")
             print("-" * 45)
         total_average_xte = total_average_xte / count
         print(f"Total average XTE: {total_average_xte:.4f}")
@@ -198,12 +239,19 @@ class ImagePerturbation:
         print("=" * 45 + "\n")
 
     def _shuffle_perturbations(self):
-        """randomly shuffles the perturbations"""
+        """
+        Randomly shuffles the perturbations
+        """
         random.shuffle(self._fns)
 
+    def _perturbation_dropout(self, pert_func):
+        return not self.measures[pert_func.__name__]["is_dropped"]
+
     def _sort_perturbations(self):
-        """sorts the perturbations according to their xte"""
-        self._fns = sorted(self._fns, key=lambda f: self.xte[f.__name__][0])
+        """
+        Drops perturbations which are dropped due to high xte
+        """
+        self._fns = list(filter(self._perturbation_dropout, self._fns))
 
 
 def _loadMaskFrames(path: str, isGreenScreen=True, height=240, width=320) -> list:

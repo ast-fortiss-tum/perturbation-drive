@@ -114,14 +114,10 @@ class DonkeySimMsgHandler(IMesgHandler):
         message = self.perturbation.peturbate(image, pert_data)
         # unpack the function we need next
         func = self.fns[message["func"]]
-        if func is self.on_enque_image:
-            img_arr = np.asarray(image, dtype=np.float32)
-            func(img_arr)
-        else:
-            # we will call either reset or stop
-            func()
+        img_arr = np.asarray(image, dtype=np.float32)
+        func(image=img_arr)
 
-    def on_enque_image(self, image: np.ndarray[np.float32]):
+    def on_enque_image(self, image, *kwargs):
         self.img_arr = image.reshape((1,) + image.shape)
         if self.image_cb is not None:
             self.image_cb(image, self.steering_angle)
@@ -193,15 +189,15 @@ class DonkeySimMsgHandler(IMesgHandler):
 
         self.client.queue_message(msg)
 
-    def on_reset_car(self):
+    def on_reset_car(self, **kwargs):
         """
         Reset the lap to the start point to use a new perturbation
         """
-        msg = {"msg_tapy": "reset_cat"}
+        msg = {"msg_type": "reset_car"}
         print(f"\n\nSend Reset Car\n\n")
         self.client.queue_message(msg)
 
-    def on_quit_app(self):
+    def on_quit_app(self, **kwargs):
         """
         Quits the app and prints autput
         """

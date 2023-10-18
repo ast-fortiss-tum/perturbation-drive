@@ -23,4 +23,4 @@ from perturbationdrive.perturbationfuncs import (
     perturb_high_attention_regions,
 )
 
-from perturbationdrive.utils.data_utils import CircularBuffer
+from .utils.data_utils import CircularBuffer
