@@ -116,9 +116,10 @@ class ImagePerturbation:
                 "is_dropped": False,
             }
         # Load iterators for dynamic masks if we have dynamic masks
+        height, width = image_size
         for filter, (path, iterator_name) in FILTER_PATHS.items():
             if filter in self._fns:
-                frames = _loadMaskFrames(path, image_size[0], image_size[1])
+                frames = _loadMaskFrames(path, height, width)
                 setattr(self, iterator_name, itertools.cycle(frames))
         # circular buffer to stop after 10 frames of crash
         self._crash_buffer = CircularBuffer(10)
@@ -158,7 +159,7 @@ class ImagePerturbation:
         """
         self._csv_handler.flush_row()
         if self.is_stopped:
-            return {"image": "image", "func": "quit_app"}
+            return {"image": image, "func": "quit_app"}
         self._crash_buffer.add((data["pos_x"], data["pos_y"]))
         if self._crash_buffer.all_elements_equal() and self._crash_buffer.length() > 9:
             print("Crash buffer is full")
@@ -186,9 +187,9 @@ class ImagePerturbation:
         iterator_name = ITERATOR_MAPPING.get(func, "")
         if iterator_name != "":
             iterator = getattr(self, ITERATOR_MAPPING.get(func, ""))
-            image = func(self.scale, image, iterator)
+            pertub_image = func(self.scale, image, iterator)
         else:
-            image = func(self.scale, image)
+            pertub_image = func(self.scale, image)
         # update xte
         curr_xte = self.measures[func.__name__]["xte"]
         num_perturbations = self.measures[func.__name__]["frames"]
@@ -197,7 +198,7 @@ class ImagePerturbation:
         )
         self.measures[func.__name__]["xte"] = curr_xte
         self.measures[func.__name__]["frames"] = num_perturbations + 1
-        if data["xte"] > self.drop_boundary:
+        if np.abs(data["xte"]) > self.drop_boundary:
             self.measures[func.__name__]["highest_scale"] = self.scale
             self.measures[func.__name__]["is_dropped"] = True
         self.logger.info(
@@ -213,19 +214,20 @@ class ImagePerturbation:
                 data["pos_y"],
             ]
         )
-        return {"image": image, "func": "update"}
+        return {"image": pertub_image, "func": "update"}
 
     def updateSteeringPerformance(self, steeringAngleDiff):
-        # calculate the filter index
-        funcName = self._fns[self._index].__name__
-        # update steering angle diff
-        curr_diff = self.measures[funcName]["steering_diff"]
-        num_differences = self.measures[funcName]["frames"]
-        curr_diff = (curr_diff * num_differences + steeringAngleDiff) / (
-            num_differences
-        )
-        self.measures[funcName]["steering_diff"] = curr_diff
-        self.logger.info(steeringAngleDiff)
+        if self._index < len(self._fns):
+            # calculate the filter index
+            funcName = self._fns[self._index].__name__
+            # update steering angle diff
+            curr_diff = self.measures[funcName]["steering_diff"]
+            num_differences = self.measures[funcName]["frames"]
+            curr_diff = (curr_diff * num_differences + steeringAngleDiff) / (
+                num_differences
+            )
+            self.measures[funcName]["steering_diff"] = curr_diff
+            self.logger.info(steeringAngleDiff)
 
     def _increment_scale(self):
         """
@@ -233,6 +235,8 @@ class ImagePerturbation:
         """
         self._sort_perturbations()
         self._update_fncs_scale()
+        if len(self._fns) == 0:
+            self.on_stop()
         if self.scale < 4:
             self.scale += 1
         else:
@@ -267,7 +271,7 @@ class ImagePerturbation:
             count += 1
             curr_xte = value_dict["xte"]
             total_average_xte += curr_xte
-            steering_diff, _ = value_dict["steering_diff"]
+            steering_diff = value_dict["steering_diff"]
             total_average_sad += steering_diff
             is_droped = value_dict["is_dropped"]
             highest_scale = value_dict["highest_scale"]

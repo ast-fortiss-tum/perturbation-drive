@@ -114,7 +114,8 @@ class DonkeySimMsgHandler(IMesgHandler):
         message = self.perturbation.peturbate(image, pert_data)
         # unpack the function we need next
         func = self.fns[message["func"]]
-        img_arr = np.asarray(image, dtype=np.float32)
+        new_image = message["image"]
+        img_arr = np.asarray(new_image, dtype=np.float32)
         func(image=img_arr)
 
     def on_enque_image(self, image, *kwargs):
