@@ -27,6 +27,7 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_sun_filter,
     dynamic_object_overlay,
 )
+from utils.data_utils import CircularBuffer
 
 
 class ImagePerturbation:
@@ -97,6 +98,8 @@ class ImagePerturbation:
             if filter in self._fns:
                 frames = _loadMaskFrames(path, image_size[0], image_size[1])
                 setattr(self, iterator_name, itertools.cycle(frames))
+        # circular buffer to stop after 10 frames of crash
+        self._crash_buffer = CircularBuffer(10)
 
     def peturbate(self, image, data: dict):
         """
@@ -113,6 +116,10 @@ class ImagePerturbation:
         :return: states if we stop the benchmark because the car is stuck or done
         :rtype: bool
         """
+        self._crash_buffer.add((data["pos_x"], data["pos_y"]))
+        if self._crash_buffer.all_elements_equal():
+            print("Crash buffer is full")
+            return {"image": image, "func": "reset_car"}
         # check if we have finished the lap
         if self._lap != data["lap"] or self._sector > data["sector"]:
             # we need to move to the next perturbation
@@ -138,7 +145,7 @@ class ImagePerturbation:
             num_perturbations + 1
         )
         self.xte[func.__name__] = (curr_xte, num_perturbations + 1)
-        return image
+        return {"image": image, "func": "update"}
 
     def updateSteeringPerformance(self, steeringAngleDiff):
         # calculate the filter index
