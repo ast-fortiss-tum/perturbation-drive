@@ -16,10 +16,17 @@ class CSVLogHandler(logging.FileHandler):
         self.writer = csv.writer(
             self.stream, delimiter=",", quotechar='"', quoting=csv.QUOTE_MINIMAL
         )
+        self.current_row = []
 
     def emit(self, record):
         if isinstance(record.msg, (list, tuple)):
-            self.writer.writerow(record.msg)
+            self.current_row.extend(record.msg)
         else:
-            self.writer.writerow([record.msg])
-        self.flush()
+            self.current_row.append(record.msg)
+
+    def flush_row(self):
+        if self.current_row:
+            self.writer.writerow(self.current_row)
+            self.flush()
+            self.current_row = []
+

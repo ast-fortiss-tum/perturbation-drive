@@ -43,7 +43,7 @@ class DonkeySimMsgHandler(IMesgHandler):
         self, model, constant_throttle, image_cb=None, rand_seed=0, pert_funcs=[]
     ):
         self.model = model
-        self.perturbation = ImagePerturbation(5, pert_funcs)
+        self.perturbation = ImagePerturbation(pert_funcs)
         self.constant_throttle = constant_throttle
         self.client = None
         self.timer = FPSTimer()

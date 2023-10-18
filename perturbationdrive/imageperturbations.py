@@ -48,7 +48,14 @@ class ImagePerturbation:
     :default image_size=(240,320): If this list is empty we use all perturbations
     """
 
-    def __init__(self, funcs=[], image_size=(240, 320), drop_boundary=3.0):
+    def __init__(
+        self,
+        funcs=[],
+        log_dir="logs.csv",
+        overwrite_logs=True,
+        image_size=(240, 320),
+        drop_boundary=3.0,
+    ):
         # marks which perturbation is selected next
         self._index = 0
         self._lap = 1
@@ -60,8 +67,10 @@ class ImagePerturbation:
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(logging.INFO)
 
-        csv_handler = CSVLogHandler("logs.csv", mode="w")
-        self.logger.addHandler(csv_handler)
+        self._csv_handler = CSVLogHandler(
+            log_dir, mode=("w" if overwrite_logs else "a")
+        )
+        self.logger.addHandler(self._csv_handler)
 
         # for the first scale we randomly shuffle the filters
         # after the first scale we select the filter next with the loweset xte
@@ -114,15 +123,20 @@ class ImagePerturbation:
         # circular buffer to stop after 10 frames of crash
         self._crash_buffer = CircularBuffer(10)
         self.logger.info(
-            (
+            [
                 "pertubation_name",
                 "xte",
-                "steering_diff",
                 "frames",
                 "highest_scale",
                 "is_dropped",
-            )
+                "sector",
+                "lap",
+                "x_pos",
+                "y_pos",
+                "steering_diff",
+            ]
         )
+        self._csv_handler.flush_row()
 
     def peturbate(self, image, data: dict):
         """
@@ -142,6 +156,7 @@ class ImagePerturbation:
         :return: states if we stop the benchmark because the car is stuck or done
         :rtype: bool
         """
+        self._csv_handler.flush_row()
         if self.is_stopped:
             return {"image": "image", "func": "quit_app"}
         self._crash_buffer.add((data["pos_x"], data["pos_y"]))
@@ -153,9 +168,6 @@ class ImagePerturbation:
             self._sector = data["sector"]
             self._lap = data["lap"]
             # we need to move to the next perturbation
-            print(
-                f"current index {self._index},\nfunctions {len(self._fns)},\n new index {(self._index + 1) % len(self._fns)}"
-            )
             self._index = (self._index + 1) % len(self._fns)
             # check if we should increment the scale
             if self._index == 0:
@@ -184,11 +196,23 @@ class ImagePerturbation:
             num_perturbations + 1
         )
         self.measures[func.__name__]["xte"] = curr_xte
-        self.measures[func.__name__]["xte"] = num_perturbations + 1
+        self.measures[func.__name__]["frames"] = num_perturbations + 1
         if data["xte"] > self.drop_boundary:
             self.measures[func.__name__]["highest_scale"] = self.scale
             self.measures[func.__name__]["is_dropped"] = True
-
+        self.logger.info(
+            [
+                func.__name__,
+                data["xte"],
+                self.measures[func.__name__]["frames"],
+                self.measures[func.__name__]["highest_scale"],
+                self.measures[func.__name__]["is_dropped"],
+                data["sector"],
+                data["lap"],
+                data["pos_x"],
+                data["pos_y"],
+            ]
+        )
         return {"image": image, "func": "update"}
 
     def updateSteeringPerformance(self, steeringAngleDiff):
@@ -201,6 +225,7 @@ class ImagePerturbation:
             num_differences
         )
         self.measures[funcName]["steering_diff"] = curr_diff
+        self.logger.info(steeringAngleDiff)
 
     def _increment_scale(self):
         """
