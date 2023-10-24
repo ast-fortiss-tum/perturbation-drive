@@ -1,5 +1,6 @@
 from collections import deque
 
+
 class CircularBuffer(deque):
     """
     Cicular buffer which stores `size` elements
@@ -15,14 +16,14 @@ class CircularBuffer(deque):
         """
         Adds an element to the circular buffer
         """
-        self.append(value)
+        self.append(round(value, 2))
 
     def all_elements_equal(self):
         """
         Checks if all elements are equal in the ring buffer
         """
         return len(set(self)) == 1
-    
+
     def length(self):
         """
         Returns the length of the crash buffer
