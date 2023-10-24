@@ -939,7 +939,7 @@ def frost_filter(scale, image):
 
     Returns: numpy array:
     """
-    intensity = [0.85, 0.25, 0.4, 0.6, 0.85][scale]
+    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     frost_image_path = "./perturbationdrive/OverlayImages/frostImg.png"
     # Load the frost overlay image
     frost_overlay = cv2.imread(frost_image_path, cv2.IMREAD_UNCHANGED)
@@ -973,7 +973,7 @@ def snow_filter(scale, image):
 
     Returns: numpy array:
     """
-    intensity = [0.85, 0.25, 0.4, 0.6, 0.85][scale]
+    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     frost_image_path = "./perturbationdrive/OverlayImages/snow.png"
     # Load the frost overlay image
     frost_overlay = cv2.imread(frost_image_path, cv2.IMREAD_UNCHANGED)
@@ -1008,7 +1008,7 @@ def dynamic_snow_filter(scale, image, iterator):
 
     Returns: numpy array:
     """
-    intensity = [0.85, 0.25, 0.4, 0.6, 0.85][scale]
+    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     snow_overlay = next(iterator)
     if (
@@ -1036,7 +1036,7 @@ def dynamic_rain_filter(scale, image, iterator):
 
     Returns: numpy array:
     """
-    intensity = [0.85, 0.25, 0.4, 0.6, 0.85][scale]
+    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     rain_overlay = next(iterator)
     # Load the next frame from the iterator
     if (
@@ -1116,7 +1116,7 @@ def dynamic_object_overlay(scale, image, iterator):
 
     Returns: numpy array:
     """
-    intensity = [0.85, 0.25, 0.4, 0.6, 0.85][scale]
+    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
     # Resize the frost overlay to match the input image dimensions
@@ -1145,7 +1145,7 @@ def dynamic_sun_filter(scale, image, iterator):
 
     Returns: numpy array:
     """
-    intensity = [0.85, 0.25, 0.4, 0.6, 0.85][scale]
+    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
     # Resize the frost overlay to match the input image dimensions
@@ -1174,7 +1174,7 @@ def dynamic_lightning_filter(scale, image, iterator):
 
     Returns: numpy array:
     """
-    intensity = [0.85, 0.25, 0.4, 0.6, 0.85][scale]
+    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
     # Resize the frost overlay to match the input image dimensions
@@ -1203,7 +1203,7 @@ def dynamic_smoke_filter(scale, image, iterator):
 
     Returns: numpy array:
     """
-    intensity = [0.85, 0.25, 0.4, 0.6, 0.85][scale]
+    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
     # Resize the frost overlay to match the input image dimensions
