@@ -34,9 +34,11 @@ perturbed_image = poisson_noise(image, 0)
 
 View the examples folder for examples on how to run this benchmarking library with different simulators.
 
+### Create the ImagePerturbation Object
+
 On initialization the perturbation class expects the following parameters:
 
-- `funcs=[]`: A list of perturbation functions which shall be used for the benchmarking process. If this list is empty, a prefedined set of functions will be used.
+- `funcs=[]`: A string list of perturbation functions which shall be used for the benchmarking process. If this list is empty, a prefedined set of functions will be used.
 - `log_dir="logs.csv"`: The string path to the file which shall be used to log the benchmarking.
 - `overwrite_logs=True`: If the old log should be overwriten, if there is already a file at the `log_dir` place.
 - `image_size=(240,320)`: The size of the input and output image.
@@ -51,8 +53,10 @@ funcs = [
     "defocus_blur",
     "dynamic_snow_filter"
 ]
-perturbation = ImagePerturbation()
+perturbation = ImagePerturbation(funcs)
 ```
+
+### Perturbate the image
 
 The perturbation object expects the image and a dict containing the following entries:
 
@@ -96,6 +100,17 @@ instruction = message["func"]
 
 # Print final output of the perturbation benchmark
 perturbation.on_stop()
+```
+
+### Measure the Steering Angle Performance
+
+If you also want to measure the steering angle difference of your model on the perturbated image and the non-perturbated image you can optionally call the `ImagePerturbation` object and measure this metric.
+
+```Python
+# calculate the steering angle difference
+diff = abs(steering_angle - unchanged_steering_angle)
+# update the metrics
+perturbation.udpateSteeringPerformance(diff)
 ```
 
 ## Local setup
