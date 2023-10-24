@@ -43,11 +43,9 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_rain_filter,
     object_overlay,
     dynamic_object_overlay,
-    dynamic_frost_filter,
     dynamic_sun_filter,
     dynamic_lightning_filter,
     dynamic_smoke_filter,
-    dynamic_hail_filter,
     perturb_high_attention_regions,
 )
 

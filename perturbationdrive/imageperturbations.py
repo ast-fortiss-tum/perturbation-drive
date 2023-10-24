@@ -45,11 +45,9 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_rain_filter,
     object_overlay,
     dynamic_object_overlay,
-    dynamic_frost_filter,
     dynamic_sun_filter,
     dynamic_lightning_filter,
     dynamic_smoke_filter,
-    dynamic_hail_filter,
     perturb_high_attention_regions,
 )
 from .utils.data_utils import CircularBuffer
@@ -430,18 +428,16 @@ FUNCTION_MAPPING = {
     "dynamic_rain_filter": dynamic_rain_filter,
     "object_overlay": object_overlay,
     "dynamic_object_overlay": dynamic_object_overlay,
-    "dynamic_frost_filter": dynamic_frost_filter,
     "dynamic_sun_filter": dynamic_sun_filter,
     "dynamic_lightning_filter": dynamic_lightning_filter,
     "dynamic_smoke_filter": dynamic_smoke_filter,
-    "dynamic_hail_filter": dynamic_hail_filter,
     "perturb_high_attention_regions": perturb_high_attention_regions
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name
 FILTER_PATHS = {
     dynamic_snow_filter: (
-        "./perturbationdrive/OverlayMasks/snowfall.mp4",
+        "./perturbationdrive/OverlayMasks/snow.mp4",
         "_snow_iterator",
     ),
     dynamic_lightning_filter: (

@@ -16,7 +16,8 @@ class CircularBuffer(deque):
         """
         Adds an element to the circular buffer
         """
-        self.append(round(value, 2))
+        rounded_tuple = tuple(round(num, 2) for num in value)
+        self.append(rounded_tuple)
 
     def all_elements_equal(self):
         """
