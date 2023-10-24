@@ -2,6 +2,7 @@ import numpy as np
 import cv2
 from scipy.ndimage import zoom as scizoom
 from io import BytesIO
+from .kernels.kernels import diamond_square
 
 
 def gaussian_noise(scale, img):
@@ -310,6 +311,418 @@ def jpeg_filter(scale, image):
     return jpeg_artifact_image
 
 
+def shear_image(scale, image):
+    """
+    Apply horizontal shear to an image with different severities.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    shear_factor = [-0.3, -0.15, 0.01, 0.15, 0.3][scale]
+    # Load the image
+    if image is None:
+        raise ValueError("Image not found at the given path.")
+
+    rows, cols, _ = image.shape
+
+    # Define the shear matrix
+    M = np.array([[1, shear_factor, 0], [0, 1, 0]])
+
+    sheared = cv2.warpAffine(image, M, (cols, rows))
+
+    return sheared
+
+
+def translate_image(scale, image):
+    """
+    Apply translation to an image with different severities in both x and y directions.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    tx, ty = [(-50, 50), (-25, 25), (-0.01, 0.01), (25, -25), (50, -50)][scale]
+    # Load the image
+    if image is None:
+        raise ValueError("Image not found at the given path.")
+
+    rows, cols, _ = image.shape
+
+    # Define the translation matrix
+    M = np.array([[1, 0, tx], [0, 1, ty]], dtype=np.float32)
+
+    translated = cv2.warpAffine(image, M, (cols, rows))
+    return translated
+
+
+def scale_image(scale, image):
+    """
+    Apply scaling to an image with different severities while maintaining source dimensions.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    scale_factor = [0.5, 0.75, 0.99, 1.25, 2][scale]
+    rows, cols, _ = image.shape
+
+    # Resize the image
+    new_dimensions = (int(cols * scale_factor), int(rows * scale_factor))
+    scaled = cv2.resize(image, new_dimensions, interpolation=cv2.INTER_LINEAR)
+
+    # If scaled image is smaller, pad it
+    if scale_factor < 1:
+        top_pad = (rows - scaled.shape[0]) // 2
+        bottom_pad = rows - scaled.shape[0] - top_pad
+        left_pad = (cols - scaled.shape[1]) // 2
+        right_pad = cols - scaled.shape[1] - left_pad
+        scalled_image = cv2.copyMakeBorder(
+            scaled,
+            top_pad,
+            bottom_pad,
+            left_pad,
+            right_pad,
+            cv2.BORDER_CONSTANT,
+            value=[0, 0, 0],
+        )
+    # If scaled image is larger, crop it
+    else:
+        start_row = (scaled.shape[0] - rows) // 2
+        start_col = (scaled.shape[1] - cols) // 2
+        scalled_image = scaled[
+            start_row : start_row + rows, start_col : start_col + cols
+        ]
+
+    return scalled_image
+
+
+def rotate_image(scale, image):
+    """
+    Apply rotation to an image with different severities while maintaining source dimensions.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    angle = [-45, -20, 0.01, 20, 45][scale]
+    rows, cols, _ = image.shape
+    center = (cols / 2, rows / 2)
+
+    # Compute the rotation matrix
+    M = cv2.getRotationMatrix2D(center, angle, 1)
+
+    # Apply the rotation
+    rotated = cv2.warpAffine(image, M, (cols, rows), borderValue=(0, 0, 0))
+
+    return rotated
+
+
+def stripe_mapping(scale, image):
+    """
+    Apply Stripe mapping to an image with different severities.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    width = [10, 20, 30, 40, 50][scale]
+    rows, cols, _ = image.shape
+
+    # Clone the original image
+    striped = image.copy()
+
+    # Define stripe boundaries
+    start_col = (cols - width) // 2
+    end_col = start_col + width
+
+    # Invert the pixel values in the stripe
+    striped[:, start_col:end_col] = 255 - striped[:, start_col:end_col]
+
+    return striped
+
+
+def fog_mapping(scale, image):
+    """
+    Apply fog effect to an image with different severities using Diamond-Square algorithm.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    severity = [0.1, 0, 2, 0.3, 0.4, 0.5][scale]
+    rows, cols, _ = image.shape
+    # Determine size for diamond-square algorithm (closest power of 2 plus 1)
+    size = 2 ** int(np.ceil(np.log2(max(rows, cols)))) + 1
+
+    # Generate fog pattern
+    fog_pattern = diamond_square(size, severity)
+    # Resize fog pattern to image size and normalize to [0, 255]
+    fog_pattern_resized = cv2.resize(fog_pattern, (cols, rows))
+    fog_pattern_resized = (
+        (fog_pattern_resized - fog_pattern_resized.min())
+        / (fog_pattern_resized.max() - fog_pattern_resized.min())
+        * 255
+    ).astype(np.uint8)
+    fog_pattern_rgb = cv2.merge(
+        [fog_pattern_resized, fog_pattern_resized, fog_pattern_resized]
+    )  # Convert grayscale to RGB
+
+    # Blend fog with image
+    foggy = cv2.addWeighted(image, 1 - severity, fog_pattern_rgb, severity, 0)
+
+    return foggy
+
+
+def splatter_mapping(scale, image):
+    """
+    Apply splatter effect to an image with different severities.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    severity = [0.1, 0.2, 0.3, 0.4, 0.5][scale]
+    rows, cols, _ = image.shape
+
+    # Determine number and size of splatters based on severity
+    num_splotches = int(severity * 50)
+    max_splotch_size = max(6, int(severity * 50))
+
+    splattered = image.copy()
+    for _ in range(num_splotches):
+        center_x = np.random.randint(0, cols)
+        center_y = np.random.randint(0, rows)
+        splotch_size = np.random.randint(5, max_splotch_size)
+
+        # Generate a mask for splotch and apply to the image
+        y, x = np.ogrid[-center_y : rows - center_y, -center_x : cols - center_x]
+        mask = x * x + y * y <= splotch_size * splotch_size
+        splattered[mask] = [0, 0, 0]  # Obscuring the region with black color
+
+    return splattered
+
+
+def dotted_lines_mapping(scale, image):
+    """
+    Apply dotted lines effect to an image with different severities.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    severity = [0.1, 0.2, 0.3, 0.4, 0.5][scale]
+
+    rows, cols, _ = image.shape
+
+    # Determine parameters based on severity
+    num_lines = int(scale * 10)
+    distance_between_dots = max(10, int(50 * (1 - severity)))
+    dot_thickness = int(severity * 5)
+
+    dotted = image.copy()
+    for _ in range(num_lines):
+        start_x = np.random.randint(0, cols)
+        start_y = np.random.randint(0, rows)
+        direction = np.random.rand(2) * 2 - 1  # Random direction
+        direction /= np.linalg.norm(direction)  # Normalize to unit vector
+
+        current_x, current_y = start_x, start_y
+        while 0 <= current_x < cols and 0 <= current_y < rows:
+            cv2.circle(
+                dotted, (int(current_x), int(current_y)), dot_thickness, (0, 0, 0), -1
+            )  # Draw dot
+            current_x += direction[0] * distance_between_dots
+            current_y += direction[1] * distance_between_dots
+
+    return dotted
+
+
+def zigzag_mapping(scale, image):
+    """
+    Apply zigzag effect to an image with different severities.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    severity = [0.1, 0.2, 0.3, 0.4, 0.5][scale]
+
+    rows, cols, _ = image.shape
+
+    # Determine parameters based on severity
+    num_lines = int(severity * 10)
+    amplitude = int(20 * severity)
+    frequency = int(10 * severity)
+
+    zigzag = image.copy()
+    for _ in range(num_lines):
+        start_x = np.random.randint(0, cols)
+        start_y = np.random.randint(0, rows)
+        direction = np.random.rand(2) * 2 - 1  # Random direction
+        direction /= np.linalg.norm(direction)  # Normalize to unit vector
+
+        current_x, current_y = start_x, start_y
+        step = 0
+        while 0 <= current_x < cols and 0 <= current_y < rows:
+            # Calculate offset for zigzag
+            offset = amplitude * np.sin(frequency * step)
+            current_x += direction[0]
+            current_y += direction[1] + offset
+            if 0 <= current_x < cols and 0 <= current_y < rows:
+                zigzag[int(current_y), int(current_x)] = [0, 0, 0]  # Draw on image
+            step += 1
+    return zigzag
+
+
+def canny_edges_mapping(scale, image):
+    """
+    Apply Canny edge detection to an image with different severities.
+    The detected edges are highlited and put on top of the input image
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    severity = [0.1, 0.2, 0.3, 0.4, 0.5][scale]
+    edge_color = (255, 0, 0)
+
+    # Convert the image to grayscale for edge detection
+    gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+
+    # Calculate low and high thresholds based on severity
+    low_threshold = int(50 + severity * 100)
+    high_threshold = int(150 + severity * 100)
+
+    canny = cv2.Canny(gray_image, low_threshold, high_threshold)
+    colored_edges = np.zeros_like(image)
+
+    # Color the detected edges with the specified color
+    colored_edges[canny > 0] = edge_color
+    # Merge the colored edges with the original image
+    merged_image = cv2.addWeighted(image, 0.7, colored_edges, 0.3, 0)
+
+    return merged_image
+
+
+def speckle_noise_filter(scale, image):
+    """
+    Apply speckle noise to an image with different severities.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    severity = [0.1, 0.2, 0.3, 0.4, 0.5][scale]
+
+    rows, cols, _ = image.shape
+    # Generate noise pattern
+    noise = np.random.normal(1, severity, (rows, cols, 3))
+
+    # Apply speckle noise by multiplying original image with noise pattern
+    speckled = (image * noise).clip(0, 255).astype(np.uint8)
+    return speckled
+
+
+def false_color_filter(scale, image):
+    """
+    Apply false color effect to an image with different severities.
+    Severity 1: The Red and Blue channels are swapped.
+    Severity 2: The Red and Green channels are swapped.
+    Severity 3: The Blue and Green channels are swapped.
+    Severity 4: Each channel is inverted.
+    Severity 5: Channels are averaged with their adjacent channels.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+
+    false_color = image.copy()
+
+    # Depending on the severity, we swap or mix channels in different ways
+    if scale == 0:
+        false_color[:, :, 0] = image[:, :, 1]
+        false_color[:, :, 1] = image[:, :, 2]
+        false_color[:, :, 2] = image[:, :, 0]
+    elif scale == 1:
+        false_color[:, :, 0] = image[:, :, 1]
+        false_color[:, :, 1] = image[:, :, 0]
+        false_color[:, :, 2] = image[:, :, 2]
+    elif scale == 2:
+        false_color[:, :, 0] = image[:, :, 2]
+        false_color[:, :, 1] = image[:, :, 1]
+        false_color[:, :, 2] = image[:, :, 0]
+    elif scale == 3:
+        false_color[:, :, 0] = 255 - image[:, :, 0]
+        false_color[:, :, 1] = 255 - image[:, :, 1]
+        false_color[:, :, 2] = 255 - image[:, :, 2]
+    elif scale == 4:
+        false_color[:, :, 0] = (image[:, :, 0] + image[:, :, 1]) // 2
+        false_color[:, :, 1] = (image[:, :, 1] + image[:, :, 2]) // 2
+        false_color[:, :, 2] = (image[:, :, 2] + image[:, :, 0]) // 2
+
+    return false_color
+
+
+def high_pass_filter(scale, image):
+    """
+    Apply high pass filter to an image with different severities.
+    This filter highlightes edges and fine details in an image as well
+    as darkens the input image.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    kernel_size = [233, 75, 63, 49, 15][scale]
+    # Convert the image to HSV color space
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+
+    # Split the channels
+    H, S, V = cv2.split(hsv_image)
+
+    # Apply Gaussian blur to the V channel (value/brightness)
+    blurred_V = cv2.GaussianBlur(V, (int(kernel_size), int(kernel_size)), 0)
+
+    # Subtract the blurred V channel from the original to get the high-pass filtered result
+    high_pass_V = cv2.subtract(V, blurred_V)
+
+    # Merge the high-pass filtered V channel with the original H and S channels
+    merged_hsv = cv2.merge([H, S, high_pass_V])
+
+    # Convert back to RGB color space
+    high_pass_rgb = cv2.cvtColor(merged_hsv, cv2.COLOR_HSV2RGB)
+
+    return high_pass_rgb
+
+
 def fog_filter(scale, image):
     """
     Apply a fog effect to the image.
@@ -456,8 +869,8 @@ def dynamic_rain_filter(scale, image, iterator):
         rain_overlay = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
     print("image is ", image)
     print("other image is ", rain_overlay)
-    cv2.imwrite('output_image.jpg', image)
-    cv2.imwrite('output_image2.jpg', rain_overlay)
+    cv2.imwrite("output_image.jpg", image)
+    cv2.imwrite("output_image2.jpg", rain_overlay)
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
     bgr = rain_overlay[:, :, :3]
     mask = rain_overlay[:, :, 3] != 0
