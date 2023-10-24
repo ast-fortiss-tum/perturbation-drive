@@ -43,7 +43,7 @@ class DonkeySimMsgHandler(IMesgHandler):
         self, model, constant_throttle, image_cb=None, rand_seed=0, pert_funcs=[]
     ):
         self.model = model
-        self.perturbation = ImagePerturbation(1, pert_funcs)
+        self.perturbation = ImagePerturbation(pert_funcs)
         self.constant_throttle = constant_throttle
         self.client = None
         self.timer = FPSTimer()
@@ -59,6 +59,9 @@ class DonkeySimMsgHandler(IMesgHandler):
             "car_loaded": self.on_car_created,
             "on_disconnect": self.on_disconnect,
             "aborted": self.on_aborted,
+            "reset_car": self.on_reset_car,
+            "quit_app": self.on_quit_app,
+            "update": self.on_enque_image,
         }
 
     def on_connect(self, client):
@@ -76,8 +79,6 @@ class DonkeySimMsgHandler(IMesgHandler):
     def on_recv_message(self, message):
         self.timer.on_frame()
         if not "msg_type" in message:
-            print("expected msg_type field")
-            print("message:", message)
             return
 
         msg_type = message["msg_type"]
@@ -92,7 +93,14 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def on_telemetry(self, data):
         imgString = data["image"]
-        pert_data = {"lap": data["lap"], "sector": data["sector"], "xte": data["cte"]}
+        pert_data = {
+            "lap": data["lap"],
+            "sector": data["sector"],
+            "xte": data["cte"],
+            "pos_x": data["pos_x"],
+            "pos_y": data["pos_x"],
+            "pos_z": data["pos_x"],
+        }
         # use opencv because it has faster image manipulation and conversion to numpy than PIL
         img_data = base64.b64decode(imgString)
         img_array = np.frombuffer(img_data, dtype=np.uint8)
@@ -103,12 +111,17 @@ class DonkeySimMsgHandler(IMesgHandler):
             (1,) + unchanged_img_arr.shape
         )
         # perturb the image
-        image = self.perturbation.peturbate(image, pert_data)
-        # convert the image into dtype and dimensions needed for NN
-        img_arr = np.asarray(image, dtype=np.float32)
-        self.img_arr = img_arr.reshape((1,) + img_arr.shape)
+        message = self.perturbation.peturbate(image, pert_data)
+        # unpack the function we need next
+        func = self.fns[message["func"]]
+        new_image = message["image"]
+        img_arr = np.asarray(new_image, dtype=np.float32)
+        func(image=img_arr)
+
+    def on_enque_image(self, image, *kwargs):
+        self.img_arr = image.reshape((1,) + image.shape)
         if self.image_cb is not None:
-            self.image_cb(img_arr, self.steering_angle)
+            self.image_cb(image, self.steering_angle)
 
     def update(self):
         if self.img_arr is not None:
@@ -136,7 +149,6 @@ class DonkeySimMsgHandler(IMesgHandler):
 
         if len(outputs) > 0:
             self.steering_angle = outputs[self.STEERING]
-
         if self.constant_throttle != 0.0:
             self.throttle = self.constant_throttle
         elif len(outputs) > 1:
@@ -147,7 +159,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             unchanged_steering = unchanged_outputs[0][self.STEERING]
             diff = abs(self.steering_angle - unchanged_steering)
             self.perturbation.updateSteeringPerformance(diff)
-        self.throttle = 0.0
+        # self.throttle = 0.0
         self.send_control(self.steering_angle, self.throttle)
 
     def send_control(self, steer, throttle):
@@ -177,6 +189,23 @@ class DonkeySimMsgHandler(IMesgHandler):
         }
 
         self.client.queue_message(msg)
+
+    def on_reset_car(self, **kwargs):
+        """
+        Reset the lap to the start point to use a new perturbation
+        """
+        msg = {"msg_type": "reset_car"}
+        print(f"\n\nSend Reset Car\n\n")
+        self.client.queue_message(msg)
+
+    def on_quit_app(self, **kwargs):
+        """
+        Quits the app and prints autput
+        """
+        msg = {"msg_type": "quit_app"}
+        self.client.queue_message(msg)
+        print(f"\n\nStop App\n\n")
+        self.stop()
 
     def stop(self):
         self.client.stop()

@@ -7,7 +7,7 @@ This then sends the steering output back to the server.
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5`
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5 --perturbation=dynamic_rain_filter`
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5 --perturbation=defocus_blur --perturbation=increase_brightness --perturbation=pixelate --perturbation=contrast`
-`python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5 --perturbation=dynamic_smoke_filter --perturbation=dynamic_lightning_filter --perturbation=dynamic_sun_filter --perturbation=dynamic_object_overlay`
+`python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/model_15_10.h5 --perturbation=dynamic_smoke_filter --perturbation=dynamic_lightning_filter --perturbation=dynamic_sun_filter --perturbation=dynamic_object_overlay`
 Author: Tawn Kramer
 """
 from __future__ import print_function
@@ -61,7 +61,7 @@ if __name__ == "__main__":
 
     try:
         predict_client.go(
-            args.model, address, constant_throttle=0.3, image_cb=display_img, pert_funcs=args.perturbation
+            args.model, address, constant_throttle=0.1, image_cb=display_img, pert_funcs=args.perturbation
         )
     except KeyboardInterrupt:
         print("got ctrl+c break")

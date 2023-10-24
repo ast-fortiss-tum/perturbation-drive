@@ -10,3 +10,5 @@ gym
 pygame
 seaborn
 sphinx
+matplotlib
+scikit-image

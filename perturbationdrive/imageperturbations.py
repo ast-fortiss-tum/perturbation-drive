@@ -2,31 +2,56 @@ import numpy as np
 import cv2
 import itertools
 import random
+import skimage.exposure
+import logging
 from perturbationdrive.perturbationfuncs import (
-    dynamic_snow_filter,
-    dynamic_snow_filter,
-    poisson_noise,
-    jpeg_filter,
-    motion_blur,
-    frost_filter,
-    fog_filter,
-    contrast,
-    elastic,
-    object_overlay,
-    glass_blur,
     gaussian_noise,
-    dynamic_rain_filter,
-    snow_filter,
-    pixelate,
-    increase_brightness,
+    poisson_noise,
     impulse_noise,
     defocus_blur,
+    glass_blur,
+    motion_blur,
     zoom_blur,
-    dynamic_smoke_filter,
-    dynamic_lightning_filter,
-    dynamic_sun_filter,
+    increase_brightness,
+    contrast,
+    elastic,
+    pixelate,
+    jpeg_filter,
+    shear_image,
+    translate_image,
+    scale_image,
+    rotate_image,
+    stripe_mapping,
+    fog_mapping,
+    splatter_mapping,
+    dotted_lines_mapping,
+    zigzag_mapping,
+    canny_edges_mapping,
+    speckle_noise_filter,
+    false_color_filter,
+    high_pass_filter,
+    low_pass_filter,
+    phase_scrambling,
+    power_equalisation,
+    histogram_equalisation,
+    reflection_filter,
+    white_balance_filter,
+    sharpen_filter,
+    grayscale_filter,
+    fog_filter,
+    frost_filter,
+    snow_filter,
+    dynamic_snow_filter,
+    dynamic_rain_filter,
+    object_overlay,
     dynamic_object_overlay,
+    dynamic_sun_filter,
+    dynamic_lightning_filter,
+    dynamic_smoke_filter,
+    perturb_high_attention_regions,
 )
+from .utils.data_utils import CircularBuffer
+from .utils.logger import CSVLogHandler
 
 
 class ImagePerturbation:
@@ -39,23 +64,43 @@ class ImagePerturbation:
     :param funcs: List of the function names we want to use as perturbations
     :type funcs: list string
     :default funcs: If this list is empty we use all perturbations
+
+    :param image_size: Tuple of height and width of the image
+    :type image_size: Tuple(int, int)
+    :default image_size=(240,320): If this list is empty we use all perturbations
     """
 
-    def __init__(self, scale: int, funcs=[]):
-        self.scale = scale
+    def __init__(
+        self,
+        funcs=[],
+        log_dir="logs.csv",
+        overwrite_logs=True,
+        image_size=(240, 320),
+        drop_boundary=3.0,
+    ):
         # marks which perturbation is selected next
         self._index = 0
         self._lap = 1
-        self._sector = 1
+        self._sector = 0
         self.scale = 0
-        # fot the first scale we randomly shuffle the filters
+        self.drop_boundary = drop_boundary
+        self.is_stopped = False
+        # setup logger
+        self.logger = logging.getLogger(self.__class__.__name__)
+        self.logger.setLevel(logging.INFO)
+
+        self._csv_handler = CSVLogHandler(
+            log_dir, mode=("w" if overwrite_logs else "a")
+        )
+        self.logger.addHandler(self._csv_handler)
+
+        # for the first scale we randomly shuffle the filters
         # after the first scale we select the filter next with the loweset xte
         # we only iterate to the next filter if the average xte for this filter is
         # less than x, where we set x here to 2, but plan on having x as param
         # later on
         if len(funcs) == 0:
             self._fns = [
-                dynamic_snow_filter,
                 dynamic_snow_filter,
                 poisson_noise,
                 jpeg_filter,
@@ -81,32 +126,47 @@ class ImagePerturbation:
             # the user has given us perturbations to use
             self._fns = _convertStringToPertubation(funcs)
         self._shuffle_perturbations()
-        # init xte for all perturbations as 0
-        self.xte = {}
-        # init steering angle diffs for all perturbations as 0
-        self.steering_angle = {}
+        # measures for all perturbations
+        self.measures = {}
         for func in self._fns:
-            # tupple of average xte and amount of perturbations
-            self.xte[func.__name__] = (0, 0)
-            self.steering_angle[func.__name__] = (0, 0)
-        # we create an infinite iterator over the snow frames
-        snow_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/snowfall.mp4")
-        rain_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/rain.mp4")
-        bird_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/birds.mp4")
-        lightning_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/lightning.mp4")
-        smoke_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/smoke.mp4")
-        sun_frames = _loadMaskFramesGreenScreen("./perturbationdrive/OverlayMasks/sun.mp4")
-
-        self._snow_iterator = itertools.cycle(snow_frames)
-        self._rain_iterator = itertools.cycle(rain_frames)
-        self._bird_iterator = itertools.cycle(bird_frames)
-        self._lightning_iterator = itertools.cycle(lightning_frames)
-        self._smoke_iterator = itertools.cycle(smoke_frames)
-        self._sun_iterator = itertools.cycle(sun_frames)
+            self.measures[func.__name__] = {
+                "pertubation_name": func.__name__,
+                "xte": 0,
+                "steering_diff": 0,
+                "frames": 0,
+                "highest_scale": 0,
+                "is_dropped": False,
+            }
+        # Load iterators for dynamic masks if we have dynamic masks
+        height, width = image_size
+        for filter, (path, iterator_name) in FILTER_PATHS.items():
+            if filter in self._fns:
+                frames = _loadMaskFrames(path, height, width)
+                setattr(self, iterator_name, itertools.cycle(frames))
+        # circular buffer to stop after 10 frames of crash
+        self._crash_buffer = CircularBuffer(10)
+        self.logger.info(
+            [
+                "pertubation_name",
+                "xte",
+                "frames",
+                "highest_scale",
+                "is_dropped",
+                "sector",
+                "lap",
+                "x_pos",
+                "y_pos",
+                "steering_diff",
+            ]
+        )
+        self._csv_handler.flush_row()
 
     def peturbate(self, image, data: dict):
         """
         Perturbates an image based on the current perturbation
+        If we the car is stuck, we reset the lap and move on to the next perturbation.
+        If at any time the XTE is larger than 3, the car is fully of the raod and we will not
+        move on to the next intensity stage for this perturbation
 
         :param image: The input image for the perturbation
         :type image: MatLike
@@ -119,60 +179,91 @@ class ImagePerturbation:
         :return: states if we stop the benchmark because the car is stuck or done
         :rtype: bool
         """
+        self._csv_handler.flush_row()
+        if self.is_stopped:
+            return {"image": image, "func": "quit_app"}
+        self._crash_buffer.add((data["pos_x"], data["pos_y"]))
+        if self._crash_buffer.all_elements_equal() and self._crash_buffer.length() > 9:
+            print("Crash buffer is full")
+            return {"image": image, "func": "reset_car"}
         # check if we have finished the lap
-        if self._lap != data["lap"]:
-            self._index += 1
-        elif self._sector > data["sector"]:
-            self._index += 1
+        if self._lap != data["lap"] or self._sector > data["sector"]:
+            self._sector = data["sector"]
+            self._lap = data["lap"]
+            # we need to move to the next perturbation
+            self._index = (self._index + 1) % len(self._fns)
+            # check if we should increment the scale
+            if self._index == 0:
+                self._increment_scale()
+                # print summary when incrementing scale
+                self.print_performance()
+                return {"image": image, "func": "reset_car"}
+            else:
+                return {"image": image, "func": "reset_car"}
+
         self._sector = data["sector"]
         self._lap = data["lap"]
         # calculate the filter index
         func = self._fns[self._index]
         # if we have a special dynamic overlay we need to pass the iterator as param
-        if func is dynamic_snow_filter:
-            image = func(self.scale, image, self._snow_iterator)
-        elif func is dynamic_rain_filter:
-            image = func(self.scale, image, self._rain_iterator)
-        elif func is dynamic_sun_filter:
-            image = func(self.scale, image, self._sun_iterator)
-        elif func is dynamic_lightning_filter:
-            image = func(self.scale, image, self._lightning_iterator)
-        elif func is dynamic_object_overlay:
-            image = func(self.scale, image, self._bird_iterator)
-        elif func is dynamic_smoke_filter:
-            image = func(self.scale, image, self._smoke_iterator)
+        iterator_name = ITERATOR_MAPPING.get(func, "")
+        if iterator_name != "":
+            iterator = getattr(self, ITERATOR_MAPPING.get(func, ""))
+            pertub_image = func(self.scale, image, iterator)
         else:
-            image = func(self.scale, image)
+            pertub_image = func(self.scale, image)
         # update xte
-        curr_xte, num_perturbations = self.xte[func.__name__]
+        curr_xte = self.measures[func.__name__]["xte"]
+        num_perturbations = self.measures[func.__name__]["frames"]
         curr_xte = (curr_xte * num_perturbations + data["xte"]) / (
             num_perturbations + 1
         )
-        self.xte[func.__name__] = (curr_xte, num_perturbations + 1)
-        # check if we increment the scale
-        if self._index == len(self._fns) - 1:
-            self._index = 0
-            self._increment_scale()
-            # print summary when incrementing scale
-            self.print_xte()
-        return image
+        self.measures[func.__name__]["xte"] = curr_xte
+        self.measures[func.__name__]["frames"] = num_perturbations + 1
+        if np.abs(data["xte"]) > self.drop_boundary:
+            self.measures[func.__name__]["highest_scale"] = self.scale
+            self.measures[func.__name__]["is_dropped"] = True
+        self.logger.info(
+            [
+                func.__name__,
+                data["xte"],
+                self.measures[func.__name__]["frames"],
+                self.measures[func.__name__]["highest_scale"],
+                self.measures[func.__name__]["is_dropped"],
+                data["sector"],
+                data["lap"],
+                data["pos_x"],
+                data["pos_y"],
+            ]
+        )
+        return {"image": pertub_image, "func": "update"}
 
     def updateSteeringPerformance(self, steeringAngleDiff):
-        # calculate the filter index
-        funcName = self._fns[self._index].__name__
-        # update steering angle diff
-        curr_diff, num_differences = self.steering_angle[funcName]
-        curr_diff = (curr_diff * num_differences + steeringAngleDiff) / (
-            num_differences + 1
-        )
-        self.steering_angle[funcName] = (curr_diff, num_differences + 1)
+        if self._index < len(self._fns):
+            # calculate the filter index
+            funcName = self._fns[self._index].__name__
+            # update steering angle diff
+            curr_diff = self.measures[funcName]["steering_diff"]
+            num_differences = self.measures[funcName]["frames"]
+            curr_diff = (curr_diff * num_differences + steeringAngleDiff) / (
+                num_differences
+            )
+            self.measures[funcName]["steering_diff"] = curr_diff
+            self.logger.info(steeringAngleDiff)
 
     def _increment_scale(self):
-        """Increments the scale by one"""
-        if self.scale == 0:
-            self._sort_perturbations()
+        """
+        Increments the scale by one and drops all perturbations which have been droped
+        """
+        self._sort_perturbations()
+        self._update_fncs_scale()
+        if len(self._fns) == 0:
+            self.on_stop()
         if self.scale < 4:
             self.scale += 1
+        else:
+            # we are done
+            self.on_stop()
 
     def on_stop(self):
         """
@@ -183,24 +274,34 @@ class ImagePerturbation:
         print("\n" + "=" * 45)
         print("    STOPED BENCHMARKING")
         print("=" * 45 + "\n")
-        self.print_xte()
+        self.print_performance()
+        self.is_stopped = True
 
-    def print_xte(self):
+    def _update_fncs_scale(self):
+        for fnc in self._fns:
+            self.measures[fnc.__name__]["highest_scale"] = self.scale
+
+    def print_performance(self):
         """Command line output for the xte measures of all funcs"""
         print("\n" + "=" * 45)
-        print(f"    AVERAGE XTE ON SCALE {self.scale}")
+        print(f"    AVERAGE PERFORMANCE ON SCALE {self.scale}")
         print("=" * 45 + "\n")
         total_average_xte = 0
         count = 0
         total_average_sad = 0
-        for key, value in self.xte.items():
+        for key, value_dict in self.measures.items():
             count += 1
-            curr_xte, _ = value
+            curr_xte = value_dict["xte"]
             total_average_xte += curr_xte
-            steering_diff, _ = self.steering_angle[key]
+            steering_diff = value_dict["steering_diff"]
             total_average_sad += steering_diff
-            print(f"Average XTE for {key}: {curr_xte:.4f}")
-            print(f"Average Steering Angle Diff for {key}: {steering_diff:.4f}")
+            is_droped = value_dict["is_dropped"]
+            highest_scale = value_dict["highest_scale"]
+            print(f"Perturbation: {key}")
+            print(f"Average XTE: {curr_xte:.4f}")
+            print(f"Average Steering Angle Diff: {steering_diff:.4f}")
+            print(f"Is Dropped: {is_droped}")
+            print(f"Highest scale achieved: {highest_scale}")
             print("-" * 45)
         total_average_xte = total_average_xte / count
         print(f"Total average XTE: {total_average_xte:.4f}")
@@ -208,21 +309,33 @@ class ImagePerturbation:
         print("=" * 45 + "\n")
 
     def _shuffle_perturbations(self):
-        """randomly shuffles the perturbations"""
+        """
+        Randomly shuffles the perturbations
+        """
         random.shuffle(self._fns)
 
+    def _perturbation_dropout(self, pert_func):
+        return not self.measures[pert_func.__name__]["is_dropped"]
+
     def _sort_perturbations(self):
-        """sorts the perturbations according to their xte"""
-        self._fns = sorted(self._fns, key=lambda f: self.xte[f.__name__][0])
+        """
+        Drops perturbations which are dropped due to high xte
+        """
+        self._fns = list(filter(self._perturbation_dropout, self._fns))
 
 
-def _loadMaskFrames(path: str) -> list:
+def _loadMaskFrames(path: str, isGreenScreen=True, height=240, width=320) -> list:
     """
-    Helper method to load all rain frames for quicker mask overlay later
+    Loads all frames for a given mp4 video. Appends alpha channel and optionally sets
+    the alpha channel of the greenscreen background to 0
 
-    Credits for video masks
-    <a href="https://www.vecteezy.com/video/9265242-green-screen-rain-effect">Green Screen Rain Effect Stock Videos by Vecteezy</a>
-    <a href="https://www.vecteezy.com/video/1803396-falling-snow-overlay-loop">Falling Snow Overlay Loop Stock Videos by Vecteezy</a>
+    Parameters:
+        - path str: Path to mp4 video
+        - isGreenScreen boolean=True: States if the greenscreen background is removed
+        - height int=240: Desired height of the frames
+        - widht int=320: Desired widht of the frames
+
+    Returns: list MatLike
     """
     cap = cv2.VideoCapture(path)
 
@@ -234,91 +347,135 @@ def _loadMaskFrames(path: str) -> list:
         if not ret or frame is None:
             print("failed to read frame")
             break
+        frame = cv2.resize(frame, (width, height))
         if frame.shape[2] != 4:
             # append alpha channel
             alpha_channel = np.ones(frame.shape[:2], dtype=frame.dtype) * 255
             frame = cv2.merge((frame, alpha_channel))
-
+        # option to remove greenscreen by default
+        if isGreenScreen:
+            frame = _removeGreenScreen(frame)
         frames.append(frame)
     cap.release()
     return frames
 
 
-def _loadMaskFramesGreenScreen(path: str) -> list:
+def _removeGreenScreen(image):
     """
-    Helper method to load all rain frames for quicker mask overlay later
+    Removes green screen background by setting transparency to 0 using LAB channels
 
-    Credits for video masks
-    - <a href="https://www.vecteezy.com/video/25444944-flying-black-birds-flock-animation-on-green-screen-background">Flying black birds flock animation on green screen background Stock Videos by Vecteezy</a>
-    - <a href="https://www.vecteezy.com/video/9265242-green-screen-rain-effect">Green Screen Rain Effect Stock Videos by Vecteezy</a>
-    - <a href="https://www.vecteezy.com/video/1803396-falling-snow-overlay-loop">Falling Snow Overlay Loop Stock Videos by Vecteezy</a>
-    - <a href="https://www.vecteezy.com/video/29896285-fly-through-dark-cloud-or-smoke-effect-animation-moving-forward-through-dark-cloud-or-smoke-effect-on-green-screen-background">Fly through dark cloud or smoke effect animation, moving forward through dark cloud or smoke effect on green screen background Stock Videos by Vecteezy</a>
-    - <a href="https://www.vecteezy.com/video/16627335-realistic-lightning-strike-on-green-screen-background-blue-lightning-thunderstorm-effect-over-green-background-for-video-projects-3d-loop-animation-of-electric-thunderstorm-lightning-strike-multi">Realistic Lightning Strike On Green Screen Background , Blue Lightning Thunderstorm Effect Over Green Background For Video Projects,3d Loop Animation Of Electric Thunderstorm Lightning Strike, Multi Stock Videos by Vecteezy</a>
-    - <a href="https://www.vecteezy.com/video/20614326-green-lens-flare-red-bright-glow-sun-light-lens-flares-art-animation-on-green-free-video">Green lens flare red bright glow, sun light lens flares art animation on green Free video Stock Videos by Vecteezy</a>
+    Returns: Mathlike
     """
-    cap = cv2.VideoCapture(path)
-
-    # extract frames
-    frames = []
-    while True:
-        # the image is rgb so we convert it to rgba
-        ret, frame = cap.read()
-        if not ret or frame is None:
-            print("failed to read frame")
-            break
-        # Define a range for the green color and create a mask.
-        lower_green = np.array([35, 40, 40])  # Lower bound for the green color
-        upper_green = np.array([90, 255, 255])  # Upper bound for the green color
-        hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(hsv_frame, lower_green, upper_green)
-
-        # Invert the mask to get the non-green areas
-        mask_inv = cv2.bitwise_not(mask)
-
-        # Split the original frame into its R, G, and B channels
-        r, g, b = cv2.split(frame)
-
-        # Create a new 4-channel image (B, G, R, alpha)
-        rgba = [b, g, r, mask_inv]
-        frame_with_alpha = cv2.merge(rgba, 4)
-
-        frames.append(frame_with_alpha)
-    cap.release()
-    return frames
+    # convert to LAB
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    # extract A channel
+    A = lab[:, :, 1]
+    # threshold A channel
+    thresh = cv2.threshold(A, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    # blur threshold image
+    blur = cv2.GaussianBlur(
+        thresh, (0, 0), sigmaX=5, sigmaY=5, borderType=cv2.BORDER_DEFAULT
+    )
+    # stretch so that 255 -> 255 and 127.5 -> 0
+    mask = skimage.exposure.rescale_intensity(
+        blur, in_range=(127.5, 255), out_range=(0, 255)
+    ).astype(np.uint8)
+    # add mask to image as alpha channel
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
+    image[:, :, 3] = mask
+    return image
 
 
 # Mapping of function names to function objects
-function_mapping = {
-    "dynamic_snow_filter": dynamic_snow_filter,
-    "poisson_noise": poisson_noise,
-    "jpeg_filter": jpeg_filter,
-    "motion_blur": motion_blur,
-    "frost_filter": frost_filter,
-    "fog_filter": fog_filter,
-    "contrast": contrast,
-    "elastic": elastic,
-    "object_overlay": object_overlay,
-    "glass_blur": glass_blur,
+FUNCTION_MAPPING = {
     "gaussian_noise": gaussian_noise,
-    "dynamic_rain_filter": dynamic_rain_filter,
-    "snow_filter": snow_filter,
-    "pixelate": pixelate,
-    "increase_brightness": increase_brightness,
+    "poisson_noise": poisson_noise,
     "impulse_noise": impulse_noise,
     "defocus_blur": defocus_blur,
-    "pixelate": pixelate,
+    "glass_blur": glass_blur,
+    "motion_blur": motion_blur,
     "zoom_blur": zoom_blur,
-    "dynamic_smoke_filter": dynamic_smoke_filter,
-    "dynamic_lightning_filter": dynamic_lightning_filter,
-    "dynamic_sun_filter": dynamic_sun_filter,
+    "increase_brightness": increase_brightness,
+    "contrast": contrast,
+    "elastic": elastic,
+    "pixelate": pixelate,
+    "jpeg_filter": jpeg_filter,
+    "shear_image": shear_image,
+    "translate_image": translate_image,
+    "scale_image": scale_image,
+    "rotate_image": rotate_image,
+    "stripe_mapping": stripe_mapping,
+    "fog_mapping": fog_mapping,
+    "splatter_mapping": splatter_mapping,
+    "dotted_lines_mapping": dotted_lines_mapping,
+    "zigzag_mapping": zigzag_mapping,
+    "canny_edges_mapping": canny_edges_mapping,
+    "speckle_noise_filter": speckle_noise_filter,
+    "false_color_filter": false_color_filter,
+    "high_pass_filter": high_pass_filter,
+    "low_pass_filter": low_pass_filter,
+    "phase_scrambling": phase_scrambling,
+    "power_equalisation": power_equalisation,
+    "histogram_equalisation": histogram_equalisation,
+    "reflection_filter": reflection_filter,
+    "white_balance_filter": white_balance_filter,
+    "sharpen_filter": sharpen_filter,
+    "grayscale_filter": grayscale_filter,
+    "fog_filter": fog_filter,
+    "frost_filter": frost_filter,
+    "snow_filter": snow_filter,
+    "dynamic_snow_filter": dynamic_snow_filter,
+    "dynamic_rain_filter": dynamic_rain_filter,
+    "object_overlay": object_overlay,
     "dynamic_object_overlay": dynamic_object_overlay,
+    "dynamic_sun_filter": dynamic_sun_filter,
+    "dynamic_lightning_filter": dynamic_lightning_filter,
+    "dynamic_smoke_filter": dynamic_smoke_filter,
+    "perturb_high_attention_regions": perturb_high_attention_regions
+}
+
+# mapping of dynamic perturbation functions to their image path and iterator name
+FILTER_PATHS = {
+    dynamic_snow_filter: (
+        "./perturbationdrive/OverlayMasks/snow.mp4",
+        "_snow_iterator",
+    ),
+    dynamic_lightning_filter: (
+        "./perturbationdrive/OverlayMasks/lightning.mp4",
+        "_lightning_iterator",
+    ),
+    dynamic_rain_filter: (
+        "./perturbationdrive/OverlayMasks/rain.mp4",
+        "_rain_iterator",
+    ),
+    dynamic_object_overlay: (
+        "./perturbationdrive/OverlayMasks/birds.mp4",
+        "_bird_iterator",
+    ),
+    dynamic_smoke_filter: (
+        "./perturbationdrive/OverlayMasks/smoke.mp4",
+        "_smoke_iterator",
+    ),
+    dynamic_sun_filter: ("./perturbationdrive/OverlayMasks/sun.mp4", "_sun_iterator"),
+}
+
+# mapping of dynamic perturbation functions to their iterator name
+ITERATOR_MAPPING = {
+    dynamic_snow_filter: "_snow_iterator",
+    dynamic_rain_filter: "_rain_iterator",
+    dynamic_sun_filter: "_sun_iterator",
+    dynamic_lightning_filter: "_lightning_iterator",
+    dynamic_object_overlay: "_bird_iterator",
+    dynamic_smoke_filter: "_smoke_iterator",
 }
 
 
 def _convertStringToPertubation(func_names):
-    """Converts a list of function names into a list of perturbation functions"""
+    """
+    Converts a list of function names into a list of perturbation functions
+    """
     ret = []
     for name in func_names:
-        if name in function_mapping:
-            ret.append(function_mapping[name])
+        if name in FUNCTION_MAPPING:
+            ret.append(FUNCTION_MAPPING[name])
     return ret
