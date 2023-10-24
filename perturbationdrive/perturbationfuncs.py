@@ -3,6 +3,12 @@ import cv2
 from scipy.ndimage import zoom as scizoom
 from io import BytesIO
 from .kernels.kernels import diamond_square
+from .utils.utilFuncs import (
+    round_to_nearest_odd,
+    scramble_channel,
+    equalise_power,
+    simple_white_balance,
+)
 
 
 def gaussian_noise(scale, img):
@@ -721,6 +727,224 @@ def high_pass_filter(scale, image):
     high_pass_rgb = cv2.cvtColor(merged_hsv, cv2.COLOR_HSV2RGB)
 
     return high_pass_rgb
+
+
+def low_pass_filter_color(scale, image):
+    """
+    Apply low pass filter to an image with different severities while preserving color.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+
+    kernel_size = [15, 40, 63, 75, 113][scale]
+
+    # Convert the image to HSV color space
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+
+    # Split the channels
+    H, S, V = cv2.split(hsv_image)
+
+    # Apply Gaussian blur to the V channel (value/brightness)
+    blurred_V = cv2.GaussianBlur(
+        V,
+        (
+            round_to_nearest_odd(int(kernel_size)),
+            round_to_nearest_odd(int(kernel_size)),
+        ),
+        0,
+    )
+
+    # Merge the blurred V channel with the original H and S channels
+    merged_hsv = cv2.merge([H, S, blurred_V])
+
+    # Convert back to RGB color space
+    low_pass_rgb = cv2.cvtColor(merged_hsv, cv2.COLOR_HSV2RGB)
+
+    return low_pass_rgb
+
+
+def phase_scrambling(scale, image):
+    """
+    Apply power scrambling (phase scrambling) to an image with different severities.
+    Phase scrambling involves manipulating the phase information of an image's
+    Fourier transform while keeping the magnitude intact. This results in an
+    image that retains its overall power spectrum but has its content scrambled.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    severity = [0.05, 0.15, 0.26, 0.38, 0.55][scale]
+    # Scramble each channel
+    R, G, B = cv2.split(image)
+    scrambled_R = scramble_channel(R, severity)
+    scrambled_G = scramble_channel(G, severity)
+    scrambled_B = scramble_channel(B, severity)
+
+    # Merging the scrambled channels
+    scrambled_rgb = cv2.merge([scrambled_R, scrambled_G, scrambled_B])
+
+    return scrambled_rgb
+
+
+def power_equalisation(scale, image):
+    """
+    Apply power equalisation to an image with different severities while
+    preserving color.
+    We equalize or modify the energy distribution of the image across different frequencies.
+    By adjustingthe magnitude of the Fourier transform (which represents the frequency
+    content of the image), we can change how the energy (or power) is spread
+    across frequencies.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    alpha = [1.15, 1.08, 1.02, 0.98, 0.92][scale]
+    # Convert the image to HSV color space
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    H, S, V = cv2.split(hsv_image)
+    # Equalise each channel
+    equalised_V = equalise_power(V, alpha)
+
+    # Merging the equalised channel with original H and S
+    equalised_hsv = cv2.merge([H, S, equalised_V])
+
+    # Convert back to RGB color space
+    equalised_rgb = cv2.cvtColor(equalised_hsv, cv2.COLOR_HSV2RGB)
+    return equalised_rgb
+
+
+def histogram_equalisation(scale, image):
+    """
+    Apply histogram equalisation to an image with different severities while
+    preserving color.
+    We enhance the contrast of an image by effectively spreading out the
+    pixel intensities in an image.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    clip_limit = [1, 3, 5, 7, 10][scale]
+    equalised_images = []
+
+    # Convert the image to HSV color space
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    H, S, V = cv2.split(hsv_image)
+
+    # Apply CLAHE to the V channel
+    clahe = cv2.createCLAHE(clipLimit=clip_limit, tileGridSize=(8, 8))
+    equalised_V = clahe.apply(V)
+
+    # Merging the equalised V channel with original H and S
+    equalised_hsv = cv2.merge([H, S, equalised_V])
+
+    # Convert back to RGB color space
+    equalised_rgb = cv2.cvtColor(equalised_hsv, cv2.COLOR_HSV2RGB)
+
+    return equalised_rgb
+
+
+def reflection_filter(scale, image):
+    """
+    Apply a reflection effect to an image with different intensity.
+    Creates a mirror effect to the input image and appends the mirrored image to
+    the bottom of the image. The intensity refers to the share of the image
+    which is appended at the bottom (20%, 30%, 45%, 60% or 90%).
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    severity = [0.2, 0.3, 0.45, 0.6, 0.9][scale]
+    # Calculate the portion of the image to reflect
+    portion_to_reflect = int(image.shape[0] * severity)
+
+    # Create the reflection by flipping vertically
+    reflection = cv2.flip(image[-portion_to_reflect:], 0)
+
+    # Stack the original image and its reflection
+    reflected_img = np.vstack((image, reflection[:portion_to_reflect]))
+
+    # Resize the image to maintain original dimensions
+    reflected_img = cv2.resize(reflected_img, (image.shape[1], image.shape[0]))
+
+    return reflected_img
+
+
+def white_balance_filter(scale, image):
+    """
+    Apply a white balance effect to an image with different intensities.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    severity = [0.1, 0.25, 0.5, 0.75, 0.99][scale]
+    return cv2.addWeighted(
+        image, 1 - severity, simple_white_balance(image.copy()), severity, 0
+    )
+
+
+def sharpen_filter(scale, image):
+    """
+    Apply a sharpening effect to an image with different severities using a
+    simple sharpen konvolution via a kernel matrix.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
+    """
+    severity = [1.15, 1.2, 1.25, 1.5, 2.0][scale]
+
+    # Base sharpening kernel
+    kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
+    kernel[1, 1] = 8 * severity
+
+    # Convolve the image with the sharpening kernel
+    return cv2.filter2D(image, -1, kernel)
+
+
+def grayscale_filter(scale, image):
+    """
+    Apply a grayscale effect to an image with different intensities.
+
+    Parameters:
+    - image: input image array.
+    - intensities: the intensity level to apply.
+
+    Returns:
+    - gray_image: image with grayscale effect.
+    """
+
+    severity = [0.1, 0.2, 0.35, 0.55, 0.85][scale]
+    # Convert the image to grayscale
+    grayscale_img = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    grayscale_img_colored = cv2.cvtColor(grayscale_img, cv2.COLOR_GRAY2RGB)
+
+    # Interpolate between the original and grayscale image based on severity
+    grayed_img = cv2.addWeighted(
+        image, 1 - severity, grayscale_img_colored, severity, 0
+    )
+
+    return grayed_img
 
 
 def fog_filter(scale, image):
