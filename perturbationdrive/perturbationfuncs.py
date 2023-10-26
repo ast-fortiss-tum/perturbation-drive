@@ -880,11 +880,10 @@ def grayscale_filter(scale, image):
     Apply a grayscale effect to an image with different intensities.
 
     Parameters:
-    - image: input image array.
-    - intensities: the intensity level to apply.
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
-    Returns:
-    - gray_image: image with grayscale effect.
+    Returns: numpy array:
     """
 
     severity = [0.1, 0.2, 0.35, 0.55, 0.85][scale]
@@ -904,8 +903,14 @@ def silhouette_filter(scale, image):
     """
     Applies a silhouette filter using canny edge detection to highlight edges and
     return a gray scale image
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
     """
-    thresholds = [(10,60), (20,80), (30,100), (40,120), (50,150)]
+    thresholds = [(10, 60), (20, 80), (30, 100), (40, 120), (50, 150)]
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     lower_threshold, upper_threshold = thresholds[scale]
 
@@ -921,9 +926,21 @@ def silhouette_filter(scale, image):
 def invert_filter(scale, image):
     """
     Applies a invert filter, inverting each color channel seperately
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
     """
     inverted = cv2.bitwise_not(image)
-    original_weight, inverted_weight = [(0.9, 0.1), (0.7, 0.3), (0.4, 0.6), (0.3, 0.7), (0.0, 1.0)][scale]
+    original_weight, inverted_weight = [
+        (0.9, 0.1),
+        (0.7, 0.3),
+        (0.4, 0.6),
+        (0.3, 0.7),
+        (0.0, 1.0),
+    ][scale]
     blended = cv2.addWeighted(image, original_weight, inverted, inverted_weight, 0)
 
     return blended
@@ -932,6 +949,12 @@ def invert_filter(scale, image):
 def solarite_filter(scale, image):
     """
     Inverts the tonesnof the image pixels which are above a certain threshold
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
     """
     threshold = [230, 200, 170, 140, 110][scale]
 
@@ -943,6 +966,12 @@ def solarite_filter(scale, image):
 def posterize_filter(scale, image):
     """
     Reduces the number of distinct colors while mainting essential image features
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
     """
     scale = [128, 64, 32, 8, 4][scale]
 
@@ -964,6 +993,12 @@ def posterize_filter(scale, image):
 def cutout_filter(scale, image):
     """
     Creates random cutouts on the picture and makes the random cutouts black
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
     """
     scale = [1, 2, 4, 6, 10][scale]
 
@@ -980,7 +1015,7 @@ def cutout_filter(scale, image):
         y = np.random.randint(0, w - patch_size_y)
 
         # Apply the patch
-        image[x:x+patch_size_x, y:y+patch_size_y, :] = 0  # set to black
+        image[x : x + patch_size_x, y : y + patch_size_y, :] = 0  # set to black
 
     return image
 
@@ -988,16 +1023,22 @@ def cutout_filter(scale, image):
 def sample_pairing_filter(scale, image):
     """
     Randomly sample to regions of the image together
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
     """
 
     alpha = [0.9, 0.7, 0.5, 0.3, 0.1][scale]
 
     # Randomly select a section of the image
     h, w, _ = image.shape
-    start_x = np.random.randint(0, w//2)
-    start_y = np.random.randint(0, h//2)
-    end_x = start_x + w//2
-    end_y = start_y + h//2
+    start_x = np.random.randint(0, w // 2)
+    start_y = np.random.randint(0, h // 2)
+    end_x = start_x + w // 2
+    end_y = start_y + h // 2
 
     random_section = image[start_y:end_y, start_x:end_x]
 
@@ -1005,7 +1046,7 @@ def sample_pairing_filter(scale, image):
     random_section_resized = cv2.resize(random_section, (w, h))
 
     # Blend the image and the section
-    blended = cv2.addWeighted(image, alpha, random_section_resized, 1-alpha, 0)
+    blended = cv2.addWeighted(image, alpha, random_section_resized, 1 - alpha, 0)
 
     return blended
 
@@ -1013,9 +1054,15 @@ def sample_pairing_filter(scale, image):
 def gaussian_blur(scale, image):
     """
     Applies gaussian blur to the image
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
     """
 
-    kernel_size = [(3,3), (5, 5), (7, 7), (9, 9), (11, 11)][scale]
+    kernel_size = [(3, 3), (5, 5), (7, 7), (9, 9), (11, 11)][scale]
 
     # Apply Gaussian Blur
     blurred = cv2.GaussianBlur(image, kernel_size, 0)
@@ -1026,6 +1073,12 @@ def gaussian_blur(scale, image):
 def saturation_filter(scale, image):
     """
     Increases the saturation of the image
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
     """
 
     multiplier = [1.05, 1.15, 1.4, 1.65, 1.9][scale]
@@ -1043,6 +1096,12 @@ def saturation_filter(scale, image):
 def saturation_decrease_filter(scale, image):
     """
     Decreases the saturation of the image
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+
+    Returns: numpy array:
     """
 
     multiplier = [0.9, 0.85, 0.6, 0.35, 0.1][scale]
