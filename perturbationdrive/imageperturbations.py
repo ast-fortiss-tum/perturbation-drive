@@ -38,6 +38,15 @@ from perturbationdrive.perturbationfuncs import (
     white_balance_filter,
     sharpen_filter,
     grayscale_filter,
+    silhouette_filter,
+    invert_filter,
+    solarite_filter,
+    posterize_filter,
+    cutout_filter,
+    sample_pairing_filter,
+    gaussian_blur,
+    saturation_filter,
+    saturation_decrease_filter,
     fog_filter,
     frost_filter,
     snow_filter,
@@ -431,7 +440,16 @@ FUNCTION_MAPPING = {
     "dynamic_sun_filter": dynamic_sun_filter,
     "dynamic_lightning_filter": dynamic_lightning_filter,
     "dynamic_smoke_filter": dynamic_smoke_filter,
-    "perturb_high_attention_regions": perturb_high_attention_regions
+    "perturb_high_attention_regions": perturb_high_attention_regions,
+    "silhouette_filter": silhouette_filter,
+    "invert_filter": invert_filter,
+    "solarite_filter": solarite_filter,
+    "posterize_filter": posterize_filter,
+    "cutout_filter": cutout_filter,
+    "sample_pairing_filter": sample_pairing_filter,
+    "gaussian_blur": gaussian_blur,
+    "saturation_filter": saturation_filter,
+    "saturation_decrease_filter": saturation_decrease_filter,
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name
