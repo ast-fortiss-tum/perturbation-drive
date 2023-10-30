@@ -919,6 +919,7 @@ def silhouette_filter(scale, image):
 
     # Invert the binary output to get the silhouette
     silhouette = cv2.bitwise_not(edges)
+    silhouette = cv2.cvtColor(silhouette, cv2.COLOR_GRAY2BGR)
 
     return silhouette
 

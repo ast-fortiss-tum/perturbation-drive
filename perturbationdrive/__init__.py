@@ -60,3 +60,13 @@ from perturbationdrive.perturbationfuncs import (
 
 from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
+from .SaliencyMap.saliencymap import (
+    getSaliencyMap,
+    getSaliencyPixels,
+    getSaliencyRegions,
+    plotImageAndSaliencyMap,
+    plotSaliencyRegions,
+)
+
+from .AdversarialExamples.fast_gradient_sign_method import fgsm_attack
+from .AdversarialExamples.projected_gradient_descent import pgd_attack

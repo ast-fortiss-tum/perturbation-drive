@@ -61,6 +61,8 @@ from perturbationdrive.perturbationfuncs import (
 )
 from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
+import types
+import importlib
 
 
 class ImagePerturbation:
@@ -109,28 +111,8 @@ class ImagePerturbation:
         # less than x, where we set x here to 2, but plan on having x as param
         # later on
         if len(funcs) == 0:
-            self._fns = [
-                dynamic_snow_filter,
-                poisson_noise,
-                jpeg_filter,
-                motion_blur,
-                frost_filter,
-                fog_filter,
-                contrast,
-                elastic,
-                glass_blur,
-                gaussian_noise,
-                dynamic_rain_filter,
-                snow_filter,
-                pixelate,
-                increase_brightness,
-                impulse_noise,
-                defocus_blur,
-                dynamic_smoke_filter,
-                dynamic_lightning_filter,
-                dynamic_sun_filter,
-                dynamic_object_overlay,
-            ]
+            self._fns = get_functions_from_module("perturbationdrive.perturbationfuncs")
+            print(f"funcs are {self._fns}")
         else:
             # the user has given us perturbations to use
             self._fns = _convertStringToPertubation(funcs)
@@ -201,6 +183,7 @@ class ImagePerturbation:
             self._lap = data["lap"]
             # we need to move to the next perturbation
             self._index = (self._index + 1) % len(self._fns)
+            print(f"Moving on to perturbation {self._fns[self._index].__name__}")
             # check if we should increment the scale
             if self._index == 0:
                 self._increment_scale()
@@ -254,6 +237,7 @@ class ImagePerturbation:
             # update steering angle diff
             curr_diff = self.measures[funcName]["steering_diff"]
             num_differences = self.measures[funcName]["frames"]
+            num_differences = num_differences if num_differences > 0 else 1
             curr_diff = (curr_diff * num_differences + steeringAngleDiff) / (
                 num_differences
             )
@@ -497,3 +481,24 @@ def _convertStringToPertubation(func_names):
         if name in FUNCTION_MAPPING:
             ret.append(FUNCTION_MAPPING[name])
     return ret
+
+
+def get_functions_from_module(module_name):
+    """
+    Import all functions from a module and return them in a list.
+
+    Args:
+    - module_name (str): The name of the module to import.
+
+    Returns:
+    - List[types.FunctionType]: A list of functions from the module.
+    """
+    module = importlib.import_module(module_name)
+
+    functions_list = [
+        getattr(module, attr_name)
+        for attr_name in dir(module)
+        if isinstance(getattr(module, attr_name), types.FunctionType)
+    ]
+
+    return functions_list
