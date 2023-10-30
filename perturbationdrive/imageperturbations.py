@@ -4,6 +4,7 @@ import itertools
 import random
 import skimage.exposure
 import logging
+import datetime
 from perturbationdrive.perturbationfuncs import (
     gaussian_noise,
     poisson_noise,
@@ -147,6 +148,7 @@ class ImagePerturbation:
                 "lap",
                 "x_pos",
                 "y_pos",
+                "timestamp",
                 "steering_diff",
             ]
         )
@@ -226,6 +228,7 @@ class ImagePerturbation:
                 data["lap"],
                 data["pos_x"],
                 data["pos_y"],
+                datetime.datetime.now().timestamp(),
             ]
         )
         return {"image": pertub_image, "func": "update"}
@@ -499,6 +502,14 @@ def get_functions_from_module(module_name):
         getattr(module, attr_name)
         for attr_name in dir(module)
         if isinstance(getattr(module, attr_name), types.FunctionType)
+        and getattr(module, attr_name).__module__ == module_name
     ]
-
+    functions_list = [
+        func
+        for func in functions_list
+        if func.__name__ != "perturb_high_attention_regions"
+        and func.__name__ != "high_pass_filter"
+        and func.__name__ != "fog_mapping"
+        and func.__name__ != "zoom_blur"
+    ]
     return functions_list
