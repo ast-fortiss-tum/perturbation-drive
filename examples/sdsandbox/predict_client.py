@@ -69,10 +69,12 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.timer.reset()
 
     def on_aborted(self, msg):
+        print("abort")
         self.perturbation.on_stop()
         self.stop()
 
     def on_disconnect(self):
+        print("discon")
         self.perturbation.on_stop()
         pass
 
@@ -209,10 +211,12 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def stop(self):
         self.client.stop()
+        print("stop")
         self.perturbation.on_stop()
 
     def __del__(self):
         self.stop()
+        print("del")
         self.perturbation.on_stop()
 
 

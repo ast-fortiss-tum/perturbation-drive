@@ -1,4 +1,4 @@
-from perturbationdrive.uncertainty.saliencymap import (
+from perturbationdrive.SaliencyMap.saliencymap import (
     getSaliencyMap,
     getSaliencyPixels,
     getSaliencyRegions,

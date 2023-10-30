@@ -36,6 +36,15 @@ from perturbationdrive.perturbationfuncs import (
     white_balance_filter,
     sharpen_filter,
     grayscale_filter,
+    silhouette_filter,
+    invert_filter,
+    solarite_filter,
+    posterize_filter,
+    cutout_filter,
+    sample_pairing_filter,
+    gaussian_blur,
+    saturation_filter,
+    saturation_decrease_filter,
     fog_filter,
     frost_filter,
     snow_filter,
@@ -51,3 +60,13 @@ from perturbationdrive.perturbationfuncs import (
 
 from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
+from .SaliencyMap.saliencymap import (
+    getSaliencyMap,
+    getSaliencyPixels,
+    getSaliencyRegions,
+    plotImageAndSaliencyMap,
+    plotSaliencyRegions,
+)
+
+from .AdversarialExamples.fast_gradient_sign_method import fgsm_attack
+from .AdversarialExamples.projected_gradient_descent import pgd_attack
