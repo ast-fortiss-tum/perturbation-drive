@@ -113,6 +113,16 @@ diff = abs(steering_angle - unchanged_steering_angle)
 perturbation.udpateSteeringPerformance(diff)
 ```
 
+## Neural Style Transfer
+
+If you want to perturb your images using neural style transfer based on the ideas and models of `Perceptual Losses for Real-Time Style Transfer and Super- Resolution, Johnson et al., 2016`, you first need to download the models via a setup script.
+
+1) Navigate into the directory via `cd perturbationdrive/NeuralStyleTransfer`
+2) Make the setup script executable `chmod +x setup.sh`
+3) Execute the setup script `./setup.sh`. This will create the folders `perturbationdrive/NeuralStyleTransfer/models/instance_norm` and `perturbationdrive/NeuralStyleTransfer/models/eccv16` with all relevant Neural Style Transfer models.
+
+Happy Testing!
+
 ## Local setup
 
 To set this library up locally, navigate into the folder of this library.
