@@ -1,5 +1,7 @@
 # How to run sdsandbox
 
+To run this example you will need the sdsandbox/sdsim unity project on your device. You can find this unity project in [this GitHub repo](https://github.com/ast-fortiss-tum/sdsandbox).
+
 Make sure to install all requirements for this example using `pip install -r requirements.txt`
 
 1. Load the Unity project sdsandbox/sdsim in Unity. Double click on Assets/Scenes/road_generator to open that scene.

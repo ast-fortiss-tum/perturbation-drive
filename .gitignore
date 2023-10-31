@@ -209,3 +209,7 @@ benchmark-pertubation.json
 
 ### logs ###
 logs.csv
+
+
+### Neural Style Models ###
+*/NeuralStyleTransfer/models/*/*.t7
