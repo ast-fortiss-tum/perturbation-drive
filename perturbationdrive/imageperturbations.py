@@ -157,6 +157,7 @@ class ImagePerturbation:
             ]
         )
         self._csv_handler.flush_row()
+        print("finished setup")
 
     def peturbate(self, image, data: dict):
         """
@@ -208,6 +209,8 @@ class ImagePerturbation:
         if iterator_name != "":
             iterator = getattr(self, ITERATOR_MAPPING.get(func, ""))
             pertub_image = func(self.scale, image, iterator)
+        elif "styling" in func.__name__:
+            pertub_image = func(self, self.scale, image)
         else:
             pertub_image = func(self.scale, image)
         # update xte
@@ -324,34 +327,54 @@ class ImagePerturbation:
         self._fns = list(filter(self._perturbation_dropout, self._fns))
 
     def candy_styling(self, scale, image):
-        return self.neuralStyleModels.transferStyle(image, "candy")
+        alpha = [.2, .4, .6, .8, 1.0][scale]
+        styled =  self.neuralStyleModels.transferStyle(image, "candy")
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def la_muse_styling(self, scale, image):
-        return self.neuralStyleModels.transferStyle(image, "la_muse")
+        alpha = [.2, .4, .6, .8, 1.0][scale]
+        styled =  self.neuralStyleModels.transferStyle(image, "la_muse")
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def mosaic_styling(self, scale, image):
-        return self.neuralStyleModels.transferStyle(image, "mosaic")
+        alpha = [.2, .4, .6, .8, 1.0][scale]
+        styled = self.neuralStyleModels.transferStyle(image, "mosaic")
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def feathers_styling(self, scale, image):
-        return self.neuralStyleModels.transferStyle(image, "feathers")
+        alpha = [.2, .4, .6, .8, 1.0][scale]
+        styled =  self.neuralStyleModels.transferStyle(image, "feathers")
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def the_scream_styling(self, scale, image):
-        return self.neuralStyleModels.transferStyle(image, "the_scream")
+        alpha = [.2, .4, .6, .8, 1.0][scale]
+        styled = self.neuralStyleModels.transferStyle(image, "the_scream")
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def udnie_styling(self, scale, image):
-        return self.neuralStyleModels.transferStyle(image, "udnie")
+        alpha = [.2, .4, .6, .8, 1.0][scale]
+        styled = self.neuralStyleModels.transferStyle(image, "udnie")
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def the_wave_styling(self, scale, image):
-        return self.neuralStyleModels.transferStyle(image, "the_wave")
+        alpha = [.2, .4, .6, .8, 1.0][scale]
+        styled = self.neuralStyleModels.transferStyle(image, "the_wave")
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def starry_night_styling(self, scale, image):
-        return self.neuralStyleModels.transferStyle(image, "starry_night")
+        alpha = [.2, .4, .6, .8, 1.0][scale]
+        styled = self.neuralStyleModels.transferStyle(image, "starry_night")
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def la_muse_styling(self, scale, image):
-        return self.neuralStyleModels.transferStyle(image, "la_muse")
+        alpha = [.2, .4, .6, .8, 1.0][scale]
+        styled = self.neuralStyleModels.transferStyle(image, "la_muse")
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def composition_styling(self, scale, image):
-        return self.neuralStyleModels.transferStyle(image, "composition")
+        alpha = [.2, .4, .6, .8, 1.0][scale]
+        styled = self.neuralStyleModels.transferStyle(image, "composition")
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
 
 def _loadMaskFrames(path: str, isGreenScreen=True, height=240, width=320) -> list:
