@@ -211,5 +211,13 @@ benchmark-pertubation.json
 logs.csv
 
 
-### Neural Style Models ###
-*/NeuralStyleTransfer/models/*/*.t7
+### Neural Style Transfer Models ###
+*candy.t7
+*la_muse.t7
+*mosaic.t7
+*feathers.t7
+*the_scream.t7
+*udnie.t7
+*the_wave.t7
+*starry_night.t7
+*composition_vii.t7
