@@ -116,7 +116,6 @@ class ImagePerturbation:
         # later on
         if len(funcs) == 0:
             self._fns = get_functions_from_module("perturbationdrive.perturbationfuncs")
-            print(f"funcs are {self._fns}")
         else:
             # the user has given us perturbations to use
             self._fns = _convertStringToPertubation(funcs)

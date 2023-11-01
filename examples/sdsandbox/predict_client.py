@@ -69,14 +69,11 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.timer.reset()
 
     def on_aborted(self, msg):
-        print("abort")
-        self.perturbation.on_stop()
+        print("aborted")
         self.stop()
 
     def on_disconnect(self):
-        print("discon")
-        self.perturbation.on_stop()
-        pass
+        print("disconnected")
 
     def on_recv_message(self, message):
         self.timer.on_frame()
@@ -206,18 +203,15 @@ class DonkeySimMsgHandler(IMesgHandler):
         """
         msg = {"msg_type": "quit_app"}
         self.client.queue_message(msg)
-        print(f"\n\nStop App\n\n")
+        print(f"\n\nQuit App\n\n")
         self.stop()
 
     def stop(self):
         self.client.stop()
-        print("stop")
-        self.perturbation.on_stop()
+        print("stoped client")
 
     def __del__(self):
         self.stop()
-        print("del")
-        self.perturbation.on_stop()
 
 
 def clients_connected(arr):

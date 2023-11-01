@@ -28,8 +28,7 @@ class NeuralStyleTransfer:
         self.models = {}
         for path in model_names:
             model_name = os.path.splitext(os.path.basename(path))[0]
-            print(f"getting {os.path.exists(path)} from {path}")
-            print("123")
+            print(f"Fetching Neural Style {model_name} from {path}")
             self.models[model_name] = cv2.dnn.readNetFromTorch(path)
 
     def transferStyle(self, image, model_name):
