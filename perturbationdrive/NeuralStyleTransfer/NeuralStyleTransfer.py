@@ -10,19 +10,18 @@ class NeuralStyleTransfer:
     On init the user can choose all styles to load and via
     `transferStyle` to user can transfer the image style to
     on of the preloaded styles
+
+    All eccv16 models are too slow and should not be used
     """
 
     def __init__(
         self,
         model_names=[
             "perturbationdrive/NeuralStyleTransfer/models/instance_norm/candy.t7",
-            "perturbationdrive/NeuralStyleTransfer/models/eccv16/composition_vii.t7",
             "perturbationdrive/NeuralStyleTransfer/models/instance_norm/feathers.t7",
             "perturbationdrive/NeuralStyleTransfer/models/instance_norm/la_muse.t7",
             "perturbationdrive/NeuralStyleTransfer/models/instance_norm/mosaic.t7",
-            "perturbationdrive/NeuralStyleTransfer/models/eccv16/starry_night.t7",
             "perturbationdrive/NeuralStyleTransfer/models/instance_norm/the_scream.t7",
-            "perturbationdrive/NeuralStyleTransfer/models/eccv16/the_wave.t7",
             "perturbationdrive/NeuralStyleTransfer/models/instance_norm/udnie.t7",
         ],
     ):

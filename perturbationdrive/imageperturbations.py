@@ -328,52 +328,57 @@ class ImagePerturbation:
 
     def candy_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.neuralStyleModels.transferStyle(image, "candy")
+        styled = self.neuralStyleModels.transferStyle(image, "candy").astype(np.uint8)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def la_muse_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.neuralStyleModels.transferStyle(image, "la_muse")
+        styled = self.neuralStyleModels.transferStyle(image, "la_muse").astype(np.uint8)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def mosaic_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.neuralStyleModels.transferStyle(image, "mosaic")
+        styled = self.neuralStyleModels.transferStyle(image, "mosaic").astype(np.uint8)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def feathers_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.neuralStyleModels.transferStyle(image, "feathers")
+        styled = self.neuralStyleModels.transferStyle(image, "feathers").astype(
+            np.uint8
+        )
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def the_scream_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.neuralStyleModels.transferStyle(image, "the_scream")
+        styled = self.neuralStyleModels.transferStyle(image, "the_scream").astype(
+            np.uint8
+        )
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def udnie_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.neuralStyleModels.transferStyle(image, "udnie")
+        styled = self.neuralStyleModels.transferStyle(image, "udnie").astype(np.uint8)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def the_wave_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.neuralStyleModels.transferStyle(image, "the_wave")
+        styled = self.neuralStyleModels.transferStyle(image, "the_wave").astype(
+            np.uint8
+        )
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def starry_night_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.neuralStyleModels.transferStyle(image, "starry_night")
+        styled = self.neuralStyleModels.transferStyle(image, "starry_night").astype(
+            np.uint8
+        )
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
-    def la_muse_styling(self, scale, image):
+    def composition_vii_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.neuralStyleModels.transferStyle(image, "la_muse")
-        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
-
-    def composition_styling(self, scale, image):
-        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.neuralStyleModels.transferStyle(image, "composition")
+        styled = self.neuralStyleModels.transferStyle(image, "composition_vii").astype(
+            np.uint8
+        )
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
 
@@ -503,7 +508,7 @@ FUNCTION_MAPPING = {
     "the_wave": ImagePerturbation.the_wave_styling,
     "starry_night": ImagePerturbation.starry_night_styling,
     "la_muse": ImagePerturbation.la_muse_styling,
-    "composition": ImagePerturbation.composition_styling,
+    "composition_vii": ImagePerturbation.composition_vii_styling,
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name
