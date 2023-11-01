@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import os
 import itertools
 import random
 import skimage.exposure
@@ -64,6 +65,7 @@ from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
 import types
 import importlib
+from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
 
 
 class ImagePerturbation:
@@ -75,7 +77,8 @@ class ImagePerturbation:
 
     :param funcs: List of the function names we want to use as perturbations
     :type funcs: list string
-    :default funcs: If this list is empty we use all perturbations
+    :default funcs: If this list is empty we use all perturbations which are quick enough for
+        the simultation
 
     :param image_size: Tuple of height and width of the image
     :type image_size: Tuple(int, int)
@@ -137,6 +140,7 @@ class ImagePerturbation:
                 setattr(self, iterator_name, itertools.cycle(frames))
         # circular buffer to stop after 10 frames of crash
         self._crash_buffer = CircularBuffer(10)
+        self.neuralStyleModels = NeuralStyleTransfer(getNeuralModelPaths(funcs))
         self.logger.info(
             [
                 "pertubation_name",
@@ -319,6 +323,36 @@ class ImagePerturbation:
         """
         self._fns = list(filter(self._perturbation_dropout, self._fns))
 
+    def candy_styling(self, scale, image):
+        return self.neuralStyleModels.transferStyle(image, "candy")
+
+    def la_muse_styling(self, scale, image):
+        return self.neuralStyleModels.transferStyle(image, "la_muse")
+
+    def mosaic_styling(self, scale, image):
+        return self.neuralStyleModels.transferStyle(image, "mosaic")
+
+    def feathers_styling(self, scale, image):
+        return self.neuralStyleModels.transferStyle(image, "feathers")
+
+    def the_scream_styling(self, scale, image):
+        return self.neuralStyleModels.transferStyle(image, "the_scream")
+
+    def udnie_styling(self, scale, image):
+        return self.neuralStyleModels.transferStyle(image, "udnie")
+
+    def the_wave_styling(self, scale, image):
+        return self.neuralStyleModels.transferStyle(image, "the_wave")
+
+    def starry_night_styling(self, scale, image):
+        return self.neuralStyleModels.transferStyle(image, "starry_night")
+
+    def la_muse_styling(self, scale, image):
+        return self.neuralStyleModels.transferStyle(image, "la_muse")
+
+    def composition_styling(self, scale, image):
+        return self.neuralStyleModels.transferStyle(image, "composition")
+
 
 def _loadMaskFrames(path: str, isGreenScreen=True, height=240, width=320) -> list:
     """
@@ -437,6 +471,16 @@ FUNCTION_MAPPING = {
     "gaussian_blur": gaussian_blur,
     "saturation_filter": saturation_filter,
     "saturation_decrease_filter": saturation_decrease_filter,
+    "candy": ImagePerturbation.candy_styling,
+    "la_muse": ImagePerturbation.la_muse_styling,
+    "mosaic": ImagePerturbation.mosaic_styling,
+    "feathers": ImagePerturbation.feathers_styling,
+    "the_scream": ImagePerturbation.the_scream_styling,
+    "udnie": ImagePerturbation.udnie_styling,
+    "the_wave": ImagePerturbation.the_wave_styling,
+    "starry_night": ImagePerturbation.starry_night_styling,
+    "la_muse": ImagePerturbation.la_muse_styling,
+    "composition": ImagePerturbation.composition_styling,
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name
@@ -513,3 +557,20 @@ def get_functions_from_module(module_name):
         and func.__name__ != "zoom_blur"
     ]
     return functions_list
+
+
+def getNeuralModelPaths(style_names: [str]):
+    paths = [
+        "perturbationdrive/NeuralStyleTransfer/models/instance_norm/candy.t7",
+        "perturbationdrive/NeuralStyleTransfer/models/eccv16/composition_vii.t7",
+        "perturbationdrive/NeuralStyleTransfer/models/instance_norm/feathers.t7",
+        "perturbationdrive/NeuralStyleTransfer/models/instance_norm/la_muse.t7",
+        "perturbationdrive/NeuralStyleTransfer/models/instance_norm/mosaic.t7",
+        "perturbationdrive/NeuralStyleTransfer/models/eccv16/starry_night.t7",
+        "perturbationdrive/NeuralStyleTransfer/models/instance_norm/the_scream.t7",
+        "perturbationdrive/NeuralStyleTransfer/models/eccv16/the_wave.t7",
+        "perturbationdrive/NeuralStyleTransfer/models/instance_norm/udnie.t7",
+    ]
+    style_names = [style for style in style_names if any(style in s for s in paths)]
+    lookup_dict = {os.path.splitext(os.path.basename(path))[0]: path for path in paths}
+    return [lookup_dict[key] for key in style_names]
