@@ -327,52 +327,52 @@ class ImagePerturbation:
         self._fns = list(filter(self._perturbation_dropout, self._fns))
 
     def candy_styling(self, scale, image):
-        alpha = [.2, .4, .6, .8, 1.0][scale]
-        styled =  self.neuralStyleModels.transferStyle(image, "candy")
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
+        styled = self.neuralStyleModels.transferStyle(image, "candy")
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def la_muse_styling(self, scale, image):
-        alpha = [.2, .4, .6, .8, 1.0][scale]
-        styled =  self.neuralStyleModels.transferStyle(image, "la_muse")
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
+        styled = self.neuralStyleModels.transferStyle(image, "la_muse")
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def mosaic_styling(self, scale, image):
-        alpha = [.2, .4, .6, .8, 1.0][scale]
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "mosaic")
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def feathers_styling(self, scale, image):
-        alpha = [.2, .4, .6, .8, 1.0][scale]
-        styled =  self.neuralStyleModels.transferStyle(image, "feathers")
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
+        styled = self.neuralStyleModels.transferStyle(image, "feathers")
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def the_scream_styling(self, scale, image):
-        alpha = [.2, .4, .6, .8, 1.0][scale]
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "the_scream")
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def udnie_styling(self, scale, image):
-        alpha = [.2, .4, .6, .8, 1.0][scale]
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "udnie")
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def the_wave_styling(self, scale, image):
-        alpha = [.2, .4, .6, .8, 1.0][scale]
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "the_wave")
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def starry_night_styling(self, scale, image):
-        alpha = [.2, .4, .6, .8, 1.0][scale]
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "starry_night")
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def la_muse_styling(self, scale, image):
-        alpha = [.2, .4, .6, .8, 1.0][scale]
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "la_muse")
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def composition_styling(self, scale, image):
-        alpha = [.2, .4, .6, .8, 1.0][scale]
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "composition")
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
