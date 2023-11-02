@@ -106,6 +106,8 @@ class DonkeySimMsgHandler(IMesgHandler):
         img_data = base64.b64decode(imgString)
         img_array = np.frombuffer(img_data, dtype=np.uint8)
         image = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
+        # Convert BGR to RGB
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         # if we want to measure the diff in steering angle
         unchanged_img_arr = np.asarray(image, dtype=np.float32)
         self.unchanged_img_arr = unchanged_img_arr.reshape(

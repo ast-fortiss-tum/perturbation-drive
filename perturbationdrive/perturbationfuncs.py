@@ -1261,8 +1261,6 @@ def dynamic_rain_filter(scale, image, iterator):
         or rain_overlay.shape[1] != image.shape[1]
     ):
         rain_overlay = cv2.resize(rain_overlay, (image.shape[1], image.shape[0]))
-    cv2.imwrite("output_image.jpg", image)
-    cv2.imwrite("output_image2.jpg", rain_overlay)
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
     bgr = rain_overlay[:, :, :3]
     mask = rain_overlay[:, :, 3] != 0
