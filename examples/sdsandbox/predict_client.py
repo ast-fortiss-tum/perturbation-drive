@@ -3,6 +3,8 @@ Predict Server
 Create a server to accept image inputs and run them against a trained neural network.
 This then sends the steering output back to the client.
 
+I advise using the model_1_11.h5 as it achieves the best performance
+
 Author: Tawn Kramer
 """
 from __future__ import print_function

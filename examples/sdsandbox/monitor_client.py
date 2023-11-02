@@ -4,6 +4,8 @@ Predict Client
 Create a client to accept image inputs and run them against a trained neural network.
 This then sends the steering output back to the server.
 
+I advise using the model_1_11.h5 as it achieves the best performance
+
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5`
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5 --perturbation=dynamic_rain_filter`
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5 --perturbation=defocus_blur --perturbation=increase_brightness --perturbation=pixelate --perturbation=contrast`
