@@ -13,8 +13,8 @@ import time
 import base64
 
 import tensorflow as tf
-from tensorflow.python import keras
-from tensorflow.python.keras.models import load_model
+from tensorflow import keras
+from tensorflow.keras.models import load_model
 import cv2
 import numpy as np
 from gym_donkeycar.core.fps import FPSTimer
