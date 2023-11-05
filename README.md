@@ -54,6 +54,31 @@ funcs = [
 perturbation = ImagePerturbation(funcs)
 ```
 
+Optionally, you can perturbate the images based on the attention map of the model on the input image. To enable this feature, you will need to specify the attention parameters when creating the `ImagePerturbation` object. The `ImagePerturbation` constructor requires an dictionary contining the following information:
+
+- `map`: A string value if the object should calculate the vanilla saliency map or calculate the Grad Cam map. This parameter is required. Possible values are either `vanilla` or `grad_cam`.
+- `model`: The underlying model. This value if required.
+- `threshold=0.5`: A float value in the range of [0, 1]. If a input image pixel achieves a value higher or equal to this threshold we apply the perturbation in this region. This param is not required and the default is 0.5.
+- `layer="conv2d_5"`: The string name of the model layer which shalll be used to calculate the Grad Cam map. This param is not required and the default is "conv2d_5".
+
+ ```Python
+from perturbationdrive import ImagePerturbation
+
+# Instantiate a perturbation object
+funcs = [
+    "elastic"
+]
+
+attention = {
+    "map": "grad_cam",
+    "model": model,
+    "threshold": 0.4,
+    "layer": "conv2d_3"
+}
+
+perturbation = ImagePerturbation(funcs, attention=attention)
+```  
+
 ### Perturbate the image
 
 The perturbation object expects the image and a dict containing the following entries:
