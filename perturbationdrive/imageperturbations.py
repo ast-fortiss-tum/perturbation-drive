@@ -95,7 +95,8 @@ class ImagePerturbation:
     :type drop_boundary: float
     :default drop_boundary=3.0
 
-    :param attention_map: States if we perturbated the input based on the attention map and which attention map to use.
+    :param attention_map: States if we perturbated the input based on the attention map and which attention map to use. Possible arguments for map are 
+        `grad_cam` or `vanilla`.
         If you want to perturb based on the attention map you will need to speciy the model, attention threshold as well as the map type here.
         You can use either the vanilla saliency map or the Grad Cam attention map. If this dict is empty we do not perturb based on the saliency regions
     :type attention_map: dict(map: str, model: tf.model, threshold: float, layer: str).
