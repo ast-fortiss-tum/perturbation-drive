@@ -21,7 +21,7 @@ def getSaliencyMap(model, img, _=None):
     images = Variable(img, dtype=float)
 
     with GradientTape() as tape:
-        pred = model(images, training=False)
+        pred = model(images, training=False, verbose=0)
         class_idxs_sorted = np.argsort(pred.numpy().flatten())[::-1]
         loss = pred[0][class_idxs_sorted[0]]
 
