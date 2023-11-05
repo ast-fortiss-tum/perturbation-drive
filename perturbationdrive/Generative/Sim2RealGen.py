@@ -69,7 +69,7 @@ class Sim2RealGen:
         generated_real = real2real[0] * 0.5 + 0.5
         generated_real = np.clip(generated_real * 255, 0, 255).astype(np.uint8)
         return cv2.resize(generated_real, (h, w), interpolation=cv2.INTER_AREA)
-    
+
     def sim2sim(self, image):
         # expect an image uints
         (h, w) = image.shape[:2]
