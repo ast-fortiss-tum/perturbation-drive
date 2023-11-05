@@ -1,15 +1,16 @@
 import tensorflow as tf
 import numpy as np
 import cv2
+import tensorflow_addons as tfa
 
 
 class Sim2RealGen:
     def __init__(self) -> None:
         self.sim2real = tf.keras.models.load_model(
-            "perturbationdrive/Generative/donkey_sim2real.keras"
+            "perturbationdrive/Generative/donkey_sim2real.h5"
         )
         self.real2sim = tf.keras.models.load_model(
-            "perturbationdrive/Generative/donkey_real2sim.keras"
+            "perturbationdrive/Generative/donkey_real2sim.h5"
         )
 
     def toSim(self, image):
@@ -29,7 +30,7 @@ class Sim2RealGen:
         # move image to original shape and datatype
         generated_real = generated_real[0] * 0.5 + 0.5
         generated_real = np.clip(generated_real * 255, 0, 255).astype(np.uint8)
-        return cv2.resize(generated_real, (h, w), interpolation=cv2.INTER_AREA)
+        return cv2.resize(generated_real, (w, h), interpolation=cv2.INTER_AREA)
 
     def toReal(self, image):
         # expect an image uints
@@ -48,7 +49,7 @@ class Sim2RealGen:
         # move image to original shape and datatype
         generated_real = generated_real[0] * 0.5 + 0.5
         generated_real = np.clip(generated_real * 255, 0, 255).astype(np.uint8)
-        return cv2.resize(generated_real, (h, w), interpolation=cv2.INTER_AREA)
+        return cv2.resize(generated_real, (w, h), interpolation=cv2.INTER_AREA)
 
     def real2real(self, image):
         # expect an image uints
@@ -68,7 +69,8 @@ class Sim2RealGen:
         # move image to original shape and datatype
         generated_real = real2real[0] * 0.5 + 0.5
         generated_real = np.clip(generated_real * 255, 0, 255).astype(np.uint8)
-        return cv2.resize(generated_real, (h, w), interpolation=cv2.INTER_AREA)
+        print(f"we have {h} and {w}")
+        return cv2.resize(generated_real, (w, h), interpolation=cv2.INTER_AREA)
 
     def sim2sim(self, image):
         # expect an image uints
@@ -88,4 +90,4 @@ class Sim2RealGen:
         # move image to original shape and datatype
         generated_real = sim2sim[0] * 0.5 + 0.5
         generated_real = np.clip(generated_real * 255, 0, 255).astype(np.uint8)
-        return cv2.resize(generated_real, (h, w), interpolation=cv2.INTER_AREA)
+        return cv2.resize(generated_real, (w, h), interpolation=cv2.INTER_AREA)

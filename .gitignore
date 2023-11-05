@@ -225,3 +225,5 @@ logs.csv
 
 ### CycleGan Models ###
 *.keras
+*sim2real.h5
+*real2sim.h5
