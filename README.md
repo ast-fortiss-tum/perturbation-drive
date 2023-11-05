@@ -21,8 +21,6 @@ Apply common image perturbations and corruptions to images.
 Each perturbation needs an input image and the scale of the perturbation as input.
 The scale is in the range from 0 to 4.
 
-TODO: Be able to input own scale,
-
 ```Python
 from perturbationdrive import poisson_noise
 
