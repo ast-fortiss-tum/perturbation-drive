@@ -3,7 +3,7 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
-def GradCam(model, img_array, layer_name="conv2d_5"):
+def gradCam(model, img_array, layer_name="conv2d_5"):
     """
     Creates a grad-cam heatmap for a given model and a layer name contained with that model. 
     We recommend using the last convolutional layer of the model. Eg in terms of the underlying Dave2 model
