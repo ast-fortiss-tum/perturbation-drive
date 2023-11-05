@@ -5,3 +5,6 @@ from perturbationdrive.SaliencyMap.saliencymap import (
     plotImageAndSaliencyMap,
     plotSaliencyRegions,
 )
+from .GradCam import gradCam
+
+from .AttentionMaps import AttentionMaps

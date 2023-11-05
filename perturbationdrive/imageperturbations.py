@@ -66,23 +66,41 @@ from .utils.logger import CSVLogHandler
 import types
 import importlib
 from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
+from .SaliencyMap import AttentionMaps, gradCam, getSaliencyMap
+from typing import Union
 
 
 class ImagePerturbation:
     """
     Instanciates an image perturbation class
 
-    :param scale: The scale of the perturbation in the range [1;5].
-    :type scale: int
-
     :param funcs: List of the function names we want to use as perturbations
     :type funcs: list string
     :default funcs: If this list is empty we use all perturbations which are quick enough for
         the simultation
 
+    :param log_dir: The directory to log the benchmarking
+    :type log:dir: str
+    :default log_dir="logs.csv"
+
+    :param overwrite_logs: States if we overwrite the old logs or append to the logs
+    :type overwrite_logs: bool
+    :default overwrite_logs=true
+
     :param image_size: Tuple of height and width of the image
     :type image_size: Tuple(int, int)
     :default image_size=(240,320): If this list is empty we use all perturbations
+
+    :param drop_boundary: Threshold to drop perturbation if the XTE is bigger than
+    :type drop_boundary: float
+    :default drop_boundary=3.0
+
+    :param attention_map: States if we perturbated the input based on the attention map and which attention map to use. Possible arguments for map are 
+        `grad_cam` or `vanilla`.
+        If you want to perturb based on the attention map you will need to speciy the model, attention threshold as well as the map type here.
+        You can use either the vanilla saliency map or the Grad Cam attention map. If this dict is empty we do not perturb based on the saliency regions
+    :type attention_map: dict(map: str, model: tf.model, threshold: float, layer: str).
+    :default attention_map={}: The treshold can be empty and is 0.5 per default. The default layer for the GradCam Map is `conv2d_5`
     """
 
     def __init__(
@@ -92,6 +110,7 @@ class ImagePerturbation:
         overwrite_logs=True,
         image_size=(240, 320),
         drop_boundary=3.0,
+        attention_map={},
     ):
         # marks which perturbation is selected next
         self._index = 0
@@ -140,6 +159,12 @@ class ImagePerturbation:
         # circular buffer to stop after 10 frames of crash
         self._crash_buffer = CircularBuffer(10)
         self.neuralStyleModels = NeuralStyleTransfer(getNeuralModelPaths(funcs))
+        # init perturbating saliency regions
+        self.attention_func = mapSaliencyNameToFunc(attention_map.get("map", None))
+        self.model = attention_map.get("model", None)
+        self.saliency_threshold = attention_map.get("threshold", 0.5)
+        self.grad_cam_layer = attention_map.get("layer", "conv2d_5")
+        # init logger
         self.logger.info(
             [
                 "pertubation_name",
@@ -210,6 +235,14 @@ class ImagePerturbation:
             pertub_image = func(self.scale, image, iterator)
         elif "styling" in func.__name__:
             pertub_image = func(self, self.scale, image)
+        elif self.attention_func != None:
+            # preprocess image and get map
+            img_array = preprocess_image_saliency(image)
+            map = self.attention_func(self.model, img_array, self.grad_cam_layer)
+            # perturb regions of image which have high values
+            pertub_image = perturb_high_attention_regions(
+                map, image, func, self.saliency_threshold, self.scale
+            )
         else:
             pertub_image = func(self.scale, image)
         # update xte
@@ -601,3 +634,19 @@ def getNeuralModelPaths(style_names: [str]):
     style_names = [style for style in style_names if any(style in s for s in paths)]
     lookup_dict = {os.path.splitext(os.path.basename(path))[0]: path for path in paths}
     return [lookup_dict[key] for key in style_names]
+
+
+def mapSaliencyNameToFunc(name: Union[str, None]):
+    if name == None:
+        return None
+    elif name == "grad_cam":
+        return gradCam
+    elif name == "vanilla":
+        return getSaliencyMap
+    else:
+        return None
+
+
+def preprocess_image_saliency(img):
+    img_arr = np.asarray(img, dtype=np.float32)
+    return img_arr.reshape((1,) + img_arr.shape)

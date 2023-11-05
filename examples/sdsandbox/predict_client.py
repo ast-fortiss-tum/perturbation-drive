@@ -42,10 +42,18 @@ class DonkeySimMsgHandler(IMesgHandler):
     THROTTLE = 1
 
     def __init__(
-        self, model, constant_throttle, image_cb=None, rand_seed=0, pert_funcs=[]
+        self,
+        model,
+        constant_throttle,
+        image_cb=None,
+        rand_seed=0,
+        pert_funcs=[],
+        attention={},
     ):
         self.model = model
-        self.perturbation = ImagePerturbation(pert_funcs)
+        if attention:
+            attention["model"] = model
+        self.perturbation = ImagePerturbation(pert_funcs, attention_map=attention)
         self.constant_throttle = constant_throttle
         self.client = None
         self.timer = FPSTimer()
@@ -233,6 +241,7 @@ def go(
     image_cb=None,
     rand_seed=None,
     pert_funcs=[],
+    attention={},
 ):
     print("loading model", filename)
     model = load_model(filename, compile=False)
@@ -250,6 +259,7 @@ def go(
             image_cb=image_cb,
             rand_seed=rand_seed,
             pert_funcs=pert_funcs,
+            attention=attention,
         )
         client = SimClient(address, handler)
         clients.append(client)
@@ -289,8 +299,32 @@ if __name__ == "__main__":
         default=[],
         help="perturbations to use on the model. by default all are used",
     )
+    parser.add_argument(
+        "--attention_map", type=str, default="", help="which attention map to use"
+    )
+    parser.add_argument(
+        "--attention_threshold",
+        type=float,
+        default=0.5,
+        help="threshold for attention map perturbation",
+    )
+    parser.add_argument(
+        "--attention_layer",
+        type=str,
+        default="conv2d_5",
+        help="layer for attention map perturbation",
+    )
 
     args = parser.parse_args()
+    attention = (
+        {}
+        if args.attention_map == ""
+        else {
+            "map": args.attention_map,
+            "threshold": args.attention_threshold,
+            "layer": args.attention_layer,
+        }
+    )
 
     address = (args.host, args.port)
     go(
@@ -300,4 +334,5 @@ if __name__ == "__main__":
         num_cars=args.num_cars,
         rand_seed=args.rand_seed,
         pert_funcs=args.perturbation,
+        attention=attention,
     )

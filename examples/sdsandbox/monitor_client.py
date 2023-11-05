@@ -57,13 +57,43 @@ if __name__ == "__main__":
         default=[],
         help="perturbations to use on the model. by default all are used",
     )
+    parser.add_argument(
+        "--attention_map", type=str, default="", help="which attention map to use"
+    )
+    parser.add_argument(
+        "--attention_threshold",
+        type=float,
+        default=0.5,
+        help="threshold for attention map perturbation",
+    )
+    parser.add_argument(
+        "--attention_layer",
+        type=str,
+        default="conv2d_5",
+        help="layer for attention map perturbation",
+    )
     args = parser.parse_args()
 
     address = ("127.0.0.1", 9091)
 
+    attention = (
+        {}
+        if args.attention_map == ""
+        else {
+            "map": args.attention_map,
+            "threshold": args.attention_threshold,
+            "layer": args.attention_layer,
+        }
+    )
+
     try:
         predict_client.go(
-            args.model, address, constant_throttle=0.1, image_cb=display_img, pert_funcs=args.perturbation
+            args.model,
+            address,
+            constant_throttle=0.1,
+            image_cb=display_img,
+            pert_funcs=args.perturbation,
+            attention=attention,
         )
     except KeyboardInterrupt:
         print("got ctrl+c break")

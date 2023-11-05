@@ -5,13 +5,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-def getSaliencyMap(img, model):
+def getSaliencyMap(model, img, _=None):
     """
     Returns the saliency map of a tensorflow cnn
 
     Parameters:
         - img (numpy array): The input image.
         - model: The tensorflow model to evaluate
+        - _: Throwaway param needed to make the function sig identical to GradCam
 
     Returns: numpy array:
     """
