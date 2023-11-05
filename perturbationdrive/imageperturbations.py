@@ -419,10 +419,14 @@ class ImagePerturbation:
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def sim2real(self, scale, image):
-        return image
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
+        styled = self.cycleGenerativeModels.sim2real(image)
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def sim2sim(self, scale, image):
-        return image
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
+        styled = self.cycleGenerativeModels.sim2sim(image)
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def useGenerativeModels(func_names):
         return True if ("sim2real" in func_names or "sim2sim" in func_names) else False
