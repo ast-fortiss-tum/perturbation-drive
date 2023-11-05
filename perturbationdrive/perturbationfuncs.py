@@ -1441,6 +1441,7 @@ def perturb_high_attention_regions(
 ):
     """
     Perturbs the regions of an image where the saliency map has an value greater than boundary
+    Can be used with either vanilla saliency map or grad-cam map
 
     Parameters:
         - saliency_map (numpy array): Two dimensional saliency map
