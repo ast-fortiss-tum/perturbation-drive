@@ -72,5 +72,5 @@ from .AdversarialExamples.fast_gradient_sign_method import fgsm_attack
 from .AdversarialExamples.projected_gradient_descent import pgd_attack
 from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
 from .SaliencyMap.GradCam import (
-    GradCam
+    gradCam
 )

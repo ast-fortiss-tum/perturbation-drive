@@ -162,7 +162,7 @@ class ImagePerturbation:
         self.attention_func = mapSaliencyNameToFunc(attention_map.get("map", None))
         self.model = attention_map.get("model", None)
         self.saliency_threshold = attention_map.get("threshold", 0.5)
-        self.grad_cam_layer = map.get("layer", "conv2d_5")
+        self.grad_cam_layer = attention_map.get("layer", "conv2d_5")
         # init logger
         self.logger.info(
             [
