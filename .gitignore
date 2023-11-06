@@ -206,6 +206,7 @@ benchmark_pert.json
 benchmark_perturbation.json
 benchmark-perturbation.json
 benchmark-pertubation.json
+benchmark-pert.json
 
 ### logs ###
 logs.csv
@@ -224,6 +225,11 @@ logs.csv
 
 
 ### CycleGan Models ###
-*.keras
 *sim2real.h5
 *real2sim.h5
+
+
+### Models should be downloaded on demand via curl ###
+*.keras
+*.t7
+*.h5
