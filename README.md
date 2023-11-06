@@ -136,6 +136,50 @@ diff = abs(steering_angle - unchanged_steering_angle)
 perturbation.udpateSteeringPerformance(diff)
 ```
 
+## CycleGANs
+
+This library partly relies on CycleGANs to translate images into another domain, such as from simulated images into real images. You can specify such perturbations such as:
+
+```Python
+from perturbationdrive import ImagePerturbation
+
+# Instantiate a perturbation object
+funcs = [
+    "sim2real", 
+]
+perturbation = ImagePerturbation(funcs)
+```
+
+In order to use these perturbations you will either download the models vie `curl` or train your own CycleGAN
+
+### Download the models
+
+1) Navigate into the directory via `cd perturbationdrive/Generative`.
+2) Make the setup script executable `chmod +x setup.sh`.
+3) Execute the setup script `./setup.sh`. This will download the generative models `donkey_sim2real.h5` and `donkey_sim2sim.h5`.
+
+### Train you own model
+
+You will need two folders containing the unlabeled images from your two domains. It is important that the input domain is equivalent to your simualtor input. Then you can train your model such as.
+
+```Python
+from perturbationdrive.Generative import train
+
+train(
+    input_dir="./relative/path/to/folder",
+    output_dir="./relative/path/to/folder",
+    image_extension_input="jpg",
+    image_extension_output="jpg",
+    buffer_size=100,
+    batch_size=2,
+    early_stop_patience=None,
+    epochs=50,
+    steps_per_epoch=300,
+)
+```
+
+This will automatically save the two generative models `donkey_sim2real.h5` and `donkey_sim2sim.h5`.
+
 ## Neural Style Transfer
 
 If you want to perturb your images using neural style transfer based on the ideas and models of `Perceptual Losses for Real-Time Style Transfer and Super- Resolution, Johnson et al., 2016`, you first need to download the models via a setup script.
