@@ -419,7 +419,7 @@ class ImagePerturbation:
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def sim2real(self, scale, image):
-        alpha = [1.0, 0.4, 0.6, 0.8, 1.0][scale]
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.cycleGenerativeModels.toReal(image)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 

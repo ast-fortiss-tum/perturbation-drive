@@ -12,6 +12,7 @@ class Sim2RealGen:
         self.real2sim = tf.keras.models.load_model(
             "perturbationdrive/Generative/donkey_real2sim.h5"
         )
+        print("\n\nsetup generative models\n\n")
 
     def toSim(self, image):
         # expect an image uints

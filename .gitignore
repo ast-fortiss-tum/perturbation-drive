@@ -210,6 +210,7 @@ benchmark-pert.json
 
 ### logs ###
 logs.csv
+logs_fixed.csv
 
 
 ### Neural Style Transfer Models ###

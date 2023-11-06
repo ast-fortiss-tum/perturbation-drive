@@ -73,3 +73,4 @@ from .AdversarialExamples.projected_gradient_descent import pgd_attack
 from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
 from .SaliencyMap.GradCam import gradCam
 from .Generative.Sim2RealGen import Sim2RealGen
+from .evaluatelogs import fix_csv_logs, plot_driven_distance

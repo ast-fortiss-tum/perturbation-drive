@@ -107,8 +107,8 @@ class DonkeySimMsgHandler(IMesgHandler):
             "sector": data["sector"],
             "xte": data["cte"],
             "pos_x": data["pos_x"],
-            "pos_y": data["pos_y"],
-            "pos_z": data["pos_z"],
+            "pos_y": data["pos_z"],
+            "pos_z": data["pos_y"],
         }
         # use opencv because it has faster image manipulation and conversion to numpy than PIL
         img_data = base64.b64decode(imgString)
@@ -140,9 +140,9 @@ class DonkeySimMsgHandler(IMesgHandler):
             self.img_arr = None
 
     def predict(self, image_array):
-        outputs = self.model.predict(image_array)
+        outputs = self.model.predict(image_array, verbose=0)
         if self.unchanged_img_arr is not None:
-            unchanged_outputs = self.model.predict(self.unchanged_img_arr)
+            unchanged_outputs = self.model.predict(self.unchanged_img_arr, verbose=0)
             return self.parse_outputs(outputs, unchanged_outputs)
         self.parse_outputs(outputs)
 
