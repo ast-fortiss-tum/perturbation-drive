@@ -29,7 +29,7 @@ def gradCam(model, img_array, layer_name="conv2d_5"):
 
     with tf.GradientTape() as tape:
         inputs = tf.cast(img_array, tf.float32)
-        (convOutputs, predictions) = gradModel(inputs, verbose=0)
+        (convOutputs, predictions) = gradModel(inputs)
         loss = predictions[:, ]
     # use automatic differentiation to compute the gradients
     grads = tape.gradient(loss, convOutputs)

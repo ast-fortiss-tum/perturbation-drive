@@ -57,7 +57,3 @@ def plot_driven_distance(file_path):
         plt.legend(title=perturbation)
         plt.tight_layout()
         plt.show()
-
-
-fix_csv_logs("logs.csv")
-plot_driven_distance("logs_fixed.csv")
