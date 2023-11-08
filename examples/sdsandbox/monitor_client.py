@@ -49,6 +49,8 @@ if __name__ == "__main__":
     """Before using this method make sure to set the correct camera size in conf.py"""
     parser = argparse.ArgumentParser(description="prediction server with monitor")
     parser.add_argument("--model", type=str, help="model name. no json or keras.")
+    parser.add_argument("--host", type=str, default="127.0.0.1", help="server sim host")
+    parser.add_argument("--port", type=int, default=9091, help="bind to port")
     parser.add_argument(
         "--perturbation",
         dest="perturbation",
@@ -74,7 +76,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    address = ("127.0.0.1", 9091)
+    address = (args.host, args.port)
 
     attention = (
         {}

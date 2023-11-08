@@ -221,3 +221,9 @@ logs.csv
 *the_wave.t7
 *starry_night.t7
 *composition_vii.t7
+
+### gen models ###
+*sim.h5
+*real.h5
+*sim.keras
+*real.keras
