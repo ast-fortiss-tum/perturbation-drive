@@ -204,8 +204,8 @@ class ImagePerturbation:
         self._csv_handler.flush_row()
         if self.is_stopped:
             return {"image": image, "func": "quit_app"}
-        self._crash_buffer.add((data["pos_x"], data["pos_y"]))
-        if self._crash_buffer.all_elements_equal() and self._crash_buffer.length() > 9:
+        self._crash_buffer.add((data["pos_x"], data["pos_y"], data["pos_z"]))
+        if self._crash_buffer.all_elements_equal() and self._crash_buffer.length() > 20:
             print("Crash buffer is full")
             return {"image": image, "func": "reset_car"}
         # check if we have finished the lap
