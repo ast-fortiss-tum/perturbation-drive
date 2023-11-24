@@ -23,7 +23,7 @@ from gym_donkeycar.core.sim_client import SimClient
 from perturbationdrive import ImagePerturbation
 
 import conf
-import models
+import examples.models.models as models
 
 
 if tf.__version__ == "1.13.1":
@@ -102,6 +102,7 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def on_telemetry(self, data):
         imgString = data["image"]
+        # the sandbox mixes y and z value up, so we fix it here
         pert_data = {
             "lap": data["lap"],
             "sector": data["sector"],

@@ -5,13 +5,12 @@ Author: Tawn Kramer
 '''
 from __future__ import print_function
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Conv2D, MaxPooling2D, Input
-from tensorflow.keras.layers import Dense, Lambda, ELU
-from tensorflow.keras.layers import Activation, Dropout, Flatten, Dense
-from tensorflow.keras.layers import Cropping2D
-from tensorflow.keras.optimizers import Adadelta, Adam
+from tensorflow.keras.layers import Conv2D, Input
+from tensorflow.keras.layers import Dense, Lambda
+from tensorflow.keras.layers import Dropout, Flatten, Dense
+from tensorflow.keras.optimizers import Adam
 
-import conf
+import sdsandbox.conf as conf
 
 def show_model_summary(model):
     model.summary()
