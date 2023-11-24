@@ -163,7 +163,7 @@ In order to use these perturbations you will either download the models vie `cur
 You will need two folders containing the unlabeled images from your two domains. It is important that the input domain is equivalent to your simualtor input. Then you can train your model such as.
 
 ```Python
-from perturbationdrive.Generative import train
+from perturbationdrive import train_cycle_gan
 
 train(
     input_dir="./relative/path/to/folder",
@@ -179,6 +179,8 @@ train(
 ```
 
 This will automatically save the two generative models `donkey_sim2real.h5` and `donkey_sim2sim.h5`.
+
+After each epoch, two images will be generated in a `generated_sim` and `generated_real` folder which show the performance of the generators.
 
 ## Neural Style Transfer
 
