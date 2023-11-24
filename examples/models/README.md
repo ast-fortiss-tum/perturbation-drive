@@ -7,7 +7,7 @@ To train your model you will need your own dataset. You can generate a dataset f
 1. Create your dataset by following sdsandbox specifications.
 2. Run the script to train you model:
     - You need to specify your model name via `--model`
-    - You need to specify the relative path to your input logs `--inputs`. This path needs to end with '*.*'.
+    - You need to specify the relative path to your input logs `--inputs`. This path needs to end with '*.jpg'.
     - You can specify the amount of epochs. The default is 200, however training will stop if there is no improvement.
 
 When defining your model name you can opt for the different [tensorflow model](https://www.tensorflow.org/tutorials/keras/save_and_load#save_the_entire_model) formats of `.keras`, `.h5` or saved model format.
