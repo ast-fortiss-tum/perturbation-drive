@@ -23,7 +23,7 @@ from gym_donkeycar.core.sim_client import SimClient
 from perturbationdrive import ImagePerturbation
 
 import conf
-import models
+import examples.models.models as models
 
 
 if tf.__version__ == "1.13.1":

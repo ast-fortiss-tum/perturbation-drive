@@ -1,0 +1,23 @@
+# How to train your own models
+
+To train your model you will need your own dataset. You can generate a dataset for the supported simulators by following the specifications in the simulator examples.
+
+## Train DAVE-2
+
+1. Create your dataset by following sdsandbox specifications.
+2. Run the script to train you model:
+    - You need to specify your model name via `--model`
+    - You need to specify the relative path to your input logs `--inputs`. This path needs to end with '*.*'.
+    - You can specify the amount of epochs. The default is 200, however training will stop if there is no improvement.
+
+When defining your model name you can opt for the different [tensorflow model](https://www.tensorflow.org/tutorials/keras/save_and_load#save_the_entire_model) formats of `.keras`, `.h5` or saved model format.
+
+The training will also automatically create a loss graph with the file name loss.png.
+
+Here you can find an example script execution.
+
+```bash
+python3 examples/models/train_dave2.py --model=your_name.h5 --epochs=200 --inputs="./relative/path/to/your/inputs/*.*"
+
+python3  examples/models/train_dave2.py --model=your_name --epochs=200 --inputs="./../../../../Desktop/dataset_1.11./*.jpg"
+```

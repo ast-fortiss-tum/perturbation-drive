@@ -36,4 +36,16 @@ This list contains a couple of example configurations:
 
 ## Train your own model
 
-Todo
+1. Create your dataset by following `Specifications on the sdsandbox simulator`.
+2. Run the script to train you model:
+    - You need to specify your model name via `--model`
+    - You need to specify the relative path to your input logs `--inputs`. This path needs to end with '*.*'.
+    - You can specify the amount of epochs. The default is 200, however training will stop if there is no improvement.
+
+This is an example script execution.
+
+```bash
+python3 examples/sdsandbox/train_sdsandbox_model.py --model=your_name --epochs=200 --inputs=../relative/path/to/your/inputs/*.*
+
+python3 examples/sdsandbox/train_sdsandbox_model.py --model=your_name --epochs=200 --inputs="./../../../../Desktop/dataset_1.11./*.*"
+```
