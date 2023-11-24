@@ -1,6 +1,6 @@
 import cv2
 import os
-from utils import download_file
+from ..utils import download_file
 
 
 class NeuralStyleTransfer:

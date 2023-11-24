@@ -429,11 +429,22 @@ class GANMonitor(tf.keras.callbacks.Callback):
     """
 
     def __init__(
-        self, num_img=1, sim_paths="generated_sim", real_paths="generated_real"
+        self,
+        Sim_Dataset,
+        Real_Dataset,
+        real_generator,
+        sim_generator,
+        num_img=1,
+        sim_paths="generated_sim",
+        real_paths="generated_real",
     ):
         self.num_img = num_img
         self.day_paths = sim_paths
         self.night_paths = real_paths
+        self.Sim_Dataset = Sim_Dataset
+        self.Real_Dataset = Real_Dataset
+        self.real_generator = real_generator
+        self.sim_generator = sim_generator
 
         # dir to save genereated day images
         if not os.path.exists(self.day_paths):
@@ -444,16 +455,16 @@ class GANMonitor(tf.keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs=None):
         # generated night
-        for i, img in enumerate(Sim_Dataset.take(self.num_img)):
+        for i, img in enumerate(self.Sim_Dataset.take(self.num_img)):
             # TODO: Evaluate FID Distance for a cycled image here
-            prediction = real_generator(img, training=False)[0].numpy()
+            prediction = self.real_generator(img, training=False)[0].numpy()
             prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
             prediction = PIL.Image.fromarray(prediction)
             prediction.save(f"{self.night_paths}/generated_{i}_{epoch+1}.png")
 
         # generated day images
-        for i, img in enumerate(Real_Dataset.take(self.num_img)):
-            prediction = sim_generator(img, training=False)[0].numpy()
+        for i, img in enumerate(self.Real_Dataset.take(self.num_img)):
+            prediction = self.sim_generator(img, training=False)[0].numpy()
             prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
             prediction = PIL.Image.fromarray(prediction)
             prediction.save(f"{self.day_paths}/generated_{i}_{epoch+1}.png")
@@ -507,7 +518,7 @@ class CustomEarlyStopping(tf.keras.callbacks.Callback):
             print("Epoch %05d: early stopping" % (self.stopped_epoch + 1))
 
 
-def train(
+def train_cycle_gan(
     input_dir,
     output_dir,
     image_extension_input="jpg",
@@ -535,18 +546,18 @@ def train(
         - steps_per_epoch=300: Steps per epoch to take.
     """
     # create datasets
-    sim_list = glob(input_dir + f"/*{image_extension_input}")
+    # sim_list = glob(input_dir + f"/*{image_extension_input}")
     Sim_Dataset = create_img_dataset(
-        directory=sim_list,
+        directory=input_dir,
         image_preprocess_fn=preprocess_image_train,
         buffer_size=buffer_size,
         batch_size=batch_size,
         image_extension=image_extension_input,
     )
 
-    real_list = glob(output_dir + f"/*{image_extension_output}")
+    # real_list = glob(output_dir + f"/*{image_extension_output}")
     Real_Dataset = create_img_dataset(
-        directory=real_list,
+        directory=output_dir,
         image_preprocess_fn=preprocess_image_train,
         buffer_size=buffer_size,
         batch_size=batch_size,
@@ -589,8 +600,9 @@ def train(
             return lr * tf.math.exp(decay_rate * 2)
 
     lr_scheduler = tf.keras.callbacks.LearningRateScheduler(scheduler, verbose=0)
+    gan_monitor = GANMonitor(Sim_Dataset, Real_Dataset, real_generator, sim_generator)
 
-    callbacks = [lr_scheduler, GANMonitor()]
+    callbacks = [lr_scheduler, gan_monitor]
     # early stopping
     if early_stop_patience is not None:
         early_stop = tf.keras.callbacks.EarlyStopping(

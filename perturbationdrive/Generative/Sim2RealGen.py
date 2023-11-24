@@ -3,7 +3,7 @@ import numpy as np
 import cv2
 import tensorflow_addons as tfa
 import os
-from utils import download_file
+from ..utils import download_file
 
 
 class Sim2RealGen:
