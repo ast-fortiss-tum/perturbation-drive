@@ -17,7 +17,5 @@ The training will also automatically create a loss graph with the file name loss
 Here you can find an example script execution.
 
 ```bash
-python3 examples/models/train_dave2.py --model=your_name.h5 --epochs=200 --inputs="./relative/path/to/your/inputs/*.*"
-
-python3  examples/models/train_dave2.py --model=your_name --epochs=200 --inputs="./../../../../Desktop/dataset_1.11./*.jpg"
+python3 examples/models/train_dave2.py --model=your_name.h5 --epochs=200 --inputs="./relative/path/to/your/inputs/*.jpg"
 ```
