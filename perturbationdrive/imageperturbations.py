@@ -68,6 +68,7 @@ import importlib
 from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
 from .SaliencyMap import AttentionMaps, gradCam, getSaliencyMap
 from typing import Union
+from .Generative.Sim2RealGen import Sim2RealGen
 
 
 class ImagePerturbation:
@@ -95,7 +96,7 @@ class ImagePerturbation:
     :type drop_boundary: float
     :default drop_boundary=3.0
 
-    :param attention_map: States if we perturbated the input based on the attention map and which attention map to use. Possible arguments for map are 
+    :param attention_map: States if we perturbated the input based on the attention map and which attention map to use. Possible arguments for map are
         `grad_cam` or `vanilla`.
         If you want to perturb based on the attention map you will need to speciy the model, attention threshold as well as the map type here.
         You can use either the vanilla saliency map or the Grad Cam attention map. If this dict is empty we do not perturb based on the saliency regions
@@ -159,6 +160,9 @@ class ImagePerturbation:
         # circular buffer to stop after 10 frames of crash
         self._crash_buffer = CircularBuffer(10)
         self.neuralStyleModels = NeuralStyleTransfer(getNeuralModelPaths(funcs))
+        # check if we use cycle gans
+        if self.useGenerativeModels(funcs):
+            self.cycleGenerativeModels = Sim2RealGen()
         # init perturbating saliency regions
         self.attention_func = mapSaliencyNameToFunc(attention_map.get("map", None))
         self.model = attention_map.get("model", None)
@@ -233,7 +237,8 @@ class ImagePerturbation:
         if iterator_name != "":
             iterator = getattr(self, ITERATOR_MAPPING.get(func, ""))
             pertub_image = func(self.scale, image, iterator)
-        elif "styling" in func.__name__:
+        elif "styling" in func.__name__ or "sim2" in func.__name__:
+            # apply either style transfer or cycle gan
             pertub_image = func(self, self.scale, image)
         elif self.attention_func != None:
             # preprocess image and get map
@@ -413,6 +418,19 @@ class ImagePerturbation:
         )
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
+    def sim2real(self, scale, image):
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
+        styled = self.cycleGenerativeModels.toReal(image)
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
+
+    def sim2sim(self, scale, image):
+        alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
+        styled = self.cycleGenerativeModels.sim2sim(image)
+        return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
+
+    def useGenerativeModels(self, func_names):
+        return True if ("sim2real" in func_names or "sim2sim" in func_names) else False
+
 
 def _loadMaskFrames(path: str, isGreenScreen=True, height=240, width=320) -> list:
     """
@@ -541,6 +559,8 @@ FUNCTION_MAPPING = {
     "starry_night": ImagePerturbation.starry_night_styling,
     "la_muse": ImagePerturbation.la_muse_styling,
     "composition_vii": ImagePerturbation.composition_vii_styling,
+    "sim2real": ImagePerturbation.sim2real,
+    "real2real": ImagePerturbation.sim2sim,
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name

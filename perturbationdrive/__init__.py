@@ -60,6 +60,7 @@ from perturbationdrive.perturbationfuncs import (
 
 from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
+from .utils.utilFuncs import download_file
 from .SaliencyMap.saliencymap import (
     getSaliencyMap,
     getSaliencyPixels,
@@ -71,6 +72,7 @@ from .SaliencyMap.saliencymap import (
 from .AdversarialExamples.fast_gradient_sign_method import fgsm_attack
 from .AdversarialExamples.projected_gradient_descent import pgd_attack
 from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
-from .SaliencyMap.GradCam import (
-    gradCam
-)
+from .SaliencyMap.GradCam import gradCam
+from .Generative.Sim2RealGen import Sim2RealGen
+from .Generative.TrainCycleGan import train_cycle_gan
+from .evaluatelogs import fix_csv_logs, plot_driven_distance

@@ -206,9 +206,11 @@ benchmark_pert.json
 benchmark_perturbation.json
 benchmark-perturbation.json
 benchmark-pertubation.json
+benchmark-pert.json
 
 ### logs ###
 logs.csv
+logs_fixed.csv
 
 
 ### Neural Style Transfer Models ###
@@ -222,8 +224,13 @@ logs.csv
 *starry_night.t7
 *composition_vii.t7
 
-### gen models ###
-*sim.h5
-*real.h5
-*sim.keras
-*real.keras
+
+### CycleGan Models ###
+*sim2real.h5
+*real2sim.h5
+
+
+### Models should be downloaded on demand via curl ###
+*.keras
+*.t7
+*.h5

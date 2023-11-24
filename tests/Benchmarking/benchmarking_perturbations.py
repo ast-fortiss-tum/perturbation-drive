@@ -38,10 +38,51 @@ def benchmark():
         runner.bench_func(f"elastic scale {i}", elastic, i, img)
         runner.bench_func(f"pixelate scale {i}", pixelate, i, img)
         runner.bench_func(f"jpeg_filter scale {i}", jpeg_filter, i, img)
+        runner.bench_func(f"shear_image scale {i}", shear_image, i, img)
+        runner.bench_func(f"translate_image scale {i}", translate_image, i, img)
+        runner.bench_func(f"scale_image scale {i}", scale_image, i, img)
+        runner.bench_func(f"rotate_image scale {i}", rotate_image, i, img)
+        runner.bench_func(f"stripe_mapping scale {i}", stripe_mapping, i, img)
+        runner.bench_func(f"fog_mapping scale {i}", fog_mapping, i, img)
+        runner.bench_func(f"splatter_mapping scale {i}", splatter_mapping, i, img)
+        runner.bench_func(
+            f"dotted_lines_mapping scale {i}", dotted_lines_mapping, i, img
+        )
+        runner.bench_func(f"zigzag_mapping scale {i}", zigzag_mapping, i, img)
+        runner.bench_func(f"canny_edges_mapping scale {i}", canny_edges_mapping, i, img)
+        runner.bench_func(
+            f"speckle_noise_filter scale {i}", speckle_noise_filter, i, img
+        )
+        runner.bench_func(f"false_color_filter scale {i}", false_color_filter, i, img)
+        runner.bench_func(f"high_pass_filter scale {i}", high_pass_filter, i, img)
+        runner.bench_func(f"low_pass_filter scale {i}", low_pass_filter, i, img)
+        runner.bench_func(f"phase_scrambling scale {i}", phase_scrambling, i, img)
+        runner.bench_func(f"power_equalisation scale {i}", power_equalisation, i, img)
+        runner.bench_func(
+            f"histogram_equalisation scale {i}", histogram_equalisation, i, img
+        )
+        runner.bench_func(f"reflection_filter scale {i}", reflection_filter, i, img)
+        runner.bench_func(
+            f"white_balance_filter scale {i}", white_balance_filter, i, img
+        )
+        runner.bench_func(f"sharpen_filter scale {i}", sharpen_filter, i, img)
+        runner.bench_func(f"grayscale_filter scale {i}", grayscale_filter, i, img)
+        runner.bench_func(f"silhouette_filter scale {i}", silhouette_filter, i, img)
+        runner.bench_func(f"invert_filter scale {i}", invert_filter, i, img)
+        runner.bench_func(f"solarite_filter scale {i}", solarite_filter, i, img)
+        runner.bench_func(f"posterize_filter scale {i}", posterize_filter, i, img)
+        runner.bench_func(f"cutout_filter scale {i}", cutout_filter, i, img)
+        runner.bench_func(
+            f"sample_pairing_filter scale {i}", sample_pairing_filter, i, img
+        )
+        runner.bench_func(f"gaussian_blur scale {i}", gaussian_blur, i, img)
+        runner.bench_func(f"saturation_filter scale {i}", saturation_filter, i, img)
+        runner.bench_func(
+            f"saturation_decrease_filter scale {i}", saturation_decrease_filter, i, img
+        )
         runner.bench_func(f"fog_filter scale {i}", fog_filter, i, img)
         runner.bench_func(f"frost_filter scale {i}", frost_filter, i, img)
         runner.bench_func(f"snow_filter scale {i}", snow_filter, i, img)
-        runner.bench_func(f"object_overlay scale {i}", object_overlay, i, img)
 
 
 def benchmark_donkey_image_shape():

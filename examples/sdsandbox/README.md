@@ -49,3 +49,11 @@ python3 examples/sdsandbox/train_sdsandbox_model.py --model=your_name --epochs=2
 
 python3 examples/sdsandbox/train_sdsandbox_model.py --model=your_name --epochs=200 --inputs="./../../../../Desktop/dataset_1.11./*.*"
 ```
+
+## Download the models
+
+You can download pretrained models if you do not want to train you own models.
+
+1) Navigate into the directory via `cd examples/sdsandbox`
+2) Make the setup script executable `chmod +x setup.sh`
+3) Execute the setup script `./setup.sh`. This will download the models `model_1_11.h5`, `mymodel.h5` and `mymodel_15_10.h5`
