@@ -1,5 +1,6 @@
 import numpy as np
-
+import os 
+import requests
 
 def round_to_nearest_odd(n):
     """
@@ -70,3 +71,14 @@ def simple_white_balance(img):
     img[..., 2] = np.clip(img[..., 2] * b_scale, 0, 255)
 
     return img
+
+
+def download_file(url, target_folder):
+    """Downloads file from url and moves it to target folder"""
+    local_filename = os.path.join(target_folder, url.split("/")[-1])
+    with requests.get(url, stream=True) as r:
+        r.raise_for_status()
+        with open(local_filename, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                f.write(chunk)
+    return local_filename

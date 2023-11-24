@@ -2,13 +2,28 @@ import tensorflow as tf
 import numpy as np
 import cv2
 import tensorflow_addons as tfa
+import os
+from utils import download_file
 
 
 class Sim2RealGen:
     def __init__(self) -> None:
+        if not os.path.exists("perturbationdrive/Generative/donkey_sim2real.h5"):
+            # download and move file
+            print("Fetching generative model real2sim")
+            download_file(
+                "https://syncandshare.lrz.de/dl/fiHFK1MTb6aAK2JE2osQeL/donkey_real2sim.h5",
+                "perturbationdrive/Generative",
+            )
         self.sim2real = tf.keras.models.load_model(
             "perturbationdrive/Generative/donkey_sim2real.h5"
         )
+        if not os.path.exists("perturbationdrive/Generative/donkey_real2sim.h5"):
+            print("Fetching generative model sim2real")
+            download_file(
+                "https://syncandshare.lrz.de/dl/fi5udoYWWeHS5zajmjXGha/donkey_sim2real.h5",
+                "perturbationdrive/Generative",
+            )
         self.real2sim = tf.keras.models.load_model(
             "perturbationdrive/Generative/donkey_real2sim.h5"
         )

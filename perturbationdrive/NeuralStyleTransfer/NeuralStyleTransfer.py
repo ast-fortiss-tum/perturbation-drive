@@ -1,5 +1,6 @@
 import cv2
 import os
+from utils import download_file
 
 
 class NeuralStyleTransfer:
@@ -28,7 +29,17 @@ class NeuralStyleTransfer:
         self.models = {}
         for path in model_names:
             model_name = os.path.splitext(os.path.basename(path))[0]
-            print(f"Fetching Neural Style {model_name} from {path}")
+            if not os.path.exists(path):
+                # download and save file
+                parts = path.split("/")
+                model_url = (
+                    "https://cs.stanford.edu/people/jcjohns/fast-neural-style/models/"
+                    + "/".join(parts[-2:])
+                )
+                print(f"Fetching Neural Style Transfer {model_name} from {model_url}")
+                download_file(model_url, path)
+            else:
+                print(f"Loading Neural Style Transfer {model_name} from {path}")
             self.models[model_name] = cv2.dnn.readNetFromTorch(path)
 
     def transferStyle(self, image, model_name):

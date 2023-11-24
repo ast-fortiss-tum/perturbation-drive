@@ -60,6 +60,7 @@ from perturbationdrive.perturbationfuncs import (
 
 from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
+from .utils.utilFuncs import download_file
 from .SaliencyMap.saliencymap import (
     getSaliencyMap,
     getSaliencyPixels,
