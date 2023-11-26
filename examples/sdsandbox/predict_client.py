@@ -10,6 +10,7 @@ Author: Tawn Kramer
 from __future__ import print_function
 import argparse
 import time
+import random
 import base64
 
 import tensorflow as tf
@@ -72,6 +73,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             "reset_car": self.on_reset_car,
             "quit_app": self.on_quit_app,
             "update": self.on_enque_image,
+            "road_regen": self.send_regen_road,
         }
 
     def on_connect(self, client):
@@ -87,10 +89,15 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def on_recv_message(self, message):
         self.timer.on_frame()
+        print(f"received {message}")
         if not "msg_type" in message:
             return
 
         msg_type = message["msg_type"]
+        if msg_type == "road_regen":
+            rand = random.random()
+            print(f"Generating Random Road with turn inc {rand}")
+            self.send_regen_road(0, 0, rand)
         if msg_type in self.fns:
             self.fns[msg_type](message)
         else:

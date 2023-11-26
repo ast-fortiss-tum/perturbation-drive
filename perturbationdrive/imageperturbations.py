@@ -80,6 +80,10 @@ class ImagePerturbation:
     :default funcs: If this list is empty we use all perturbations which are quick enough for
         the simultation
 
+    :param road_gen: Boolean indicating if this class randomly generates the roads for the car to drive on
+    :type road_gen: Bool
+    :default road_gen: True
+
     :param log_dir: The directory to log the benchmarking
     :type log:dir: str
     :default log_dir="logs.csv"
@@ -107,6 +111,7 @@ class ImagePerturbation:
     def __init__(
         self,
         funcs=[],
+        road_gen=True,
         log_dir="logs.csv",
         overwrite_logs=True,
         image_size=(240, 320),
@@ -120,6 +125,7 @@ class ImagePerturbation:
         self.scale = 0
         self.drop_boundary = drop_boundary
         self.is_stopped = False
+        self.road_gen = road_gen
         # setup logger
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(logging.INFO)
@@ -224,7 +230,10 @@ class ImagePerturbation:
                 self._increment_scale()
                 # print summary when incrementing scale
                 self.print_performance()
-                return {"image": image, "func": "reset_car"}
+                if self.road_gen:
+                    return {"image": image, "func": "road_regen"}
+                else:
+                    return {"image": image, "func": "reset_car"}
             else:
                 return {"image": image, "func": "reset_car"}
 
