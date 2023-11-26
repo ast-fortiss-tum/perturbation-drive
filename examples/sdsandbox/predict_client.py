@@ -89,19 +89,16 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def on_recv_message(self, message):
         self.timer.on_frame()
-        print(f"received {message}")
         if not "msg_type" in message:
+            print("message type not present", message)
             return
 
         msg_type = message["msg_type"]
-        if msg_type == "road_regen":
-            rand = random.random()
-            print(f"Generating Random Road with turn inc {rand}")
-            self.send_regen_road(0, 0, rand)
         if msg_type in self.fns:
             self.fns[msg_type](message)
         else:
             print("unknown message type", msg_type)
+            print("message is ", message)
 
     def on_car_created(self, data):
         if self.rand_seed != 0:
@@ -133,6 +130,11 @@ class DonkeySimMsgHandler(IMesgHandler):
         message = self.perturbation.peturbate(image, pert_data)
         # unpack the function we need next
         func = self.fns[message["func"]]
+        if func.__name__ == self.send_regen_road.__name__:
+            rand = random.random()
+            print(f"Generating Random Road with turn inc {rand}")
+            self.send_regen_road(0, 0, rand)
+            return
         new_image = message["image"]
         img_arr = np.asarray(new_image, dtype=np.float32)
         func(image=img_arr)
@@ -200,6 +202,9 @@ class DonkeySimMsgHandler(IMesgHandler):
         The turn_increment defaults to 1.0 internally. Provide a non zero positive float
         to affect the curviness of the road. Smaller numbers will provide more shallow curves.
         """
+        msg = {"msg_type": "quit_app"}
+        self.client.queue_message(msg)
+        print("requested reset")
         msg = {
             "msg_type": "regen_road",
             "road_style": road_style.__str__(),

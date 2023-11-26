@@ -213,6 +213,9 @@ class ImagePerturbation:
         """
         self._csv_handler.flush_row()
         if self.is_stopped:
+            if self.road_gen:
+                self.is_stopped = False
+                return {"image": image, "func": "road_regen"}
             return {"image": image, "func": "quit_app"}
         self._crash_buffer.add((data["pos_x"], data["pos_y"], data["pos_z"]))
         if self._crash_buffer.all_elements_equal() and self._crash_buffer.length() > 20:
@@ -370,7 +373,10 @@ class ImagePerturbation:
         """
         Drops perturbations which are dropped due to high xte
         """
-        self._fns = list(filter(self._perturbation_dropout, self._fns))
+        if not self.road_gen:
+            self._fns = list(filter(self._perturbation_dropout, self._fns))
+        else:
+            print(f"Not filtering functions")
 
     def candy_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
