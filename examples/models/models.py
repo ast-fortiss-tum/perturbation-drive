@@ -10,7 +10,11 @@ from tensorflow.keras.layers import Dense, Lambda
 from tensorflow.keras.layers import Dropout, Flatten, Dense
 from tensorflow.keras.optimizers import Adam
 
-import sdsandbox.conf as conf
+try:
+    import sdsandbox.conf as conf
+except:
+    print("trying to resolve conf import through relative path")
+    from ..sdsandbox import conf
 
 def show_model_summary(model):
     model.summary()
