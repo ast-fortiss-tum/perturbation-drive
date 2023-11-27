@@ -213,6 +213,7 @@ class ImagePerturbation:
         """
         self._csv_handler.flush_row()
         if self.is_stopped:
+            print(f"max sector is {data['maxSector']}")
             if self.road_gen:
                 self.is_stopped = False
                 return {"image": image, "func": "road_regen"}
@@ -222,7 +223,8 @@ class ImagePerturbation:
             print("Crash buffer is full")
             return {"image": image, "func": "reset_car"}
         # check if we have finished the lap
-        if self._lap != data["lap"] or self._sector > data["sector"]:
+        if self._lap != data["lap"] or data["sector"] >= data["maxSector"] or data["xte"] > 2:
+            print(f"max sector is {data['maxSector']}")
             self._sector = data["sector"]
             self._lap = data["lap"]
             # we need to move to the next perturbation

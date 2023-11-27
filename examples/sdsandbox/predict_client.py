@@ -114,6 +114,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             "pos_x": data["pos_x"],
             "pos_y": data["pos_z"],
             "pos_z": data["pos_y"],
+            "maxSector": data["maxSector"],
         }
         # use opencv because it has faster image manipulation and conversion to numpy than PIL
         img_data = base64.b64decode(imgString)
