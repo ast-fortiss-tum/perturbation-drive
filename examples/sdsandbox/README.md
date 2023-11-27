@@ -2,6 +2,8 @@
 
 To run this example you will need the sdsandbox/sdsim unity project on your device. You can find this unity project in [this GitHub repo](https://github.com/ast-fortiss-tum/sdsandbox).
 
+We recommend to use this [fork](https://github.com/HannesLeonhard/sdsandbox_perturbations) of the official sdsandbox simulator as it will allways contain the latest updates on the main branch.
+
 Make sure to install all requirements for this example using `pip install -r requirements.txt`
 
 ## Run Instructions
@@ -25,7 +27,7 @@ This list contains a couple of example configurations:
 3. `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/model_1_11.h5 --perturbation=defocus_blur --attention_map=grad_cam --port=9090`
 4. `python3 examples/sdsandbox/predict_client.py --model=./examples/sdsandbox/model_1_11.h5 --perturbation=defocus_blur`. Please note, that by running only the predict client, you will not be able to view the perturbated images in a seperate monitor.
 
-## Specifications on the sdsandbox simulator
+## Specifications on the sdsandbox simulator and Unity Version
 
 1. Clone the [fortiss-tum sdsandbox repository](https://github.com/ast-fortiss-tum/sdsandbox) and install all requirements.
 2. Checkout the `crossroad`-branch using `git checkout crossroad`
