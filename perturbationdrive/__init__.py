@@ -2,6 +2,10 @@ from perturbationdrive.imageperturbations import (
     ImagePerturbation,
 )
 
+from perturbationdrive.road_generator import (
+    RoadGenerator,
+)
+
 from perturbationdrive.perturbationfuncs import (
     gaussian_noise,
     poisson_noise,

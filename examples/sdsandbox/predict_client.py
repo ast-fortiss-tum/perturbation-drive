@@ -132,9 +132,8 @@ class DonkeySimMsgHandler(IMesgHandler):
         # unpack the function we need next
         func = self.fns[message["func"]]
         if func.__name__ == self.send_regen_road.__name__:
-            rand = random.random()
-            print(f"Generating Random Road with turn inc {rand}")
-            self.send_regen_road(0, 0, rand)
+            print(f"Generating Random Road with waypoints {message['road']}")
+            self.send_regen_road(0, 0, 0, message["road"])
             return
         new_image = message["image"]
         img_arr = np.asarray(new_image, dtype=np.float32)
@@ -194,7 +193,9 @@ class DonkeySimMsgHandler(IMesgHandler):
         }
         self.client.queue_message(msg)
 
-    def send_regen_road(self, road_style=0, rand_seed=0, turn_increment=0.0):
+    def send_regen_road(
+        self, road_style=0, rand_seed=0, turn_increment=0.0, wayPoints=["S 10"]
+    ):
         """
         Regenerate the road, where available. For now only in level 0.
         In level 0 there are currently 5 road styles. This changes the texture on the road
@@ -211,6 +212,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             "road_style": road_style.__str__(),
             "rand_seed": rand_seed.__str__(),
             "turn_increment": turn_increment.__str__(),
+            "wayPoints": wayPoints.__str__(),
         }
 
         self.client.queue_message(msg)

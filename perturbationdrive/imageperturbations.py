@@ -61,6 +61,7 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_smoke_filter,
     perturb_high_attention_regions,
 )
+from perturbationdrive.road_generator import RoadGenerator
 from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
 import types
@@ -126,6 +127,8 @@ class ImagePerturbation:
         self.drop_boundary = drop_boundary
         self.is_stopped = False
         self.road_gen = road_gen
+        if road_gen:
+            self.road_generator = RoadGenerator()
         # setup logger
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(logging.INFO)
@@ -216,7 +219,7 @@ class ImagePerturbation:
             print(f"max sector is {data['maxSector']}")
             if self.road_gen:
                 self.is_stopped = False
-                return {"image": image, "func": "road_regen"}
+                return {"image": image, "func": "road_regen", "road": road}
             return {"image": image, "func": "quit_app"}
         self._crash_buffer.add((data["pos_x"], data["pos_y"], data["pos_z"]))
         if self._crash_buffer.all_elements_equal() and self._crash_buffer.length() > 20:
@@ -236,7 +239,8 @@ class ImagePerturbation:
                 # print summary when incrementing scale
                 self.print_performance()
                 if self.road_gen:
-                    return {"image": image, "func": "road_regen"}
+                    road = self.road_generator.generate_random_road(100)
+                    return {"image": image, "func": "road_regen", "road": road}
                 else:
                     return {"image": image, "func": "reset_car"}
             else:
