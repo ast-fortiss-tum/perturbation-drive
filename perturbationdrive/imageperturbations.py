@@ -219,6 +219,7 @@ class ImagePerturbation:
             print(f"max sector is {data['maxSector']}")
             if self.road_gen:
                 self.is_stopped = False
+                road = self.road_generator.generate_random_road(100)
                 return {"image": image, "func": "road_regen", "road": road}
             return {"image": image, "func": "quit_app"}
         self._crash_buffer.add((data["pos_x"], data["pos_y"], data["pos_z"]))
@@ -226,7 +227,11 @@ class ImagePerturbation:
             print("Crash buffer is full")
             return {"image": image, "func": "reset_car"}
         # check if we have finished the lap
-        if self._lap != data["lap"] or data["sector"] >= data["maxSector"] or data["xte"] > 2:
+        if (
+            self._lap != data["lap"]
+            or data["sector"] >= data["maxSector"]
+            or data["xte"] > 2
+        ):
             print(f"max sector is {data['maxSector']}")
             self._sector = data["sector"]
             self._lap = data["lap"]
