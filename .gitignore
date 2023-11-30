@@ -203,8 +203,7 @@ benchmark*.csv
 benchmark*.json
 
 ### logs ###
-logs.csv
-logs_fixed.csv
+logs*.csv
 
 
 ### Neural Style Transfer Models ###
