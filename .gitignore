@@ -199,14 +199,8 @@ pyrightconfig.json
 examples/donkeyGym/src/gym-donkeycar
 
 ### Tests ###
-benchmark_perturbations.csv
-benchmark_perturbation.csv
-benchmark_perturbations.json
-benchmark_pert.json
-benchmark_perturbation.json
-benchmark-perturbation.json
-benchmark-pertubation.json
-benchmark-pert.json
+benchmark*.csv
+benchmark*.json
 
 ### logs ###
 logs.csv

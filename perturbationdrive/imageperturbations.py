@@ -6,6 +6,8 @@ import random
 import skimage.exposure
 import logging
 import datetime
+import concurrent.futures
+import time
 from perturbationdrive.perturbationfuncs import (
     gaussian_noise,
     poisson_noise,
@@ -67,7 +69,7 @@ from .utils.logger import CSVLogHandler
 import types
 import importlib
 from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
-from .SaliencyMap import AttentionMaps, gradCam, getSaliencyMap
+from .SaliencyMap import gradCam, getActivationMap
 from typing import Union
 from .Generative.Sim2RealGen import Sim2RealGen
 
@@ -170,7 +172,7 @@ class ImagePerturbation:
         self._crash_buffer = CircularBuffer(10)
         self.neuralStyleModels = NeuralStyleTransfer(getNeuralModelPaths(funcs))
         # check if we use cycle gans
-        if self.useGenerativeModels(funcs):
+        if True: #self.useGenerativeModels(funcs):
             self.cycleGenerativeModels = Sim2RealGen()
         # init perturbating saliency regions
         self.attention_func = mapSaliencyNameToFunc(attention_map.get("map", None))
@@ -446,16 +448,27 @@ class ImagePerturbation:
 
     def sim2real(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.cycleGenerativeModels.toReal(image)
+        styled = self.cycleGenerativeModels.toReal(image) # _timeout_wrapper(self.cycleGenerativeModels.toReal, args=(image,))
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def sim2sim(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.cycleGenerativeModels.sim2sim(image)
+        styled = self.cycleGenerativeModels.sim2sim(image) # _timeout_wrapper(self.cycleGenerativeModels.sim2sim, args=(image,))
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def useGenerativeModels(self, func_names):
         return True if ("sim2real" in func_names or "sim2sim" in func_names) else False
+
+
+def _timeout_wrapper(func, args=(), kwargs={}, timeout=0.035):
+    default_value = args[0] if args else None
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(func, *args, **kwargs)
+        try:
+            return future.result(timeout=timeout)
+        except concurrent.futures.TimeoutError:
+            print("timeoutwrapper timeout")
+            return default_value
 
 
 def _loadMaskFrames(path: str, isGreenScreen=True, height=240, width=320) -> list:
@@ -688,7 +701,7 @@ def mapSaliencyNameToFunc(name: Union[str, None]):
     elif name == "grad_cam":
         return gradCam
     elif name == "vanilla":
-        return getSaliencyMap
+        return getActivationMap
     else:
         return None
 
