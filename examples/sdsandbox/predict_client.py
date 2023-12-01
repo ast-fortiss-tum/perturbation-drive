@@ -50,11 +50,14 @@ class DonkeySimMsgHandler(IMesgHandler):
         rand_seed=0,
         pert_funcs=[],
         attention={},
+        road_generation=True,
     ):
         self.model = model
         if attention:
             attention["model"] = model
-        self.perturbation = ImagePerturbation(pert_funcs, attention_map=attention)
+        self.perturbation = ImagePerturbation(
+            pert_funcs, road_gen=road_generation, attention_map=attention
+        )
         self.constant_throttle = constant_throttle
         self.client = None
         self.timer = FPSTimer()
@@ -258,6 +261,7 @@ def go(
     rand_seed=None,
     pert_funcs=[],
     attention={},
+    road_gen=True,
 ):
     print("loading model", filename)
     model = load_model(filename, compile=False)
@@ -276,6 +280,7 @@ def go(
             rand_seed=rand_seed,
             pert_funcs=pert_funcs,
             attention=attention,
+            road_generation=road_gen,
         )
         client = SimClient(address, handler)
         clients.append(client)
@@ -330,6 +335,12 @@ if __name__ == "__main__":
         default="conv2d_5",
         help="layer for attention map perturbation",
     )
+    parser.add_argument(
+        "--road_generation",
+        type=bool,
+        default=True,
+        help="states if we generate the road based on the performance",
+    )
 
     args = parser.parse_args()
     attention = (
@@ -351,4 +362,5 @@ if __name__ == "__main__":
         rand_seed=args.rand_seed,
         pert_funcs=args.perturbation,
         attention=attention,
+        road_gen=args.road_generation,
     )

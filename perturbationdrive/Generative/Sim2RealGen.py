@@ -1,7 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import cv2
-# we need tfs here because the model uses tfa.layers.InstanceNormalization
+# we need tfa here because the model uses tfa.layers.InstanceNormalization
 # and without the import we cannot compile the model
 import tensorflow_addons as tfa
 import os
@@ -10,26 +10,26 @@ from ..utils import download_file
 
 class Sim2RealGen:
     def __init__(self) -> None:
-        # check if we use macos gpu
+        print("setting up generative models")
 
-        if not os.path.exists("perturbationdrive/Generative/donkey_sim2real.h5"):
+        if not os.path.exists("perturbationdrive/Generative/real2sim_tfa_e25.h5"):
             # download and move file
             print("Fetching generative model real2sim")
             download_file(
-                "https://syncandshare.lrz.de/dl/fiHFK1MTb6aAK2JE2osQeL/donkey_real2sim.h5",
-                "perturbationdrive/Generative",
-            )
-        self.sim2real = tf.keras.models.load_model(
-            "perturbationdrive/Generative/donkey_sim2real.h5"
-        )
-        if not os.path.exists("perturbationdrive/Generative/donkey_real2sim.h5"):
-            print("Fetching generative model sim2real")
-            download_file(
-                "https://syncandshare.lrz.de/dl/fi5udoYWWeHS5zajmjXGha/donkey_sim2real.h5",
+                "https://syncandshare.lrz.de/dl/fiWEkvaV9yQ64wPhDRNygr/real2sim_tfa_e25.h5",
                 "perturbationdrive/Generative",
             )
         self.real2sim = tf.keras.models.load_model(
-            "perturbationdrive/Generative/donkey_real2sim.h5"
+            "perturbationdrive/Generative/real2sim_tfa_e25.h5"
+        )
+        if not os.path.exists("perturbationdrive/Generative/sim2real_tfa_e25.h5"):
+            print("Fetching generative model sim2real")
+            download_file(
+                "https://syncandshare.lrz.de/dl/fiEDSNExRpX9wxLAK6nz4x/sim2real_tfa_e25.h5",
+                "perturbationdrive/Generative",
+            )
+        self.sim2real = tf.keras.models.load_model(
+            "perturbationdrive/Generative/sim2real_tfa_e25.h5"
         )
         print("\n\nsetup generative models\n\n")
 

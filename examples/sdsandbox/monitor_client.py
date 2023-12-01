@@ -75,6 +75,12 @@ if __name__ == "__main__":
         default="conv2d_5",
         help="layer for attention map perturbation",
     )
+    parser.add_argument(
+        "--road_generation",
+        type=bool,
+        default=True,
+        help="states if we generate the road based on the performance",
+    )
     args = parser.parse_args()
 
     address = (args.host, args.port)
@@ -97,6 +103,7 @@ if __name__ == "__main__":
             image_cb=display_img,
             pert_funcs=args.perturbation,
             attention=attention,
+            road_gen=args.road_generation,
         )
     except KeyboardInterrupt:
         print("got ctrl+c break")
