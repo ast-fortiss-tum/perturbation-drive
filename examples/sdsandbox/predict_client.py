@@ -336,7 +336,7 @@ if __name__ == "__main__":
         help="layer for attention map perturbation",
     )
     parser.add_argument(
-        "--road_generation",
+        "--road_gen",
         type=bool,
         default=True,
         help="states if we generate the road based on the performance",
@@ -362,5 +362,5 @@ if __name__ == "__main__":
         rand_seed=args.rand_seed,
         pert_funcs=args.perturbation,
         attention=attention,
-        road_gen=args.road_generation,
+        road_gen=args.road_gen,
     )
