@@ -5,14 +5,46 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
+def getActivationMap(model, img_array, layer_name="conv2d_5"):
+    """
+    Returns the activation based saliency map for a tensorflow cnn.
+    We recommend to use the last convolutional layer for your map, e.g. for
+    Dave2 you should use the `conv2d_5` layer
+
+    Parameters:
+      - model tf.model: Underlying tf model
+      - img_array (numpy array): Image the calculate Grad Cam Map for
+      - layer_name str: Layer name to use
+
+
+    Returns
+      uint8 numpy array with shape (img_height, img_width)
+    """
+    out_layer = model.get_layer(layer_name)
+    model = tf.keras.models.Model(
+    			inputs=model.inputs,
+    			outputs=out_layer.output)
+    activations = model.predict(img_array)
+
+    output = np.abs(activations)
+    output = np.sum(output, axis = -1).squeeze()
+
+    #resize and convert to image 
+    (w, h) = (img_array.shape[2], img_array.shape[1])
+    output = cv2.resize(output, (w, h))
+    output /= output.max()
+    output *= 255
+    return output.astype('uint8')
+
+
 def getSaliencyMap(model, img, _=None):
     """
-    Returns the saliency map of a tensorflow cnn
+    Returns the gradient based saliency map of a tensorflow cnn
 
     Parameters:
         - img (numpy array): The input image.
         - model: The tensorflow model to evaluate
-        - _: Throwaway param needed to make the function sig identical to GradCam
+        - _: Throwaway param needed to make the function sig identical to other attention maps
 
     Returns: numpy array:
     """

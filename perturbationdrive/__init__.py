@@ -2,6 +2,10 @@ from perturbationdrive.imageperturbations import (
     ImagePerturbation,
 )
 
+from perturbationdrive.road_generator import (
+    RoadGenerator,
+)
+
 from perturbationdrive.perturbationfuncs import (
     gaussian_noise,
     poisson_noise,
@@ -62,6 +66,7 @@ from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
 from .utils.utilFuncs import download_file
 from .SaliencyMap.saliencymap import (
+    getActivationMap,
     getSaliencyMap,
     getSaliencyPixels,
     getSaliencyRegions,
@@ -76,3 +81,4 @@ from .SaliencyMap.GradCam import gradCam
 from .Generative.Sim2RealGen import Sim2RealGen
 from .Generative.TrainCycleGan import train_cycle_gan
 from .evaluatelogs import fix_csv_logs, plot_driven_distance
+from .utils.timeout import MpTimeoutError, timeout_func, async_raise

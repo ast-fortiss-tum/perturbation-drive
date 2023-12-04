@@ -8,7 +8,8 @@ I advise using the model_1_11.h5 as it achieves the best performance
 
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5`
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5 --perturbation=dynamic_rain_filter`
-`python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/mymodel.h5 --perturbation=defocus_blur --perturbation=increase_brightness --perturbation=pixelate --perturbation=contrast`
+python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/generatedRoadModel.h5 --perturbation=defocus_blur --perturbation=increase_brightness --perturbation=pixelate --perturbation=contrast
+`python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/model_1_11.h5 --perturbation=defocus_blur --perturbation=increase_brightness --perturbation=pixelate --perturbation=contrast`
 `python3 examples/sdsandbox/monitor_client.py --model=./examples/sdsandbox/model_15_10.h5 --perturbation=dynamic_smoke_filter --perturbation=dynamic_lightning_filter --perturbation=dynamic_sun_filter --perturbation=dynamic_object_overlay`
 Author: Tawn Kramer
 """
@@ -74,6 +75,12 @@ if __name__ == "__main__":
         default="conv2d_5",
         help="layer for attention map perturbation",
     )
+    parser.add_argument(
+        "--road_gen",
+        type=bool,
+        default=True,
+        help="states if we generate the road based on the performance",
+    )
     args = parser.parse_args()
 
     address = (args.host, args.port)
@@ -96,6 +103,7 @@ if __name__ == "__main__":
             image_cb=display_img,
             pert_funcs=args.perturbation,
             attention=attention,
+            road_gen=args.road_gen,
         )
     except KeyboardInterrupt:
         print("got ctrl+c break")

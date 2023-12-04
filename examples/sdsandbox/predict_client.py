@@ -10,6 +10,7 @@ Author: Tawn Kramer
 from __future__ import print_function
 import argparse
 import time
+import random
 import base64
 
 import tensorflow as tf
@@ -49,11 +50,14 @@ class DonkeySimMsgHandler(IMesgHandler):
         rand_seed=0,
         pert_funcs=[],
         attention={},
+        road_generation=True,
     ):
         self.model = model
         if attention:
             attention["model"] = model
-        self.perturbation = ImagePerturbation(pert_funcs, attention_map=attention)
+        self.perturbation = ImagePerturbation(
+            pert_funcs, road_gen=road_generation, attention_map=attention
+        )
         self.constant_throttle = constant_throttle
         self.client = None
         self.timer = FPSTimer()
@@ -72,6 +76,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             "reset_car": self.on_reset_car,
             "quit_app": self.on_quit_app,
             "update": self.on_enque_image,
+            "road_regen": self.send_regen_road,
         }
 
     def on_connect(self, client):
@@ -88,6 +93,7 @@ class DonkeySimMsgHandler(IMesgHandler):
     def on_recv_message(self, message):
         self.timer.on_frame()
         if not "msg_type" in message:
+            print("message type not present", message)
             return
 
         msg_type = message["msg_type"]
@@ -95,6 +101,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             self.fns[msg_type](message)
         else:
             print("unknown message type", msg_type)
+            print("message is ", message)
 
     def on_car_created(self, data):
         if self.rand_seed != 0:
@@ -110,6 +117,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             "pos_x": data["pos_x"],
             "pos_y": data["pos_z"],
             "pos_z": data["pos_y"],
+            "maxSector": data["maxSector"],
         }
         # use opencv because it has faster image manipulation and conversion to numpy than PIL
         img_data = base64.b64decode(imgString)
@@ -126,6 +134,10 @@ class DonkeySimMsgHandler(IMesgHandler):
         message = self.perturbation.peturbate(image, pert_data)
         # unpack the function we need next
         func = self.fns[message["func"]]
+        if func.__name__ == self.send_regen_road.__name__:
+            print(f"Generating Random Road with waypoints {message['road']}")
+            self.send_regen_road(0, 0, 0, message["road"])
+            return
         new_image = message["image"]
         img_arr = np.asarray(new_image, dtype=np.float32)
         func(image=img_arr)
@@ -184,7 +196,9 @@ class DonkeySimMsgHandler(IMesgHandler):
         }
         self.client.queue_message(msg)
 
-    def send_regen_road(self, road_style=0, rand_seed=0, turn_increment=0.0):
+    def send_regen_road(
+        self, road_style=0, rand_seed=0, turn_increment=0.0, wayPoints=["S 10"]
+    ):
         """
         Regenerate the road, where available. For now only in level 0.
         In level 0 there are currently 5 road styles. This changes the texture on the road
@@ -193,11 +207,15 @@ class DonkeySimMsgHandler(IMesgHandler):
         The turn_increment defaults to 1.0 internally. Provide a non zero positive float
         to affect the curviness of the road. Smaller numbers will provide more shallow curves.
         """
+        msg = {"msg_type": "quit_app"}
+        self.client.queue_message(msg)
+        print("requested reset")
         msg = {
             "msg_type": "regen_road",
             "road_style": road_style.__str__(),
             "rand_seed": rand_seed.__str__(),
             "turn_increment": turn_increment.__str__(),
+            "wayPoints": wayPoints.__str__(),
         }
 
         self.client.queue_message(msg)
@@ -243,6 +261,7 @@ def go(
     rand_seed=None,
     pert_funcs=[],
     attention={},
+    road_gen=True,
 ):
     print("loading model", filename)
     model = load_model(filename, compile=False)
@@ -261,6 +280,7 @@ def go(
             rand_seed=rand_seed,
             pert_funcs=pert_funcs,
             attention=attention,
+            road_generation=road_gen,
         )
         client = SimClient(address, handler)
         clients.append(client)
@@ -315,6 +335,12 @@ if __name__ == "__main__":
         default="conv2d_5",
         help="layer for attention map perturbation",
     )
+    parser.add_argument(
+        "--road_gen",
+        type=bool,
+        default=True,
+        help="states if we generate the road based on the performance",
+    )
 
     args = parser.parse_args()
     attention = (
@@ -336,4 +362,5 @@ if __name__ == "__main__":
         rand_seed=args.rand_seed,
         pert_funcs=args.perturbation,
         attention=attention,
+        road_gen=args.road_gen,
     )

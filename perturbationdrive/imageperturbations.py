@@ -61,12 +61,14 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_smoke_filter,
     perturb_high_attention_regions,
 )
+from perturbationdrive.road_generator import RoadGenerator
 from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
+from .utils.timeout import timeout_func
 import types
 import importlib
 from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
-from .SaliencyMap import AttentionMaps, gradCam, getSaliencyMap
+from .SaliencyMap import gradCam, getActivationMap
 from typing import Union
 from .Generative.Sim2RealGen import Sim2RealGen
 
@@ -79,6 +81,10 @@ class ImagePerturbation:
     :type funcs: list string
     :default funcs: If this list is empty we use all perturbations which are quick enough for
         the simultation
+
+    :param road_gen: Boolean indicating if this class randomly generates the roads for the car to drive on
+    :type road_gen: Bool
+    :default road_gen: True
 
     :param log_dir: The directory to log the benchmarking
     :type log:dir: str
@@ -107,6 +113,7 @@ class ImagePerturbation:
     def __init__(
         self,
         funcs=[],
+        road_gen=True,
         log_dir="logs.csv",
         overwrite_logs=True,
         image_size=(240, 320),
@@ -120,10 +127,15 @@ class ImagePerturbation:
         self.scale = 0
         self.drop_boundary = drop_boundary
         self.is_stopped = False
+        self.road_gen = road_gen
+        if road_gen:
+            self.road_generator = RoadGenerator()
         # setup logger
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(logging.INFO)
-
+        self.logger.propagate = (
+            False  # Prevent log messages from being propagated to parent loggers
+        )
         self._csv_handler = CSVLogHandler(
             log_dir, mode=("w" if overwrite_logs else "a")
         )
@@ -207,13 +219,23 @@ class ImagePerturbation:
         """
         self._csv_handler.flush_row()
         if self.is_stopped:
+            print(f"max sector is {data['maxSector']}")
+            if self.road_gen:
+                self.is_stopped = False
+                road = self.road_generator.generate_random_road(100)
+                return {"image": image, "func": "road_regen", "road": road}
             return {"image": image, "func": "quit_app"}
         self._crash_buffer.add((data["pos_x"], data["pos_y"], data["pos_z"]))
         if self._crash_buffer.all_elements_equal() and self._crash_buffer.length() > 20:
             print("Crash buffer is full")
             return {"image": image, "func": "reset_car"}
         # check if we have finished the lap
-        if self._lap != data["lap"] or self._sector > data["sector"]:
+        if (
+            self._lap != data["lap"]
+            or data["sector"] >= data["maxSector"]
+            or data["xte"] > 2
+        ):
+            print(f"max sector is {data['maxSector']}")
             self._sector = data["sector"]
             self._lap = data["lap"]
             # we need to move to the next perturbation
@@ -224,7 +246,11 @@ class ImagePerturbation:
                 self._increment_scale()
                 # print summary when incrementing scale
                 self.print_performance()
-                return {"image": image, "func": "reset_car"}
+                if self.road_gen:
+                    road = self.road_generator.generate_random_road(100)
+                    return {"image": image, "func": "road_regen", "road": road}
+                else:
+                    return {"image": image, "func": "reset_car"}
             else:
                 return {"image": image, "func": "reset_car"}
 
@@ -361,7 +387,10 @@ class ImagePerturbation:
         """
         Drops perturbations which are dropped due to high xte
         """
-        self._fns = list(filter(self._perturbation_dropout, self._fns))
+        if not self.road_gen:
+            self._fns = list(filter(self._perturbation_dropout, self._fns))
+        else:
+            print(f"Not filtering functions")
 
     def candy_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
@@ -420,12 +449,16 @@ class ImagePerturbation:
 
     def sim2real(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.cycleGenerativeModels.toReal(image)
+        styled = timeout_func(
+            self.cycleGenerativeModels.toReal, args=(image,), timeout=0.04
+        )  # self.cycleGenerativeModels.sim2sim(image)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def sim2sim(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.cycleGenerativeModels.sim2sim(image)
+        styled = timeout_func(
+            self.cycleGenerativeModels.sim2sim, args=(image,), timeout=0.04
+        )  # self.cycleGenerativeModels.sim2sim(image)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def useGenerativeModels(self, func_names):
@@ -662,7 +695,7 @@ def mapSaliencyNameToFunc(name: Union[str, None]):
     elif name == "grad_cam":
         return gradCam
     elif name == "vanilla":
-        return getSaliencyMap
+        return getActivationMap
     else:
         return None
 

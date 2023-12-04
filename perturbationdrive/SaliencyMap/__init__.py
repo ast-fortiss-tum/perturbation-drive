@@ -4,6 +4,7 @@ from perturbationdrive.SaliencyMap.saliencymap import (
     getSaliencyRegions,
     plotImageAndSaliencyMap,
     plotSaliencyRegions,
+    getActivationMap,
 )
 from .GradCam import gradCam
 
