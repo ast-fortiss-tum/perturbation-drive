@@ -210,9 +210,9 @@ def Generator():
 
     # bs = batch size
     down_stack = [
-        downsample(64, 4, apply_instancenorm=False),  # (bs, 140, 340, 64)
-        downsample(128, 4),  # (bs, 70, 170, 128)
-        downsample(256, 4),  # (bs, 35, 32, 256)
+        downsample(64, 4, apply_instancenorm=False),  # (bs, 128, 128, 64)
+        downsample(128, 4),  # (bs, 64, 64, 128)
+        downsample(256, 4),  # (bs, 32, 32, 256)
         downsample(512, 4),  # (bs, 16, 16, 512)
         downsample(512, 4),  # (bs, 8, 8, 512)
         downsample(512, 4),  # (bs, 4, 4, 512)
