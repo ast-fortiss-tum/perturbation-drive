@@ -38,7 +38,7 @@ def benchmark(cycleGenerativeModels, neuralStyleModels):
 
 def benchmark_generative_components(cycleGenerativeModels):
     sim2real = tf.keras.models.load_model(
-        "perturbationdrive/Generative/donkey_sim2real.h5"
+        "perturbationdrive/Generative/sim2real_e25.h5"
     )
     img = np.random.rand(320, 240, 3) * 255
     img = img.astype(np.uint8)
@@ -53,7 +53,6 @@ def benchmark_generative_components(cycleGenerativeModels):
     for i in range(3):
         runner.bench_func(f"preprocess {i}", cycleGenerativeModels.preprocess_image, img)
         runner.bench_func(f"cycle {i}", sim2real.predict, image_tensor_batch)
-        runner.bench_func(f"resize {i}", cv2.resize, generated_real, (w, h))
 
 if __name__ == "__main__":
     benchmark_generative_components(cycleGenerativeModels)

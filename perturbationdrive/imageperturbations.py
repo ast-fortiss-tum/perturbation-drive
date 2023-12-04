@@ -6,8 +6,6 @@ import random
 import skimage.exposure
 import logging
 import datetime
-import concurrent.futures
-import time
 from perturbationdrive.perturbationfuncs import (
     gaussian_noise,
     poisson_noise,
@@ -66,6 +64,7 @@ from perturbationdrive.perturbationfuncs import (
 from perturbationdrive.road_generator import RoadGenerator
 from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
+from .utils.timeout import timeout_func
 import types
 import importlib
 from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
@@ -134,7 +133,9 @@ class ImagePerturbation:
         # setup logger
         self.logger = logging.getLogger(self.__class__.__name__)
         self.logger.setLevel(logging.INFO)
-
+        self.logger.propagate = (
+            False  # Prevent log messages from being propagated to parent loggers
+        )
         self._csv_handler = CSVLogHandler(
             log_dir, mode=("w" if overwrite_logs else "a")
         )
@@ -172,7 +173,7 @@ class ImagePerturbation:
         self._crash_buffer = CircularBuffer(10)
         self.neuralStyleModels = NeuralStyleTransfer(getNeuralModelPaths(funcs))
         # check if we use cycle gans
-        if True: #self.useGenerativeModels(funcs):
+        if self.useGenerativeModels(funcs):
             self.cycleGenerativeModels = Sim2RealGen()
         # init perturbating saliency regions
         self.attention_func = mapSaliencyNameToFunc(attention_map.get("map", None))
@@ -448,27 +449,20 @@ class ImagePerturbation:
 
     def sim2real(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.cycleGenerativeModels.toReal(image) # _timeout_wrapper(self.cycleGenerativeModels.toReal, args=(image,))
+        styled = timeout_func(
+            self.cycleGenerativeModels.toReal, args=(image,), timeout=0.04
+        )  # self.cycleGenerativeModels.sim2sim(image)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def sim2sim(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = self.cycleGenerativeModels.sim2sim(image) # _timeout_wrapper(self.cycleGenerativeModels.sim2sim, args=(image,))
+        styled = timeout_func(
+            self.cycleGenerativeModels.sim2sim, args=(image,), timeout=0.04
+        )  # self.cycleGenerativeModels.sim2sim(image)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def useGenerativeModels(self, func_names):
         return True if ("sim2real" in func_names or "sim2sim" in func_names) else False
-
-
-def _timeout_wrapper(func, args=(), kwargs={}, timeout=0.035):
-    default_value = args[0] if args else None
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(func, *args, **kwargs)
-        try:
-            return future.result(timeout=timeout)
-        except concurrent.futures.TimeoutError:
-            print("timeoutwrapper timeout")
-            return default_value
 
 
 def _loadMaskFrames(path: str, isGreenScreen=True, height=240, width=320) -> list:

@@ -169,9 +169,8 @@ def downsample(filters, size, apply_instancenorm=True):
     )
 
     if apply_instancenorm:
-        # TODO: Switch with tf.keras.layers.GroupNormalization with groups=3
-        # https://www.tensorflow.org/api_docs/python/tf/keras/layers/GroupNormalization
-        # https://docs.google.com/spreadsheets/d/1YMPudb7Otqx_TQu_oTHMm5IRZolyPcah8-qkMs_wI-I/edit#gid=0
+        # TODO: Custom implementation of Instance Normalization Layer
+        # from here https://github.com/tensorflow/examples/blob/master/tensorflow_examples/models/pix2pix/pix2pix.py
         result.add(tfa.layers.InstanceNormalization(gamma_initializer=gamma_init))
 
     result.add(layers.LeakyReLU())
@@ -194,10 +193,8 @@ def upsample(filters, size, apply_dropout=False):
             use_bias=False,
         )
     )
-    # TODO: Switch with tf.keras.layers.GroupNormalization with groups=3
-    # https://www.tensorflow.org/api_docs/python/tf/keras/layers/GroupNormalization
-    # https://docs.google.com/spreadsheets/d/1YMPudb7Otqx_TQu_oTHMm5IRZolyPcah8-qkMs_wI-I/edit#gid=0
-    # https://github.com/tensorflow/addons/issues/2807#issuecomment-1562206937
+    # TODO: Custom implementation of Instance Normalization Layer
+    # from here https://github.com/tensorflow/examples/blob/master/tensorflow_examples/models/pix2pix/pix2pix.py
     result.add(tfa.layers.InstanceNormalization(gamma_initializer=gamma_init))
 
     if apply_dropout:
@@ -213,27 +210,30 @@ def Generator():
 
     # bs = batch size
     down_stack = [
-        downsample(64, 4, apply_instancenorm=False), # (bs, 128, 128, 64)
-        downsample(128, 4), # (bs, 64, 64, 128)
-        downsample(256, 4), # (bs, 32, 32, 256)
-        downsample(512, 4), # (bs, 16, 16, 512)
-        downsample(512, 4), # (bs, 8, 8, 512)
+        downsample(64, 4, apply_instancenorm=False),  # (bs, 128, 128, 64)
+        downsample(128, 4),  # (bs, 64, 64, 128)
+        downsample(256, 4),  # (bs, 32, 32, 256)
+        downsample(512, 4),  # (bs, 16, 16, 512)
+        downsample(512, 4),  # (bs, 8, 8, 512)
     ]
 
     up_stack = [
-        upsample(512, 4, apply_dropout=True), # (bs, 8, 8, 1024)
-        upsample(512, 4, apply_dropout=True), # (bs, 16, 16, 1024)
-        upsample(256, 4), # (bs, 32, 32, 512)
-        upsample(128, 4), # (bs, 64, 64, 256)
-        upsample(64, 4), # (bs, 128, 128, 128)
+        upsample(512, 4, apply_dropout=True),  # (bs, 8, 8, 1024)
+        upsample(512, 4, apply_dropout=True),  # (bs, 16, 16, 1024)
+        upsample(256, 4),  # (bs, 32, 32, 512)
+        upsample(128, 4),  # (bs, 64, 64, 256)
+        upsample(64, 4),  # (bs, 128, 128, 128)
     ]
 
-    initializer = tf.random_normal_initializer(0., 0.02)
-    last = layers.Conv2DTranspose(3, 4,
-                                  strides=2,
-                                  padding='same',
-                                  kernel_initializer=initializer,
-                                  activation='tanh') # (bs, 256, 256, 3)
+    initializer = tf.random_normal_initializer(0.0, 0.02)
+    last = layers.Conv2DTranspose(
+        3,
+        4,
+        strides=2,
+        padding="same",
+        kernel_initializer=initializer,
+        activation="tanh",
+    )  # (bs, 256, 256, 3)
 
     x = inputs
 
@@ -274,6 +274,8 @@ def Discriminator():
         zero_pad1
     )  # (bs, 31, 31, 512)
 
+    # TODO: Custom implementation of Instance Normalization Layer
+    # from here https://github.com/tensorflow/examples/blob/master/tensorflow_examples/models/pix2pix/pix2pix.py
     norm1 = tfa.layers.InstanceNormalization(gamma_initializer=gamma_init)(conv)
 
     leaky_relu = layers.LeakyReLU()(norm1)
@@ -447,7 +449,6 @@ class GANMonitor(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         # generated night
         for i, img in enumerate(self.Sim_Dataset.take(self.num_img)):
-            # TODO: Evaluate FID Distance for a cycled image here
             prediction = self.real_generator(img, training=False)[0].numpy()
             prediction = (prediction * 127.5 + 127.5).astype(np.uint8)
             prediction = PIL.Image.fromarray(prediction)
