@@ -588,7 +588,7 @@ FUNCTION_MAPPING = {
     "la_muse": ImagePerturbation.la_muse_styling,
     "composition_vii": ImagePerturbation.composition_vii_styling,
     "sim2real": ImagePerturbation.sim2real,
-    "real2real": ImagePerturbation.sim2sim,
+    "sim2sim": ImagePerturbation.sim2sim,
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name
