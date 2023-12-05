@@ -219,7 +219,6 @@ class ImagePerturbation:
         """
         self._csv_handler.flush_row()
         if self.is_stopped:
-            print(f"max sector is {data['maxSector']}")
             if self.road_gen:
                 self.is_stopped = False
                 road = self.road_generator.generate_random_road(100)
@@ -449,16 +448,12 @@ class ImagePerturbation:
 
     def sim2real(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = timeout_func(
-            self.cycleGenerativeModels.toReal, args=(image,), timeout=0.04
-        )  # self.cycleGenerativeModels.sim2sim(image)
+        styled = self.cycleGenerativeModels.toReal(image)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def sim2sim(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
-        styled = timeout_func(
-            self.cycleGenerativeModels.sim2sim, args=(image,), timeout=0.04
-        )  # self.cycleGenerativeModels.sim2sim(image)
+        styled = self.cycleGenerativeModels.sim2sim(image)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def useGenerativeModels(self, func_names):
@@ -593,7 +588,7 @@ FUNCTION_MAPPING = {
     "la_muse": ImagePerturbation.la_muse_styling,
     "composition_vii": ImagePerturbation.composition_vii_styling,
     "sim2real": ImagePerturbation.sim2real,
-    "real2real": ImagePerturbation.sim2sim,
+    "sim2sim": ImagePerturbation.sim2sim,
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name

@@ -31,6 +31,11 @@ class Sim2RealGen:
             "perturbationdrive/Generative/donkey_real2sim.h5"
         )
         print("\n\nsetup generative models\n\n")
+        # warum up the models with empty tensor
+        dummy = tf.expand_dims(tf.zeros([256, 256, 3]), axis=0)
+        for _ in range(10):
+            self.serve2Real(dummy)
+            self.serve2Sim(dummy)
 
     @tf.function
     def preprocess_image(self, image):
@@ -43,17 +48,25 @@ class Sim2RealGen:
         image_tensor_batch = tf.expand_dims(img_arr, axis=0)
         return image_tensor_batch
 
+    @tf.function
+    def serve2Sim(self, image):
+        return self.real2sim(image, training=False)
+
     def toSim(self, image):
         # expect an image uints
         (h, w) = image.shape[:2]
 
         # prprocess the image
         image_tensor_batch = self.preprocess_image(image)
-        generated_real = self.real2sim.predict(image_tensor_batch, verbose=0)
+        generated_real = self.serve2Sim(image_tensor_batch)
         # move image to original shape and datatype
         generated_real = generated_real[0] * 0.5 + 0.5
         generated_real = np.clip(generated_real * 255, 0, 255).astype(np.uint8)
         return cv2.resize(generated_real, (w, h), interpolation=cv2.INTER_AREA)
+
+    @tf.function
+    def serve2Real(self, image):
+        return self.sim2real(image, training=False)
 
     def toReal(self, image):
         # expect an image uints
@@ -61,7 +74,7 @@ class Sim2RealGen:
 
         # prprocess the image
         image_tensor_batch = self.preprocess_image(image)
-        generated_real = self.sim2real.predict(image_tensor_batch, verbose=0)
+        generated_real = self.serve2Real(image_tensor_batch)
 
         # move image to original shape and datatype
         generated_real = generated_real[0] * 0.5 + 0.5
@@ -74,8 +87,8 @@ class Sim2RealGen:
 
         # prprocess the image
         image_tensor_batch = self.preprocess_image(image)
-        generated = self.real2sim.predict(image_tensor_batch, verbose=0)
-        real2real = self.sim2real.predict(generated, verbose=0)
+        generated = self.serve2Sim(image_tensor_batch)
+        real2real = self.serve2Real(generated)
 
         # move image to original shape and datatype
         generated_real = real2real[0] * 0.5 + 0.5
@@ -88,8 +101,8 @@ class Sim2RealGen:
 
         # prprocess the image
         image_tensor_batch = self.preprocess_image(image)
-        generated = self.sim2real.predict(image_tensor_batch, verbose=0)
-        sim2sim = self.real2sim.predict(generated, verbose=0)
+        generated = self.serve2Real(image_tensor_batch)
+        sim2sim = self.serve2Sim(generated)
 
         # move image to original shape and datatype
         generated_real = sim2sim[0] * 0.5 + 0.5
