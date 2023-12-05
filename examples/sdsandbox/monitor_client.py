@@ -77,11 +77,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--road_gen",
-        type=bool,
-        default=True,
+        type=str,
+        default="True",
         help="states if we generate the road based on the performance",
     )
     args = parser.parse_args()
+    road_gen = True if args.road_gen == "True" or args.road_gen == "true" else False
 
     address = (args.host, args.port)
 
@@ -103,7 +104,7 @@ if __name__ == "__main__":
             image_cb=display_img,
             pert_funcs=args.perturbation,
             attention=attention,
-            road_gen=args.road_gen,
+            road_gen=road_gen,
         )
     except KeyboardInterrupt:
         print("got ctrl+c break")

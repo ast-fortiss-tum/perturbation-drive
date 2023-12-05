@@ -110,6 +110,7 @@ class DonkeySimMsgHandler(IMesgHandler):
     def on_telemetry(self, data):
         imgString = data["image"]
         # the sandbox mixes y and z value up, so we fix it here
+        maxSector = data["maxSector"] if data["maxSector"] > 0 else 200
         pert_data = {
             "lap": data["lap"],
             "sector": data["sector"],
@@ -117,7 +118,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             "pos_x": data["pos_x"],
             "pos_y": data["pos_z"],
             "pos_z": data["pos_y"],
-            "maxSector": data["maxSector"],
+            "maxSector": maxSector,
         }
         # use opencv because it has faster image manipulation and conversion to numpy than PIL
         img_data = base64.b64decode(imgString)
@@ -337,12 +338,12 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--road_gen",
-        type=bool,
-        default=True,
+        type=str,
+        default="True",
         help="states if we generate the road based on the performance",
     )
-
     args = parser.parse_args()
+    road_gen = True if args.road_gen == "True" or args.road_gen == "true" else False
     attention = (
         {}
         if args.attention_map == ""
@@ -362,5 +363,5 @@ if __name__ == "__main__":
         rand_seed=args.rand_seed,
         pert_funcs=args.perturbation,
         attention=attention,
-        road_gen=args.road_gen,
+        road_gen=road_gen,
     )
