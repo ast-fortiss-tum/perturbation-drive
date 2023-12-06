@@ -26,7 +26,7 @@ decorator==4.4.2
 dill==0.3.7
 docopt==0.6.2
 docutils==0.18.1
-donkeycar==5.0.dev3
+-e git+https://github.com/tawnkramer/gym-donkeycar.git#egg=gym_donkeycar
 exceptiongroup==1.0.4
 fastai==2.7.12
 fastcore==1.5.29
