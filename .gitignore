@@ -230,3 +230,5 @@ logs*.csv
 
 # udacity sim
 udacity_sim.app
+unitylog.txt
+placeholder.txt
