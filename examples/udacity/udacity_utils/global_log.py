@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from examples.udacity.udacity_utils.config_variables import LOGGING_LEVEL
+from udacity_utils.config_variables import LOGGING_LEVEL
 
 logging.getLogger('matplotlib').setLevel(logging.WARNING)
 

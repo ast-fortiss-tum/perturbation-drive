@@ -1,6 +1,6 @@
 import cv2
 import numpy as np
-from examples.udacity.udacity_utils.config import IMAGE_WIDTH, IMAGE_HEIGHT
+from udacity_utils.config import IMAGE_WIDTH, IMAGE_HEIGHT
 
 
 def crop(image: np.ndarray) -> np.ndarray:

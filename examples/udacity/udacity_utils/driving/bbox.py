@@ -1,6 +1,6 @@
 from shapely.geometry import Point, box, LineString, Polygon
 from typing import List, Tuple
-from driving.road_polygon import RoadPolygon
+from udacity_utils.driving.road_polygon import RoadPolygon
 
 
 class RoadBoundingBox:

@@ -6,11 +6,11 @@ from typing import List, Tuple, Dict, Generator, Iterator
 import numpy as np
 from shapely.geometry import Point
 
-from examples.udacity.udacity_utils.config import NUM_SAMPLED_POINTS
-from custom_types import Tuple4F
-from driving.bbox import RoadBoundingBox
-from driving.catmull_rom import catmull_rom
-from driving.road_polygon import RoadPolygon
+from udacity_utils.config import NUM_SAMPLED_POINTS
+from udacity_utils.custom_types import Tuple4F
+from udacity_utils.driving.bbox import RoadBoundingBox
+from udacity_utils.driving.catmull_rom import catmull_rom
+from udacity_utils.driving.road_polygon import RoadPolygon
 
 
 class Road(ABC):

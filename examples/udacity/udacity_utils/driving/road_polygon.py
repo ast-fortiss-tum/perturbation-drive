@@ -2,8 +2,8 @@ from typing import List
 from typing import Tuple
 from shapely.geometry import Polygon, LineString
 
-from examples.udacity.udacity_utils.global_log import GlobalLog
-from driving.road_points import RoadPoints
+from udacity_utils.global_log import GlobalLog
+from udacity_utils.driving.road_points import RoadPoints
 
 
 class RoadPolygon:

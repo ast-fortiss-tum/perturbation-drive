@@ -1,6 +1,6 @@
 from typing import List, Tuple, Union
 from shapely.geometry import Point
-from driving.road import Road
+from udacity_utils.driving.road import Road
 
 
 class UdacityRoad(Road):

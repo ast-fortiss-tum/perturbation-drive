@@ -154,9 +154,9 @@ class DonkeySimMsgHandler(IMesgHandler):
             self.img_arr = None
 
     def predict(self, image_array):
-        outputs = self.model.predict(image_array, verbose=0)
+        outputs = self.model(image_array, training=False, verbose=0)
         if self.unchanged_img_arr is not None:
-            unchanged_outputs = self.model.predict(self.unchanged_img_arr, verbose=0)
+            unchanged_outputs = self.model(self.unchanged_img_arr, training=False, verbose=0)
             return self.parse_outputs(outputs, unchanged_outputs)
         self.parse_outputs(outputs)
 

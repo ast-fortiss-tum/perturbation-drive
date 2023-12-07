@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from driving.road_points import RoadPoints
+from udacity_utils.driving.road_points import RoadPoints
 
 
 class RoadImagery:

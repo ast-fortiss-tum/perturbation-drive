@@ -2,20 +2,20 @@
 # Edited by Antonin Raffin
 import os
 import time
-from typing import Optional, Tuple, Dict
+from typing import Optional, Tuple, Dict, List
 
 import gym
 import numpy as np
 from gym import spaces
 
-from envs.udacity.config import BASE_PORT, MAX_STEERING, INPUT_DIM
-from envs.udacity.core.udacity_sim import UdacitySimController
-from envs.unity_proc import UnityProcess
-from global_log import GlobalLog
-from test_generators.test_generator import TestGenerator
+from udacity_utils.envs.udacity.config import BASE_PORT, MAX_STEERING, INPUT_DIM
+from udacity_utils.envs.udacity.core.udacity_sim import UdacitySimController
+from udacity_utils.envs.unity_proc import UnityProcess
+from udacity_utils.global_log import GlobalLog
+from udacity_utils.generators.test_generator import TestGenerator
 
 
-class UdacityGymEnv(gym.Env):
+class UdacityGymEnv_RoadGen(gym.Env):
     """
     Gym interface for DonkeyCar with support for using
     a VAE encoded observation instead of raw pixels if needed.
@@ -26,16 +26,15 @@ class UdacityGymEnv(gym.Env):
     }
 
     def __init__(
-            self,
-            seed: int,
-            test_generator: TestGenerator = None,
-            headless: bool = False,
-            exe_path: str = None,
+        self,
+        seed: int,
+        test_generator: TestGenerator = None,
+        headless: bool = False,
+        exe_path: str = None,
     ):
-
         self.seed = seed
         self.exe_path = exe_path
-        self.logger = GlobalLog('UdacityGymEnv')
+        self.logger = GlobalLog("UdacityGymEnv_RoadGen")
         self.test_generator = test_generator
         if headless:
             self.logger.warn("Headless mode not supported with Udacity")
@@ -45,22 +44,39 @@ class UdacityGymEnv(gym.Env):
         self.unity_process = None
         if self.exe_path is not None:
             self.logger.info("Starting UdacityGym env")
-            assert os.path.exists(self.exe_path), 'Path {} does not exist'.format(self.exe_path)
+
+            # remove if it works
+            current_path = os.getcwd()
+            print(f"Current Directory: {current_path}")
+            files = [f for f in os.listdir("./examples/udacity/udacity_utils/sim")]
+            print(f"Files in the directory: {files}")
+
+            assert os.path.exists(self.exe_path), "Path {} does not exist".format(
+                self.exe_path
+            )
             # Start Unity simulation subprocess if needed
             self.unity_process = UnityProcess()
-            self.unity_process.start(sim_path=self.exe_path, headless=headless, port=self.port)
-            time.sleep(2)  # wait for the simulator to start and the scene to be selected
+            self.unity_process.start(
+                sim_path=self.exe_path, headless=headless, port=self.port
+            )
+            time.sleep(
+                2
+            )  # wait for the simulator to start and the scene to be selected
 
-        self.executor = UdacitySimController(port=self.port, test_generator=test_generator)
+        self.executor = UdacitySimController(
+            port=self.port, test_generator=test_generator
+        )
 
         # steering + throttle, action space must be symmetric
         self.action_space = spaces.Box(
             low=np.array([-MAX_STEERING, -1]),
             high=np.array([MAX_STEERING, 1]),
-            dtype=np.float32
+            dtype=np.float32,
         )
 
-        self.observation_space = spaces.Box(low=0, high=255, shape=INPUT_DIM, dtype=np.uint8)
+        self.observation_space = spaces.Box(
+            low=0, high=255, shape=INPUT_DIM, dtype=np.uint8
+        )
 
     def step(self, action: np.ndarray) -> Tuple[np.ndarray, bool, Dict]:
         """
@@ -75,15 +91,23 @@ class UdacityGymEnv(gym.Env):
 
         return observation, done, info
 
-    def reset(self, mutation_point: int = None, skip_generation: bool = False) -> np.ndarray:
-
-        self.executor.reset(mut_point=mutation_point, skip_generation=skip_generation)
+    def reset(
+        self,
+        mutation_point: int = None,
+        skip_generation: bool = False,
+        angles: List[int] = [],
+    ) -> np.ndarray:
+        self.executor.reset(
+            mut_point=mutation_point,
+            skip_generation=skip_generation,
+            angles=angles,
+        )
         observation, done, info = self.observe()
 
         return observation
 
-    def render(self, mode: str = 'human') -> Optional[np.ndarray]:
-        if mode == 'rgb_array':
+    def render(self, mode: str = "human") -> Optional[np.ndarray]:
+        if mode == "rgb_array":
             return self.executor.image_array
         return None
 

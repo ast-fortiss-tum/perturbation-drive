@@ -1,7 +1,7 @@
 from typing import List, Tuple
 
 import numpy as np
-from driving.pose import Pose
+from udacity_utils.driving.pose import Pose
 
 
 class RoadPoints:

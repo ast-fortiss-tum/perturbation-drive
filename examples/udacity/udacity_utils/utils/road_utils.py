@@ -10,29 +10,29 @@ from typing import List, Tuple
 from shapely.errors import ShapelyDeprecationWarning
 from shapely.geometry import Point
 
-from driving.udacity_road import UdacityRoad
-from utils.randomness import set_random_seed
-from utils.visualization import RoadTestVisualizer
-from examples.udacity.udacity_utils.config import ROAD_WIDTH, NUM_SAMPLED_POINTS, NUM_CONTROL_NODES, MAX_ANGLE, SEG_LENGTH, DISPLACEMENT
-from driving.catmull_rom import catmull_rom
-from examples.udacity.udacity_utils.global_log import GlobalLog
-from driving.bbox import RoadBoundingBox
+from udacity_utils.driving.udacity_road import UdacityRoad
+from udacity_utils.utils.randomness import set_random_seed
+from udacity_utils.utils.visualization import RoadTestVisualizer
+from udacity_utils.config import ROAD_WIDTH, NUM_SAMPLED_POINTS, NUM_CONTROL_NODES, MAX_ANGLE, SEG_LENGTH, DISPLACEMENT
+from udacity_utils.driving.catmull_rom import catmull_rom
+from udacity_utils.global_log import GlobalLog
+from udacity_utils.driving.bbox import RoadBoundingBox
 
 import math
 import numpy as np
 
-from driving.road import Road
-from driving.road_polygon import RoadPolygon
-from generators.test_generator import TestGenerator
+from udacity_utils.driving.road import Road
+from udacity_utils.driving.road_polygon import RoadPolygon
+from udacity_utils.generators.test_generator import TestGenerator
 
 warnings.simplefilter("ignore", ShapelyDeprecationWarning)
 
-from driving.bbox import RoadBoundingBox
-from driving.catmull_rom import catmull_rom
-from driving.road_polygon import RoadPolygon
-from utils.visualization import RoadTestVisualizer
-from driving.udacity_road import UdacityRoad
-from examples.udacity.udacity_utils.config import ROAD_WIDTH, NUM_SAMPLED_POINTS, NUM_CONTROL_NODES, MAX_ANGLE, SEG_LENGTH
+from udacity_utils.driving.bbox import RoadBoundingBox
+from udacity_utils.driving.catmull_rom import catmull_rom
+from udacity_utils.driving.road_polygon import RoadPolygon
+from udacity_utils.utils.visualization import RoadTestVisualizer
+from udacity_utils.driving.udacity_road import UdacityRoad
+from udacity_utils.config import ROAD_WIDTH, NUM_SAMPLED_POINTS, NUM_CONTROL_NODES, MAX_ANGLE, SEG_LENGTH
 
 
 def get_closest_control_point(point: Tuple[float, float], cp: List[Tuple[float, float]]) -> int:

@@ -1,0 +1,637 @@
+Mono path[0] = '/Users/hannesleonhard/Documents/BachelorWInfo/Robustness-SDC/PerturbationDrive/examples/udacity/udacity_utils/sim/udacity_sim.app/Contents/Resources/Data/Managed'
+Mono config path = '/Users/hannesleonhard/Documents/BachelorWInfo/Robustness-SDC/PerturbationDrive/examples/udacity/udacity_utils/sim/udacity_sim.app/Contents/MonoBleedingEdge/etc'
+Initialize engine version: 2019.3.0f1 (ffacea4b84e7)
+[Subsystems] Discovering subsystems at path /Users/hannesleonhard/Documents/BachelorWInfo/Robustness-SDC/PerturbationDrive/examples/udacity/udacity_utils/sim/udacity_sim.app/Contents/Resources/Data/UnitySubsystems
+GfxDevice: creating device client; threaded=1
+2023-12-07 21:57:51.129 self_driving_car_nanodegree_program[97036:1643495] (null) preferred device: Apple M1 (high power)
+2023-12-07 21:57:51.129 self_driving_car_nanodegree_program[97036:1643495] Metal devices available: 1
+2023-12-07 21:57:51.129 self_driving_car_nanodegree_program[97036:1643495] 0: Apple M1 (high power)
+2023-12-07 21:57:51.130 self_driving_car_nanodegree_program[97036:1643495] Using device Apple M1 (high power)
+Initializing Metal device caps: Apple M1
+Begin MonoManager ReloadAssembly
+- Completed reload, in  0.129 seconds
+Failed to create Convex Mesh from source mesh "SkyCarBody". Reached the maximum polygons limit (256). Consider simplifying your mesh. 
+(Filename:  Line: 95)
+
+The referenced script on this Behaviour (Game Object 'Main Camera') is missing! 
+(Filename:  Line: 334)
+
+WARNING: Shader Unsupported: 'Hidden/Nature/Terrain/Utilities' - All passes removed
+WARNING: Shader Did you use #pragma only_renderers and omit this platform?
+ERROR: Shader Shader is not supported on this GPU (none of subshaders/fallbacks are suitable)WARNING: Shader Unsupported: 'Hidden/Nature/Terrain/Utilities' - Setting to default shader.
+UnloadTime: 3.102584 ms
+obj UnityMainThreadDispatcher (JustOne) label MainThreadDispatcher 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Awake 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Instance: UnityMainThreadDispatcher (UnityMainThreadDispatcher) 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Connection Open 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Connection Open 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Plugins: Couldn't open libc, error: dlopen(libc, 0x0002): tried: 'libc' (no such file), '/System/Volumes/Preboot/Cryptexes/OSlibc' (no such file), '/usr/lib/libc' (no such file, not in dyld cache), 'libc' (no such file), '/usr/local/lib/libc' (no such file), '/usr/lib/libc' (no such file, not in dyld cache) 
+(Filename:  Line: 306)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+
+Reset 
+(Filename: ./Runtime/Export/Debug/Debug.bindings.h Line: 35)
+

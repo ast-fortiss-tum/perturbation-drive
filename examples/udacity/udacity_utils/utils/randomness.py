@@ -1,4 +1,4 @@
-from examples.udacity.udacity_utils.global_log import GlobalLog
+from udacity_utils.global_log import GlobalLog
 import numpy as np
 import random
 

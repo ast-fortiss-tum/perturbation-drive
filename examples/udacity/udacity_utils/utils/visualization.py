@@ -10,7 +10,7 @@ from math import atan2, degrees
 
 
 # https://stackoverflow.com/questions/34764535/why-cant-matplotlib-plot-in-a-different-thread
-from driving.road import Road
+from udacity_utils.driving.road import Road
 
 
 class RoadTestVisualizer:
