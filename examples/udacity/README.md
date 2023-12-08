@@ -95,7 +95,7 @@ class UdacityCriticality(Critical):
 
 Per default we use a pretrained ADS based on the Dave2 architecture. If this model is not present when executing the experiment, the model is downloaded and
 stored in the appropriate folder.
-If you want to use your own model, you need to place it in this folder `./examples/sdsandbox_perturbations/` and call it `generatedRoadModel.h5`.
+If you want to use your own model, you need to place it in this folder `./examples/models/` and call it `generatedRoadModel.h5`.
 
 Please notice, that this model will receive an image with the dimensions (1, 240, 320, 3) and the dtype float32 and the model must return an array [[steering_angle, throttle]].
 
