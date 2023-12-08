@@ -4,16 +4,13 @@ from model_ga.individual import Individual
 
 # all other imports
 from typing import List, Dict, Tuple
-import logging as log
 import numpy as np
 import gym
 import cv2
-from PIL import Image
 from numpy.typing import NDArray
 from numpy import uint8
-from perturbationdrive import gaussian_blur
+from perturbationdrive import ImagePerturbation
 from tensorflow.keras.models import load_model
-import time
 
 # related to this simulator
 from udacity_utils.generators.road_generator import RoadGenerator
@@ -42,6 +39,15 @@ class UdacitySimulator(Simulator):
             "./examples/sdsandbox_perturbations/generatedRoadModel.h5",
             compile=False,
         )
+        # setup simulator
+        test_generator = RoadGenerator(map_size=250)
+        env = UdacityGymEnv_RoadGen(
+            seed=1,
+            test_generator=test_generator,
+            exe_path="./examples/udacity/udacity_utils/sim/udacity_sim.app",
+        )
+        # setup perturbation object
+        iamge_perturbation = ImagePerturbation(funcs=list(FUNCTION_MAPPING.values()))
 
         for ind in list_individuals:
             try:
@@ -50,29 +56,31 @@ class UdacitySimulator(Simulator):
                 xte = []
 
                 instance_values = [v for v in zip(variable_names, ind)]
-                # get the perturbation scale, the instance values are in the format [x1, y1, x2, y2, ..., scale]
 
                 (
                     angles,
                     perturbation_scale,
+                    perturbation_func,
                 ) = UdacitySimulator._process_simulation_vars(instance_values)
-
-                test_generator = RoadGenerator(map_size=250)
-                env = UdacityGymEnv_RoadGen(
-                    seed=1,
-                    test_generator=test_generator,
-                    exe_path="./examples/udacity/udacity_utils/sim/udacity_sim.app",
-                )
 
                 # set up of params
                 done = False
+                perturbation_name = (
+                    UdacitySimulator._map_perturbation_func_scale_to_name(
+                        perturbation_func
+                    )
+                )
 
                 obs: NDArray[uint8] = env.reset(skip_generation=False, angles=angles)
                 while not done:
                     # resize to fit model
                     obs = cv2.resize(obs, (320, 240), cv2.INTER_NEAREST)
                     # perturb image and preprocess it
-                    img = gaussian_blur(perturbation_scale, obs)
+                    img = iamge_perturbation.simple_perturbation(
+                        obs,
+                        perturbation_name=perturbation_name,
+                        intensity=perturbation_scale,
+                    )
                     img_arr = np.asarray(img, dtype=np.float32)
                     # add a batch dimension
                     img_arr = img_arr.reshape((1,) + img_arr.shape)
@@ -96,7 +104,7 @@ class UdacitySimulator(Simulator):
                     simTime=float(len(speeds)),
                     times=[x for x in range(len(speeds))],
                     location={
-                        "ego": [(x[0], x[1]) for x in pos],  # cut of z value
+                        "ego": [(x[0], x[1]) for x in pos],  # cut out z value
                     },
                     velocity={
                         "ego": UdacitySimulator._calculate_velocities(pos, speeds),
@@ -121,9 +129,9 @@ class UdacitySimulator(Simulator):
 
                 raise e
             finally:
-                # time.sleep(2)
-                env.close()
-
+                print("Finished individual")
+        # close the environment
+        env.close()
         return results
 
     @staticmethod
@@ -144,26 +152,39 @@ class UdacitySimulator(Simulator):
     @staticmethod
     def _process_simulation_vars(
         instance_values: List[Tuple[str, float]],
-    ) -> Tuple[List[int], int]:
+    ) -> Tuple[List[int], int, int]:
         angles = []
-        perturbation_scale = None
-
-        # Iterate over the data list
+        perturbation_scale = 0
+        perturbation_function = 1
         for i in range(0, len(instance_values)):
             # Check if the current item is the perturbation scale
-            if instance_values[i][0].startswith("perturbation"):
+            if instance_values[i][0].startswith("perturbation_scale"):
                 perturbation_scale = int(instance_values[i][1])
                 break
+            elif instance_values[i][0].startswith("perturbation_function"):
+                perturbation_function = int(instance_values[i][1])
+                break
 
-            # Extract and pair x and y coordinates
             new_angle = int(instance_values[i][1])
             angles.append(new_angle)
 
-        return angles, perturbation_scale
+        return angles, perturbation_scale, perturbation_function
+
+    @staticmethod
+    def _map_perturbation_func_scale_to_name(var: int) -> str:
+        return FUNCTION_MAPPING[var]
 
     @staticmethod
     def create_scenario_instance_xosc(filename: str, _: Dict, __=None):
-        """
-        Dummy method
-        """
         return filename
+
+
+# here we can arbitrarly add functions
+FUNCTION_MAPPING = {
+    1: "gaussian_noise",
+    2: "poisson_noise",
+    3: "impulse_noise",
+    4: "defocus_blur",
+    5: "glass_blur",
+    6: "increase_brightness",
+}

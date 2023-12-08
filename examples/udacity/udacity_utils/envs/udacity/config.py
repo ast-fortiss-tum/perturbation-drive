@@ -16,7 +16,7 @@ MIN_STEERING = -MAX_STEERING
 MAX_STEERING_DIFF = 0.2
 
 # Max cross track error (used in normal mode to reset the car)
-MAX_CTE_ERROR = 3.0
+MAX_CTE_ERROR = 4.0
 
 BASE_PORT = 4567
 

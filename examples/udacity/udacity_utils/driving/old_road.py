@@ -1,7 +1,7 @@
 import copy
 import random
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Dict, Generator, Iterator
+from typing import List, Tuple, Dict, Iterator
 
 import numpy as np
 from shapely.geometry import Point

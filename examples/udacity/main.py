@@ -15,8 +15,8 @@ if __name__ == "__main__":
     problem = ADASProblem(
         problem_name="UdacityRoadGenerationProblem",
         scenario_path="",
-        xl=[-10, -10, -10, -10, -10, -10, -10, -10, 0],
-        xu=[10, 10, 10, 10, 10, 10, 10, 10, 4],
+        xl=[-10, -10, -10, -10, -10, -10, -10, -10, 0, 1],
+        xu=[10, 10, 10, 10, 10, 10, 10, 10, 4, 6],
         simulation_variables=[
             "angle1",
             "angle2",
@@ -27,6 +27,7 @@ if __name__ == "__main__":
             "angle7",
             "angle8",
             "perturbation_scale",
+            "perturbation_function",
         ],
         fitness_function=UdacityFitnessFunction(),
         critical_function=UdacityCriticality(),

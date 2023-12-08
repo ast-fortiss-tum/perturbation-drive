@@ -1,6 +1,3 @@
-import random
-from typing import Tuple, List
-
 import numpy as np
 from shapely.geometry import Point
 import warnings
@@ -18,7 +15,6 @@ from udacity_utils.driving.catmull_rom import catmull_rom
 from udacity_utils.global_log import GlobalLog
 from udacity_utils.driving.bbox import RoadBoundingBox
 
-import math
 import numpy as np
 
 from udacity_utils.driving.road import Road
