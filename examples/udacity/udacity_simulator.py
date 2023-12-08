@@ -5,11 +5,12 @@ from model_ga.individual import Individual
 # all other imports
 from typing import List, Dict, Tuple
 import numpy as np
+import os
 import gym
 import cv2
 from numpy.typing import NDArray
 from numpy import uint8
-from perturbationdrive import ImagePerturbation
+from perturbationdrive import ImagePerturbation, download_file
 from tensorflow.keras.models import load_model
 
 # related to this simulator
@@ -35,6 +36,12 @@ class UdacitySimulator(Simulator):
         """
         results = []
         # load ADS system
+        if not os.path.exist("./generatedRoadModel.h5"):
+            # if we do not have the model, we fetch it
+            download_file(
+                "https://syncandshare.lrz.de/dl/fiD9MBdQbQogMCuk5LDM3J/generatedRoadModel.h5",
+                "./",
+            )
         model = load_model(
             "./examples/sdsandbox_perturbations/generatedRoadModel.h5",
             compile=False,
