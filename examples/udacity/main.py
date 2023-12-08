@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # Set search configuration
     config = DefaultSearchConfiguration()
-    config.n_generations = 50
+    config.n_generations = 10
     config.population_size = 20
 
     # Instantiate search algorithm

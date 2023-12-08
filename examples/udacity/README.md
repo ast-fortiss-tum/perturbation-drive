@@ -7,6 +7,7 @@ and a perturbation with a scale of the perturbation.
 
 To use this example, you need to install all pip packages, `open-sbt` and `perturbationdrive`
 
+- Create a virual environment for your packages.
 - Download `open-sbt` via git `https://git.fortiss.org/opensbt/opensbt-core.git` and install it locally via pip.
   - Clone the Core Open SBT repo from GitLab
   - Navigate into the root folder (opensbt-core)
