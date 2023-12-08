@@ -36,11 +36,11 @@ class UdacitySimulator(Simulator):
         """
         results = []
         # load ADS system
-        if not os.path.exist("./generatedRoadModel.h5"):
+        if not os.path.exists("./examples/sdsandbox_perturbations/generatedRoadModel.h5"):
             # if we do not have the model, we fetch it
             download_file(
                 "https://syncandshare.lrz.de/dl/fiD9MBdQbQogMCuk5LDM3J/generatedRoadModel.h5",
-                "./",
+                "./examples/sdsandbox_perturbations/",
             )
         model = load_model(
             "./examples/sdsandbox_perturbations/generatedRoadModel.h5",
