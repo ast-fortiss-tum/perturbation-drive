@@ -199,6 +199,32 @@ class ImagePerturbation:
         self._csv_handler.flush_row()
         print("finished setup")
 
+    def simple_perturbation(
+        self, image, perturbation_name: str, intensity: int, data: dict = {}
+    ):
+        """
+        Perturbs the image based on the function name given
+        """
+        func = FUNCTION_MAPPING[perturbation_name]
+        iterator_name = ITERATOR_MAPPING.get(func, "")
+        if iterator_name != "":
+            iterator = getattr(self, ITERATOR_MAPPING.get(func, ""))
+            pertub_image = func(intensity, image, iterator)
+        elif "styling" in func.__name__ or "sim2" in func.__name__:
+            # apply either style transfer or cycle gan
+            pertub_image = func(self, intensity, image)
+        elif self.attention_func != None:
+            # preprocess image and get map
+            img_array = preprocess_image_saliency(image)
+            map = self.attention_func(self.model, img_array, self.grad_cam_layer)
+            # perturb regions of image which have high values
+            pertub_image = perturb_high_attention_regions(
+                map, image, func, self.saliency_threshold, intensity
+            )
+        else:
+            pertub_image = func(intensity, image)
+        return pertub_image
+
     def peturbate(self, image, data: dict):
         """
         Perturbates an image based on the current perturbation

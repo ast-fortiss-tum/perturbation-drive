@@ -227,3 +227,9 @@ logs*.csv
 *.keras
 *.t7
 *.h5
+
+# udacity sim
+udacity_sim.app
+unitylog.txt
+placeholder.txt
+temp.txt
