@@ -71,6 +71,7 @@ from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
 from .SaliencyMap import gradCam, getActivationMap
 from typing import Union
 from .Generative.Sim2RealGen import Sim2RealGen
+from typing import List, Tuple
 
 
 class ImagePerturbation:
@@ -82,26 +83,6 @@ class ImagePerturbation:
     :default funcs: If this list is empty we use all perturbations which are quick enough for
         the simultation
 
-    :param road_gen: Boolean indicating if this class randomly generates the roads for the car to drive on
-    :type road_gen: Bool
-    :default road_gen: True
-
-    :param log_dir: The directory to log the benchmarking
-    :type log:dir: str
-    :default log_dir="logs.csv"
-
-    :param overwrite_logs: States if we overwrite the old logs or append to the logs
-    :type overwrite_logs: bool
-    :default overwrite_logs=true
-
-    :param image_size: Tuple of height and width of the image
-    :type image_size: Tuple(int, int)
-    :default image_size=(240,320): If this list is empty we use all perturbations
-
-    :param drop_boundary: Threshold to drop perturbation if the XTE is bigger than
-    :type drop_boundary: float
-    :default drop_boundary=3.0
-
     :param attention_map: States if we perturbated the input based on the attention map and which attention map to use. Possible arguments for map are
         `grad_cam` or `vanilla`.
         If you want to perturb based on the attention map you will need to speciy the model, attention threshold as well as the map type here.
@@ -112,65 +93,24 @@ class ImagePerturbation:
 
     def __init__(
         self,
-        funcs=[],
-        road_gen=True,
-        log_dir="logs.csv",
-        overwrite_logs=True,
-        image_size=(240, 320),
-        drop_boundary=3.0,
+        funcs: List[str] = [],
         attention_map={},
+        image_size: Tuple[float, float] = (240, 320),
     ):
-        # marks which perturbation is selected next
-        self._index = 0
-        self._lap = 1
-        self._sector = 0
-        self.scale = 0
-        self.drop_boundary = drop_boundary
-        self.is_stopped = False
-        self.road_gen = road_gen
-        if road_gen:
-            self.road_generator = RoadGenerator()
-        # setup logger
-        self.logger = logging.getLogger(self.__class__.__name__)
-        self.logger.setLevel(logging.INFO)
-        self.logger.propagate = (
-            False  # Prevent log messages from being propagated to parent loggers
-        )
-        self._csv_handler = CSVLogHandler(
-            log_dir, mode=("w" if overwrite_logs else "a")
-        )
-        self.logger.addHandler(self._csv_handler)
-
-        # for the first scale we randomly shuffle the filters
-        # after the first scale we select the filter next with the loweset xte
-        # we only iterate to the next filter if the average xte for this filter is
-        # less than x, where we set x here to 2, but plan on having x as param
-        # later on
+        # Build list of all perturbation functions
         if len(funcs) == 0:
             self._fns = get_functions_from_module("perturbationdrive.perturbationfuncs")
         else:
             # the user has given us perturbations to use
             self._fns = _convertStringToPertubation(funcs)
-        self._shuffle_perturbations()
-        # measures for all perturbations
-        self.measures = {}
-        for func in self._fns:
-            self.measures[func.__name__] = {
-                "pertubation_name": func.__name__,
-                "xte": 0,
-                "steering_diff": 0,
-                "frames": 0,
-                "highest_scale": 0,
-                "is_dropped": False,
-            }
+
         # Load iterators for dynamic masks if we have dynamic masks
         height, width = image_size
         for filter, (path, iterator_name) in FILTER_PATHS.items():
             if filter in self._fns:
                 frames = _loadMaskFrames(path, height, width)
                 setattr(self, iterator_name, itertools.cycle(frames))
-        # circular buffer to stop after 10 frames of crash
-        self._crash_buffer = CircularBuffer(10)
+
         self.neuralStyleModels = NeuralStyleTransfer(getNeuralModelPaths(funcs))
         # check if we use cycle gans
         if self.useGenerativeModels(funcs):
@@ -180,27 +120,14 @@ class ImagePerturbation:
         self.model = attention_map.get("model", None)
         self.saliency_threshold = attention_map.get("threshold", 0.5)
         self.grad_cam_layer = attention_map.get("layer", "conv2d_5")
-        # init logger
-        self.logger.info(
-            [
-                "pertubation_name",
-                "xte",
-                "frames",
-                "highest_scale",
-                "is_dropped",
-                "sector",
-                "lap",
-                "x_pos",
-                "y_pos",
-                "timestamp",
-                "steering_diff",
-            ]
-        )
-        self._csv_handler.flush_row()
-        print("finished setup")
 
-    def simple_perturbation(
-        self, image, perturbation_name: str, intensity: int, data: dict = {}
+        print(f"{5* '-'} Finished Perturbation-Controller set up {5* '-'}")
+
+    def perturbation(
+        self,
+        image,
+        perturbation_name: str,
+        intensity: int,
     ):
         """
         Perturbs the image based on the function name given
@@ -327,95 +254,6 @@ class ImagePerturbation:
             ]
         )
         return {"image": pertub_image, "func": "update"}
-
-    def updateSteeringPerformance(self, steeringAngleDiff):
-        if self._index < len(self._fns):
-            # calculate the filter index
-            funcName = self._fns[self._index].__name__
-            # update steering angle diff
-            curr_diff = self.measures[funcName]["steering_diff"]
-            num_differences = self.measures[funcName]["frames"]
-            num_differences = num_differences if num_differences > 0 else 1
-            curr_diff = (curr_diff * num_differences + steeringAngleDiff) / (
-                num_differences
-            )
-            self.measures[funcName]["steering_diff"] = curr_diff
-            self.logger.info(steeringAngleDiff)
-
-    def _increment_scale(self):
-        """
-        Increments the scale by one and drops all perturbations which have been droped
-        """
-        self._sort_perturbations()
-        self._update_fncs_scale()
-        if len(self._fns) == 0:
-            self.on_stop()
-        if self.scale < 4:
-            self.scale += 1
-        else:
-            # we are done
-            self.on_stop()
-
-    def on_stop(self):
-        """
-        Prints summary of the image perturbation
-
-        :rtype: void
-        """
-        print("\n" + "=" * 45)
-        print("    STOPED BENCHMARKING")
-        print("=" * 45 + "\n")
-        self.print_performance()
-        self.is_stopped = True
-
-    def _update_fncs_scale(self):
-        for fnc in self._fns:
-            self.measures[fnc.__name__]["highest_scale"] = self.scale
-
-    def print_performance(self):
-        """Command line output for the xte measures of all funcs"""
-        print("\n" + "=" * 45)
-        print(f"    AVERAGE PERFORMANCE ON SCALE {self.scale}")
-        print("=" * 45 + "\n")
-        total_average_xte = 0
-        count = 0
-        total_average_sad = 0
-        for key, value_dict in self.measures.items():
-            count += 1
-            curr_xte = value_dict["xte"]
-            total_average_xte += curr_xte
-            steering_diff = value_dict["steering_diff"]
-            total_average_sad += steering_diff
-            is_droped = value_dict["is_dropped"]
-            highest_scale = value_dict["highest_scale"]
-            print(f"Perturbation: {key}")
-            print(f"Average XTE: {curr_xte:.4f}")
-            print(f"Average Steering Angle Diff: {steering_diff:.4f}")
-            print(f"Is Dropped: {is_droped}")
-            print(f"Highest scale achieved: {highest_scale}")
-            print("-" * 45)
-        total_average_xte = total_average_xte / count
-        print(f"Total average XTE: {total_average_xte:.4f}")
-        print(f"Total average Steering Angle Diff: {total_average_sad:.4f}")
-        print("=" * 45 + "\n")
-
-    def _shuffle_perturbations(self):
-        """
-        Randomly shuffles the perturbations
-        """
-        random.shuffle(self._fns)
-
-    def _perturbation_dropout(self, pert_func):
-        return not self.measures[pert_func.__name__]["is_dropped"]
-
-    def _sort_perturbations(self):
-        """
-        Drops perturbations which are dropped due to high xte
-        """
-        if not self.road_gen:
-            self._fns = list(filter(self._perturbation_dropout, self._fns))
-        else:
-            print(f"Not filtering functions")
 
     def candy_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
