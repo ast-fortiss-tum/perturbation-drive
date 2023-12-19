@@ -21,7 +21,7 @@ from udacity_utils.envs.udacity.udacity_gym_env import (
 from udacity_utils.config import NUM_CONTROL_NODES
 
 
-class UdacitySimulator(Simulator):
+class UdacitySimulatorAdapter(Simulator):
     @staticmethod
     def simulate(
         list_individuals: List[Individual],
