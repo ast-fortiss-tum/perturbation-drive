@@ -11,7 +11,7 @@ class Scenario:
     Models a scenario in terms of road, perturbation and perturbation scale
     """
 
-    waypoints: Union[List[float], List[Tuple[float, float]], None]
+    waypoints: Union[str, None]
     perturbation_function: str
     perturbation_scale: int
 

@@ -14,6 +14,10 @@ import time
 
 
 class PerturbationDrive:
+    """
+    Simulator independent ADS robustness benchmarking
+    """
+
     def __init__(
         self,
         simulator: PerturbationSimulator,
@@ -160,7 +164,7 @@ class PerturbationDrive:
         # set up initial road
         waypoints = None
         if not road_generator is None:
-            waypoints = road_generator.generateRoad()
+            waypoints = road_generator.generate()
 
         # grid search loop
         while True:
@@ -177,7 +181,7 @@ class PerturbationDrive:
                 scale += 1
                 # we also generate a new track here
                 if not road_generator is None:
-                    waypoints = road_generator.generateRoad()
+                    waypoints = road_generator.generate()
 
             if scale > 4:
                 # we went through all scales

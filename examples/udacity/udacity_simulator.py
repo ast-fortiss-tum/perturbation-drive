@@ -83,7 +83,7 @@ class UdacitySimulator(Simulator):
                     # resize to fit model
                     obs = cv2.resize(obs, (320, 240), cv2.INTER_NEAREST)
                     # perturb image and preprocess it
-                    img = iamge_perturbation.simple_perturbation(
+                    img = iamge_perturbation.perturbation(
                         obs,
                         perturbation_name=perturbation_name,
                         intensity=perturbation_scale,

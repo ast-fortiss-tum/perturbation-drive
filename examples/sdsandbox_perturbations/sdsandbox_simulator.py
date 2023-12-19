@@ -226,7 +226,7 @@ class DonkeySimMsgHandler(IMesgHandler):
         return output
 
     def reset_scenario(
-        self, waypoints: Union[List[float], List[Tuple[float, float]], None]
+        self, waypoints: Union[str, None]
     ):
         """
         Sends a new road to the sim

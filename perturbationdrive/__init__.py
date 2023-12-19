@@ -86,6 +86,7 @@ from .perturbationdrive import PerturbationDrive
 
 # imports related to all abstract concept
 from .AutomatedDrivingSystem.ADS import ADS
-from .RoadGenerator.RoadGenerator import RoadGenerator, RandomRoadGenerator
+from .RoadGenerator.RoadGenerator import RoadGenerator
+from .RoadGenerator.RandomRoadGenerator import RandomRoadGenerator
 from .Simulator.Simulator import PerturbationSimulator
 from .Simulator.Scenario import Scenario, ScenarioOutcome, OfflineScenarioOutcome

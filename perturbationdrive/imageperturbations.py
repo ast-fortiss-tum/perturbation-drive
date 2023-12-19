@@ -106,6 +106,8 @@ class ImagePerturbation:
 
         # Load iterators for dynamic masks if we have dynamic masks
         height, width = image_size
+        self.height = height
+        self.width = width
         for filter, (path, iterator_name) in FILTER_PATHS.items():
             if filter in self._fns:
                 frames = _loadMaskFrames(path, height, width)
@@ -133,8 +135,8 @@ class ImagePerturbation:
         Perturbs the image based on the function name given
         """
         if perturbation_name == "":
-            return image
-        
+            return cv2.resize(image, (self.width, self.height))
+
         # continue with the main logic
         func = FUNCTION_MAPPING[perturbation_name]
         iterator_name = ITERATOR_MAPPING.get(func, "")
@@ -154,110 +156,7 @@ class ImagePerturbation:
             )
         else:
             pertub_image = func(intensity, image)
-        return pertub_image
-
-    def peturbate(self, image, data: dict):
-        """
-        Perturbates an image based on the current perturbation
-        If we the car is stuck, we reset the lap and move on to the next perturbation.
-        If at any time the XTE is larger than 3, the car is fully of the raod and we will not
-        move on to the next intensity stage for this perturbation
-
-        :param image: The input image for the perturbation
-        :type image: MatLike
-        :param data: The necessary information from the simulator to update the perturbation object.
-            It needs to contains the xte, the current lap
-        :type dict:
-
-        :return: the perturbed image
-        :rtype: MatLike
-        :return: states if we stop the benchmark because the car is stuck or done
-        :rtype: bool
-        """
-        self._csv_handler.flush_row()
-        if self.is_stopped:
-            if self.road_gen:
-                self.is_stopped = False
-                road = self.road_generator.generate_random_road(100)
-                return {"image": image, "func": "road_regen", "road": road}
-            return {"image": image, "func": "quit_app"}
-        self._crash_buffer.add((data["pos_x"], data["pos_y"], data["pos_z"]))
-        if self._crash_buffer.all_elements_equal() and self._crash_buffer.length() > 20:
-            print("Crash buffer is full")
-            return {"image": image, "func": "reset_car"}
-        # check if we have finished the lap
-        if (
-            self._lap != data["lap"]
-            or data["sector"] >= data["maxSector"]
-            or data["xte"] > 2
-        ):
-            print(f"max sector is {data['maxSector']}")
-            self._sector = data["sector"]
-            self._lap = data["lap"]
-            # we need to move to the next perturbation
-            self._index = (self._index + 1) % len(self._fns)
-            print(f"Moving on to perturbation {self._fns[self._index].__name__}")
-            # check if we should increment the scale
-            if self._index == 0:
-                self._increment_scale()
-                # print summary when incrementing scale
-                self.print_performance()
-                if self.road_gen:
-                    road = self.road_generator.generate_random_road(100)
-                    return {"image": image, "func": "road_regen", "road": road}
-                else:
-                    return {"image": image, "func": "reset_car"}
-            else:
-                return {"image": image, "func": "reset_car"}
-
-        self._sector = data["sector"]
-        self._lap = data["lap"]
-        # calculate the filter index
-        func = self._fns[self._index]
-        # if we have a special dynamic overlay we need to pass the iterator as param
-        iterator_name = ITERATOR_MAPPING.get(func, "")
-        if iterator_name != "":
-            iterator = getattr(self, ITERATOR_MAPPING.get(func, ""))
-            pertub_image = func(self.scale, image, iterator)
-        elif "styling" in func.__name__ or "sim2" in func.__name__:
-            # apply either style transfer or cycle gan
-            pertub_image = func(self, self.scale, image)
-        elif self.attention_func != None:
-            # preprocess image and get map
-            img_array = preprocess_image_saliency(image)
-            map = self.attention_func(self.model, img_array, self.grad_cam_layer)
-            # perturb regions of image which have high values
-            pertub_image = perturb_high_attention_regions(
-                map, image, func, self.saliency_threshold, self.scale
-            )
-        else:
-            pertub_image = func(self.scale, image)
-        # update xte
-        curr_xte = self.measures[func.__name__]["xte"]
-        num_perturbations = self.measures[func.__name__]["frames"]
-        curr_xte = (curr_xte * num_perturbations + data["xte"]) / (
-            num_perturbations + 1
-        )
-        self.measures[func.__name__]["xte"] = curr_xte
-        self.measures[func.__name__]["frames"] = num_perturbations + 1
-        if np.abs(data["xte"]) > self.drop_boundary:
-            self.measures[func.__name__]["highest_scale"] = self.scale
-            self.measures[func.__name__]["is_dropped"] = True
-        self.logger.info(
-            [
-                func.__name__,
-                data["xte"],
-                self.measures[func.__name__]["frames"],
-                self.measures[func.__name__]["highest_scale"],
-                self.measures[func.__name__]["is_dropped"],
-                data["sector"],
-                data["lap"],
-                data["pos_x"],
-                data["pos_y"],
-                datetime.datetime.now().timestamp(),
-            ]
-        )
-        return {"image": pertub_image, "func": "update"}
+        return cv2.resize(pertub_image, (self.width, self.height))
 
     def candy_styling(self, scale, image):
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
