@@ -10,6 +10,7 @@ import copy
 import os
 import json
 import cv2
+import time
 
 
 class PerturbationDrive:
@@ -148,39 +149,50 @@ class PerturbationDrive:
         index = 0
         outcomes: List[ScenarioOutcome] = []
         perturbations: List[str] = copy.deepcopy(perturbation_functions)
+        # we append the empty perturbation here
+        perturbations.append("")
 
         # set up simulator
         self.simulator.connect()
+        # wait 1 seconds for connection to build up
+        time.sleep(1)
+
+        # set up initial road
+        waypoints = None
+        if not road_generator is None:
+            waypoints = road_generator.generateRoad()
 
         # grid search loop
         while True:
             # check if we leave the loop, increment the index and scale
             index += 1
-            if len(perturbation) == 0:
+            if len(perturbation) == 1:
                 # all perturbations resulted in failures
+                # we will still have one perturbation here because we never
+                # drop the empty perturbation
                 break
             if index == len(perturbations):
                 # we increment the scale, so start with the first perturbation again
                 index = 0
                 scale += 1
+                # we also generate a new track here
+                if not road_generator is None:
+                    waypoints = road_generator.generateRoad()
+
             if scale > 4:
                 # we went through all scales
                 break
 
             # get the road for the scenario
-            waypoints = None
-            if not road_generator is None:
-                waypoints = road_generator.generateRoad()
 
             # get the perturbation function for the scenario
-            perturbation = perturbation[index]
+            perturbation = perturbations[index]
 
             scenario = Scenario(
                 waypoints=waypoints,
                 perturbation_function=perturbation,
                 perturbation_scale=scale,
             )
-            # TODO: Simulate the scenarion without perturbation for comparison
 
             # simulate the scenario
             outcome = self.simulator.simulate_scanario(
@@ -188,13 +200,10 @@ class PerturbationDrive:
             )
             outcomes.append(outcome)
 
-            # check if we drop the scenario
-            if outcome.isDropped:
+            # check if we drop the scenario, we never remove the empty perturbation
+            # for comparison reasons
+            if not outcome.isSuccess and not perturbation == "":
                 perturbations.remove(perturbation)
-
-        if not log_dir is None:
-            scenario_writer = ScenarioOutcomeWriter(log_dir, overwrite_logs)
-            scenario_writer.write(outcomes)
 
         # TODO: print command line summary of benchmarking process
 
@@ -202,6 +211,9 @@ class PerturbationDrive:
         self.simulator.tear_down()
         if log_dir is None:
             return outcomes
+        else:
+            scenario_writer = ScenarioOutcomeWriter(log_dir, overwrite_logs)
+            scenario_writer.write(outcomes)
 
     def simulate_scenarios(
         self,

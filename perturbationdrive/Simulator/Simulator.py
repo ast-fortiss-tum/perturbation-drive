@@ -26,8 +26,24 @@ class PerturbationSimulator(ABC):
         """
         pass
 
+    @property
     @abstractmethod
-    def connect(sefl):
+    def host(self) -> str:
+        """
+        Server Sim Host
+        """
+        pass
+
+    @property
+    @abstractmethod
+    def port(self) -> int:
+        """
+        Binds simulator to this port
+        """
+        pass
+
+    @abstractmethod
+    def connect(self):
         """
         Connects to the simulator
         """

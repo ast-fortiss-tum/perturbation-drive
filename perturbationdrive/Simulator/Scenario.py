@@ -26,9 +26,9 @@ class ScenarioOutcome:
     pos: List[Tuple[float, float, float]]
     xte: List[float]
     speeds: List[float]
-    actions: List
+    actions: List[List[float]]
     scenario: Union[Scenario, None]
-    isDropped: bool
+    isSuccess: bool
 
 
 @dataclass
@@ -44,7 +44,3 @@ class OfflineScenarioOutcome:
     ground_truth_actions: List[float]
     perturbed_image_actions: List[float]
     normal_image_actions: List[float]
-
-
-# convert to json via json.dumps(asdict(outcome), indent=4)
-# merge two jsons {**existing_json_dict, **scenario_dict}

@@ -69,7 +69,7 @@ import types
 import importlib
 from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
 from .SaliencyMap import gradCam, getActivationMap
-from typing import Union
+from typing import Any, Union
 from .Generative.Sim2RealGen import Sim2RealGen
 from typing import List, Tuple
 
@@ -128,10 +128,14 @@ class ImagePerturbation:
         image,
         perturbation_name: str,
         intensity: int,
-    ):
+    ) -> np.ndarray[Any, np.dtype[np.uint8]]:
         """
         Perturbs the image based on the function name given
         """
+        if perturbation_name == "":
+            return image
+        
+        # continue with the main logic
         func = FUNCTION_MAPPING[perturbation_name]
         iterator_name = ITERATOR_MAPPING.get(func, "")
         if iterator_name != "":

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 
-from numpy import dtype, ndarray, Any, float32
+from numpy import dtype, ndarray, Any, uint8
 
 
 class ADS(ABC):
@@ -10,7 +10,7 @@ class ADS(ABC):
     """
 
     @abstractmethod
-    def action(self, input: ndarray[Any, dtype[float32]]) -> List:
+    def action(self, input: ndarray[Any, dtype[uint8]]) -> List:
         """
         Takes one action step given the input, here the input is a cv2 image.
         This method also contains the preparation for the underlying model
