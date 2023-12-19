@@ -80,14 +80,14 @@ class SDSandboxSimulator(PerturbationSimulator):
                 actions = agent.action(perturbed_image)
 
                 # save data for output
-                pos_list.append([obs["pos_x"], obs["obs_y"], obs["obs_z"]])
+                pos_list.append([obs["pos_x"], obs["pos_y"], obs["pos_z"]])
                 xte_list.append(obs["xte"])
                 actions_list.append(actions)
 
             except KeyboardInterrupt:
                 print(f"{5 * '+'} SDSandBox Simulator Got Interrupted {5 * '+'}")
                 self.client.stop()
-                break
+                raise KeyboardInterrupt
 
         # send reset to sim client
         self.client.msg_handler.reset_car()
@@ -209,10 +209,11 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.throttle = actions[0][1]
         msg = {
             "msg_type": "control",
-            "steering": self.steering_angle.__str__(),
-            "throttle": self.throttle.__str__(),
+            "steering": f"{self.steering_angle}",
+            "throttle": f"{self.throttle}",
             "brake": "0.0",
         }
+
         self.client.queue_message(msg)
         # run the image call back to inspect the image
         if perturbed_image is not None:
@@ -224,8 +225,7 @@ class DonkeySimMsgHandler(IMesgHandler):
         """
         Sends a new road to the sim
         """
-        msg = {"msg_type": "quit_app"}
-        self.client.queue_message(msg)
+
         print("requested reset")
         msg = {
             "msg_type": "regen_road",
@@ -233,6 +233,7 @@ class DonkeySimMsgHandler(IMesgHandler):
         }
 
         self.client.queue_message(msg)
+        print("Reset Donkey Scenario")
 
     def reset_car(self):
         """

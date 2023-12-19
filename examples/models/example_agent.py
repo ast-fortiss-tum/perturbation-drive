@@ -34,4 +34,4 @@ class ExampleAgent(ADS):
         img_arr = np.asarray(input, dtype=np.float32)
         # add batch dimension
         img_arr = img_arr.reshape((1,) + img_arr.shape)
-        return self.model(img_arr, training=False, verbose=0)
+        return self.model(img_arr, training=False)

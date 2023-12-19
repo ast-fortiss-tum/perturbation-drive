@@ -155,9 +155,10 @@ class PerturbationDrive:
         perturbations: List[str] = copy.deepcopy(perturbation_functions)
         # populate all perturbations
         if len(perturbations) == 0:
-            perturbations = get_functions_from_module(
+            perturbation_fns = get_functions_from_module(
                 "perturbationdrive.perturbationfuncs"
             )
+            perturbations = list(map(lambda f: f.__name__, perturbation_fns))
         # we append the empty perturbation here
         perturbations.append("")
 
