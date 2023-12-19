@@ -6,11 +6,11 @@ from typing import List, Tuple, Dict, Iterator
 import numpy as np
 from shapely.geometry import Point
 
-from utils.custom_types import Tuple4F
+from ...utils.custom_types import Tuple4F
 
-from RoadGenerator.Roads.bbox import RoadBoundingBox
-from RoadGenerator.Roads.catmull_rom import catmull_rom
-from RoadGenerator.Roads.road_polygon import RoadPolygon
+from .bbox import RoadBoundingBox
+from .catmull_rom import catmull_rom
+from .road_polygon import RoadPolygon
 
 
 class Road(ABC):

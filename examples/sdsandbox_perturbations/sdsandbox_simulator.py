@@ -23,11 +23,10 @@ class SDSandboxSimulator(PerturbationSimulator):
     def __init__(
         self, simulator_exe_path: str = "", host: str = "127.0.0.1", port: int = 9091
     ):
-        self.max_xte = 2.0
-        self.simulator_exe_path = ""
+        super().__init__(
+            max_xte=2.0, simulator_exe_path=simulator_exe_path, host=host, port=port
+        )
         self.client: Union[DonkeySimMsgHandler, None] = None
-        self.host = "127.0.0.1"
-        self.port = 9091
 
     def connect(self):
         super().connect()
@@ -107,7 +106,7 @@ class SDSandboxSimulator(PerturbationSimulator):
     def tear_down(self):
         self.client.stop()
 
-    def _client_connected(client: SimClient) -> bool:
+    def _client_connected(self, client: SimClient) -> bool:
         """
         Retruns true if the client is still connected
         """
@@ -124,12 +123,8 @@ class DonkeySimMsgHandler(IMesgHandler):
 
     def __init__(
         self,
-        model,
-        constant_throttle,
         rand_seed=0,
     ):
-        self.model = model
-        self.constant_throttle = constant_throttle
         self.client = None
         self.timer = FPSTimer()
         self.sim_data = {}
@@ -202,7 +197,7 @@ class DonkeySimMsgHandler(IMesgHandler):
         }
 
     def update(
-        self, actions: List[List[float, float]], perturbed_image: Union[any, None]
+        self, actions: List[List[float]], perturbed_image: Union[any, None]
     ) -> Dict[str, Any]:
         """
         We take a action, send the action to the client and then return the latest telemetry data
@@ -225,9 +220,7 @@ class DonkeySimMsgHandler(IMesgHandler):
         # return the sim_data so we can perturb it in the main loop and get a control action
         return output
 
-    def reset_scenario(
-        self, waypoints: Union[str, None]
-    ):
+    def reset_scenario(self, waypoints: Union[str, None]):
         """
         Sends a new road to the sim
         """
@@ -236,9 +229,6 @@ class DonkeySimMsgHandler(IMesgHandler):
         print("requested reset")
         msg = {
             "msg_type": "regen_road",
-            "road_style": "0".__str__(),
-            "rand_seed": self.rand_seed.__str__(),
-            "turn_increment": "0".__str__(),
             "wayPoints": waypoints.__str__(),
         }
 

@@ -1,5 +1,6 @@
 import argparse
 from typing import List, Dict, Any
+import traceback
 
 from sdsandbox_simulator import SDSandboxSimulator
 from examples.models.example_agent import ExampleAgent
@@ -14,9 +15,9 @@ def go(
     attention: Dict[str, Any] = {},
 ):
     try:
-        simulator = SDSandboxSimulator(host, port)
+        simulator = SDSandboxSimulator(host=host, port=port)
         ads = ExampleAgent()
-        road_generator = RandomRoadGenerator()
+        road_generator = RandomRoadGenerator(map_size=250)
         benchmarking_obj = PerturbationDrive(simulator, ads)
 
         # start the benchmarking
@@ -26,16 +27,16 @@ def go(
             road_generator=road_generator,
             log_dir="./examples/sdsandbox_perturbations/logs.json",
             overwrite_logs=True,
-            image_size=(204, 320), # images are resized to these values
+            image_size=(204, 320),  # images are resized to these values
         )
         print(f"{5 * '#'} Finished Running SDSandBox Sim {5 * '#'}")
     except Exception as e:
         print(
-            f"{5 * '#'} SDSandBox Error: Exception type: {type(e).__name__}, Error message: {e}{5 * '#'} "
+            f"{5 * '#'} SDSandBox Error: Exception type: {type(e).__name__}, \nError message: {e}\nTract {traceback.print_exc()} {5 * '#'} "
         )
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="SDSandBox Example")
 
     parser.add_argument("--host", type=str, default="127.0.0.1", help="server sim host")

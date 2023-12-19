@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from RoadGenerator.Roads.road_points import RoadPoints
+from .road_points import RoadPoints
 
 
 class RoadImagery:

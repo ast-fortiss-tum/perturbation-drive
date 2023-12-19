@@ -1,7 +1,7 @@
 from typing import List, Tuple
 
 import numpy as np
-from RoadGenerator.Roads.pose import Pose
+from .pose import Pose
 
 
 class RoadPoints:

@@ -1,7 +1,7 @@
-from abc import ABC, abstractmethod, property
+from abc import ABC, abstractmethod
 from typing import Dict, List, Union
 from ..AutomatedDrivingSystem import ADS
-from Scenario import Scenario, ScenarioOutcome
+from .Scenario import Scenario, ScenarioOutcome
 from ..imageperturbations import ImagePerturbation
 
 
@@ -10,37 +10,17 @@ class PerturbationSimulator(ABC):
     Adapter for a simulator
     """
 
-    @property
-    @abstractmethod
-    def max_xte(self) -> float:
-        """
-        Returns the maximum xte before the car is considered to be off the road
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def simulator_exe_path(self) -> Union[str, None]:
-        """
-        Path to exe of simulator. If this path is none, the user has to start the sim manually
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def host(self) -> str:
-        """
-        Server Sim Host
-        """
-        pass
-
-    @property
-    @abstractmethod
-    def port(self) -> int:
-        """
-        Binds simulator to this port
-        """
-        pass
+    def __init__(
+        self,
+        max_xte: float = 2.0,
+        simulator_exe_path: str = "",
+        host: str = "127.0.0.1",
+        port: int = 9091,
+    ):
+        self.max_xte = max_xte
+        self.simulator_exe_path = simulator_exe_path
+        self.host = host
+        self.port = port
 
     @abstractmethod
     def connect(self):

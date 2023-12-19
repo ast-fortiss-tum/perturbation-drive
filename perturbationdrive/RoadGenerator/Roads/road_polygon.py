@@ -2,7 +2,7 @@ from typing import List
 from typing import Tuple
 from shapely.geometry import Polygon, LineString
 
-from RoadGenerator.Roads.road_points import RoadPoints
+from .road_points import RoadPoints
 
 
 class RoadPolygon:

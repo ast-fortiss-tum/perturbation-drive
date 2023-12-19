@@ -3,8 +3,8 @@ from perturbationdrive import ADS
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import load_model
-from typing import List
-from numpy import dtype, ndarray, Any, uint8
+from typing import List, Any
+from numpy import dtype, ndarray, uint8
 import numpy as np
 import os
 
@@ -16,11 +16,13 @@ class ExampleAgent(ADS):
 
     def __init__(self):
         if not (
-            os.path.exists("generatedRoadModel.h5")
-            and os.path.isfile("generatedRoadModel.h5")
+            os.path.exists("./examples/models/generatedRoadModel.h5")
+            and os.path.isfile("./examples/models/generatedRoadModel.h5")
         ):
-            print(f"{5* {'+'}} Warning: ADS file does not exists {5* {'+'}}")
-        self.model = load_model("generatedRoadModel.h5", compile=False)
+            print(f"{5 * '+'} Warning: ADS file does not exists {5 * '+'}")
+        self.model = load_model(
+            "./examples/models/generatedRoadModel.h5", compile=False
+        )
         self.model.compile(loss="sgd", metrics=["mse"])
 
     def action(self, input: ndarray[Any, dtype[uint8]]) -> List:

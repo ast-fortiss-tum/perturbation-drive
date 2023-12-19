@@ -1,6 +1,6 @@
 from typing import List, Tuple, Union
 from shapely.geometry import Point
-from RoadGenerator.Roads.road import Road
+from .road import Road
 
 
 class SimulatorRoad(Road):

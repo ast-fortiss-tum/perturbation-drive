@@ -12,11 +12,11 @@ from .Roads.simulator_road import SimulatorRoad
 import math
 import numpy as np
 
-from RoadGenerator.RoadGenerator import RoadGenerator
-from RoadGenerator.Roads.road import Road
-from RoadGenerator.Roads.road_polygon import RoadPolygon
-from RoadGenerator.Roads.bbox import RoadBoundingBox
-from RoadGenerator.Roads.catmull_rom import catmull_rom
+from .RoadGenerator import RoadGenerator
+from .Roads.road import Road
+from .Roads.road_polygon import RoadPolygon
+from .Roads.bbox import RoadBoundingBox
+from .Roads.catmull_rom import catmull_rom
 
 
 from shapely.errors import ShapelyDeprecationWarning
@@ -52,6 +52,7 @@ class RandomRoadGenerator(RoadGenerator):
         self.max_angle = max_angle
         self.seg_length = seg_length
         self.road_bbox = RoadBoundingBox(bbox_size=bbox_size)
+        self.road_to_generate = None
 
         self.previous_road: Road = None
 

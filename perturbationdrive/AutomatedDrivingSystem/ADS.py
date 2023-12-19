@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, Any
 
-from numpy import dtype, ndarray, Any, uint8
+from numpy import dtype, ndarray, uint8
 
 
 class ADS(ABC):

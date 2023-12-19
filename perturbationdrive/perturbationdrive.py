@@ -1,9 +1,9 @@
-from Simulator.Simulator import PerturbationSimulator
+from .Simulator.Simulator import PerturbationSimulator
 from .AutomatedDrivingSystem.ADS import ADS
-from imageperturbations import ImagePerturbation
-from Simulator.Scenario import Scenario, ScenarioOutcome, OfflineScenarioOutcome
-from RoadGenerator.RoadGenerator import RoadGenerator
-from utils.logger import ScenarioOutcomeWriter, OfflineScenarioOutcomeWriter
+from .imageperturbations import ImagePerturbation, get_functions_from_module
+from .Simulator.Scenario import Scenario, ScenarioOutcome, OfflineScenarioOutcome
+from .RoadGenerator.RoadGenerator import RoadGenerator
+from .utils.logger import ScenarioOutcomeWriter, OfflineScenarioOutcomeWriter
 
 from typing import List, Union, Dict, Tuple
 import copy
@@ -153,6 +153,11 @@ class PerturbationDrive:
         index = 0
         outcomes: List[ScenarioOutcome] = []
         perturbations: List[str] = copy.deepcopy(perturbation_functions)
+        # populate all perturbations
+        if len(perturbations) == 0:
+            perturbations = get_functions_from_module(
+                "perturbationdrive.perturbationfuncs"
+            )
         # we append the empty perturbation here
         perturbations.append("")
 
@@ -170,7 +175,7 @@ class PerturbationDrive:
         while True:
             # check if we leave the loop, increment the index and scale
             index += 1
-            if len(perturbation) == 1:
+            if len(perturbations) == 1:
                 # all perturbations resulted in failures
                 # we will still have one perturbation here because we never
                 # drop the empty perturbation

@@ -1,7 +1,7 @@
 import random
 from abc import ABC, abstractmethod
 from typing import Union, List, Tuple
-from RoadGenerator.Roads.road import Road
+from .Roads.road import Road
 
 
 class RoadGenerator(ABC):
