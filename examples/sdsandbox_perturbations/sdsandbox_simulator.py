@@ -298,5 +298,5 @@ class ImageCallBack:
         # steering and throttle value
         self.screen_print(10, 10, "NN(steering): " + steering, self.screen)
         self.screen_print(10, 25, "NN(throttle): " + throttle, self.screen)
-        self.screen_print(10, 50, "Perturbation: " + perturbation, self.screen)
+        self.screen_print(10, 40, "Perturbation: " + perturbation, self.screen)
         pygame.display.flip()

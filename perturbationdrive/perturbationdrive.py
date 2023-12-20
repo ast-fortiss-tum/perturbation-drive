@@ -196,13 +196,11 @@ class PerturbationDrive:
                 # we went through all scales
                 break
 
+            # get the perturbation function for the scenario
+            perturbation = perturbations[index]
             print(
                 f"{5 * '-'} Running Scenario: Perturbation {perturbation} on {scale} with road {waypoints} {5 * '-'}"
             )
-
-            # get the perturbation function for the scenario
-            perturbation = perturbations[index]
-
             scenario = Scenario(
                 waypoints=waypoints,
                 perturbation_function=perturbation,
