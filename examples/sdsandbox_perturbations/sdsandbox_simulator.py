@@ -24,7 +24,11 @@ class SDSandboxSimulator(PerturbationSimulator):
         self, simulator_exe_path: str = "", host: str = "127.0.0.1", port: int = 9091
     ):
         super().__init__(
-            max_xte=2.0, simulator_exe_path=simulator_exe_path, host=host, port=port
+            max_xte=2.0,
+            simulator_exe_path=simulator_exe_path,
+            host=host,
+            port=port,
+            initial_pos=None,
         )
         self.client: Union[DonkeySimMsgHandler, None] = None
 
@@ -33,6 +37,18 @@ class SDSandboxSimulator(PerturbationSimulator):
         address = (self.host, self.port)
         handler = DonkeySimMsgHandler()
         self.client = SimClient(address, handler)
+
+        # wait for the first observation here
+        while len(self.client.sim_data) == 0:
+            print("SDSandBoxSimulator Waiting for inital obs")
+            time.sleep(0.02)
+        # the last value if the road width, which should be equivalent to max_xte * 2
+        self.initial_pos = (
+            self.client.sim_data["pos_x"],
+            self.client.sim_data["pos_y"],
+            self.client.sim_data["pos_z"],
+            self.max_xte * 2,
+        )
 
     def simulate_scanario(
         self, agent: ADS, scenario: Scenario, perturbation_controller: ImagePerturbation
@@ -127,7 +143,7 @@ class DonkeySimMsgHandler(IMesgHandler):
     ):
         self.client = None
         self.timer = FPSTimer()
-        self.sim_data = {}
+        self.sim_data: Dict = {}
         # we need this if we want to measure the diff in steering angles
         self.unchanged_img_arr = None
         # set the image call back to monitor the data

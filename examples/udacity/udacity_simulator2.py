@@ -23,7 +23,11 @@ class UdacitySimulator(PerturbationSimulator):
     ):
         # udacity road is 8 units wide
         super().__init__(
-            max_xte=4.0, simulator_exe_path=simulator_exe_path, host=host, port=port
+            max_xte=4.0,
+            simulator_exe_path=simulator_exe_path,
+            host=host,
+            port=port,
+            initial_pos=None,
         )
         self.client: Union[UdacityGymEnv_RoadGen, None] = None
 
@@ -31,9 +35,12 @@ class UdacitySimulator(PerturbationSimulator):
         super().connect()
         self.client = UdacityGymEnv_RoadGen(
             seed=1,
-            test_generator=None,
             exe_path=self.simulator_exe_path,
         )
+        # set initial pos
+        obs, done, info = self.client.observe()
+        x, y, z = info["pos"]
+        self.initial_pos = (x, y, z, 2 * self.max_xte)
 
     def simulate_scanario(
         self, agent: ADS, scenario: Scenario, perturbation_controller: ImagePerturbation
@@ -58,7 +65,10 @@ class UdacitySimulator(PerturbationSimulator):
 
         # reset the scene to match the scenario
         # Road generatior ir none because we currently do not build random roads
-        obs: ndarray[uint8] = self.client.reset(skip_generation=True)
+        obs: ndarray[uint8] = self.client.reset(
+            skip_generation=False, track_string=waypoints
+        )
+        # TODO: Resetting does not work!
 
         # action loop
         while not done:
@@ -89,7 +99,11 @@ class UdacitySimulator(PerturbationSimulator):
 
         # determine if we were successful
         isSuccess = max([abs(xte) for xte in xte_list]) < self.max_xte
-
+        print(f"{5 * '-'} Finished udacity scenario: {isSuccess} {5 * '_'}")
+        # reset for the new track
+        _ = self.client.reset(
+            skip_generation=False, track_string=waypoints
+        )
         # return the scenario output
         return ScenarioOutcome(
             frames=[x for x in range(len(pos_list))],

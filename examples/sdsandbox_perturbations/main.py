@@ -17,14 +17,14 @@ def go(
     try:
         simulator = SDSandboxSimulator(host=host, port=port)
         ads = ExampleAgent()
-        # road_generator = RandomRoadGenerator(map_size=250)
+        road_generator = RandomRoadGenerator(map_size=250)
         benchmarking_obj = PerturbationDrive(simulator, ads)
 
         # start the benchmarking
         benchmarking_obj.grid_seach(
             perturbation_functions=pert_funcs,
             attention_map=attention,
-            road_generator=None,# road_generator,
+            road_generator=road_generator,
             log_dir="./examples/sdsandbox_perturbations/logs.json",
             overwrite_logs=True,
             image_size=(240, 320),  # images are resized to these values

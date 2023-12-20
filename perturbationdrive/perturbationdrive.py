@@ -170,7 +170,7 @@ class PerturbationDrive:
         # set up initial road
         waypoints = None
         if not road_generator is None:
-            waypoints = road_generator.generate()
+            waypoints = road_generator.generate(starting_pos=self.simulator.initial_pos)
 
         # grid search loop
         while True:
@@ -187,7 +187,9 @@ class PerturbationDrive:
                 scale += 1
                 # we also generate a new track here
                 if not road_generator is None:
-                    waypoints = road_generator.generate()
+                    waypoints = road_generator.generate(
+                        starting_pos=self.simulator.initial_pos
+                    )
 
             if scale > 4:
                 # we went through all scales

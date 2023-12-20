@@ -2,7 +2,7 @@
 # Edited by Antonin Raffin
 import os
 import time
-from typing import Optional, Tuple, Dict, List
+from typing import Optional, Tuple, Dict, Union
 
 import gym
 import numpy as np
@@ -12,7 +12,6 @@ from udacity_utils.envs.udacity.config import BASE_PORT, MAX_STEERING, INPUT_DIM
 from udacity_utils.envs.udacity.core.udacity_sim import UdacitySimController
 from udacity_utils.envs.unity_proc import UnityProcess
 from udacity_utils.global_log import GlobalLog
-from udacity_utils.generators.test_generator import TestGenerator
 
 
 class UdacityGymEnv_RoadGen(gym.Env):
@@ -28,14 +27,12 @@ class UdacityGymEnv_RoadGen(gym.Env):
     def __init__(
         self,
         seed: int,
-        test_generator: TestGenerator = None,
         headless: bool = False,
         exe_path: str = None,
     ):
         self.seed = seed
         self.exe_path = exe_path
         self.logger = GlobalLog("UdacityGymEnv_RoadGen")
-        self.test_generator = test_generator
         if headless:
             self.logger.warn("Headless mode not supported with Udacity")
         self.headless = False
@@ -63,9 +60,7 @@ class UdacityGymEnv_RoadGen(gym.Env):
                 2
             )  # wait for the simulator to start and the scene to be selected
 
-        self.executor = UdacitySimController(
-            port=self.port, test_generator=test_generator
-        )
+        self.executor = UdacitySimController(port=self.port)
 
         # steering + throttle, action space must be symmetric
         self.action_space = spaces.Box(
@@ -93,17 +88,15 @@ class UdacityGymEnv_RoadGen(gym.Env):
 
     def reset(
         self,
-        mutation_point: int = None,
         skip_generation: bool = False,
-        angles: List[int] = [],
+        track_string: Union[str, None] = None,
     ) -> np.ndarray:
         self.executor.reset(
-            mut_point=mutation_point,
             skip_generation=skip_generation,
-            angles=angles,
+            track_string=track_string,
         )
         observation, done, info = self.observe()
-
+        time.sleep(2)
         return observation
 
     def render(self, mode: str = "human") -> Optional[np.ndarray]:

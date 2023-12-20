@@ -12,6 +12,8 @@ class RoadGenerator(ABC):
     @abstractmethod
     def generate(self, *args, **kwargs) -> Union[str, None]:
         """
-        Generates a new road and returns it as string representation in tuples
+        Generates a new road and returns it as string representation in tuples.
+
+        kwargs needs to contain the initial staring pos as arg `starting_pos`
         """
         pass

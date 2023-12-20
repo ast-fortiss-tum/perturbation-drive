@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Tuple
 from ..AutomatedDrivingSystem import ADS
 from .Scenario import Scenario, ScenarioOutcome
 from ..imageperturbations import ImagePerturbation
@@ -16,11 +16,13 @@ class PerturbationSimulator(ABC):
         simulator_exe_path: str = "",
         host: str = "127.0.0.1",
         port: int = 9091,
+        initial_pos: Union[Tuple[float, float, float, float], None] = None,
     ):
         self.max_xte = max_xte
         self.simulator_exe_path = simulator_exe_path
         self.host = host
         self.port = port
+        self.initial_pos: Union[Tuple[float, float, float, float], None] = initial_pos
 
     @abstractmethod
     def connect(self):

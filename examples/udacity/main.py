@@ -81,14 +81,14 @@ def go(
             port=port,
         )
         ads = ExampleAgent()
-        # road_generator = RandomRoadGenerator(map_size=250)
+        road_generator = RandomRoadGenerator(map_size=250)
         benchmarking_obj = PerturbationDrive(simulator, ads)
 
         # start the benchmarking
         benchmarking_obj.grid_seach(
             perturbation_functions=pert_funcs,
             attention_map=attention,
-            road_generator=None,  # road_generator,
+            road_generator=road_generator,
             log_dir="./examples/udacity/logs.json",
             overwrite_logs=True,
             image_size=(240, 320),  # images are resized to these values
@@ -140,7 +140,6 @@ if __name__ == "__main__":
         if args.attention_map == ""
         else {
             "map": args.attention_map,
-            "threshold": args.attention_threshold,
             "layer": args.attention_layer,
         }
     )
