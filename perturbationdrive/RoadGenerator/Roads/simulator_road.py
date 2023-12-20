@@ -25,7 +25,7 @@ class SimulatorRoad(Road):
                 for point in self.road_points
             ]
         return [
-            (point.x, 1.90000000, point.y, self.road_width)
+            (point.x, point.z, point.y, self.road_width)
             for point in self.road_points
         ]
 

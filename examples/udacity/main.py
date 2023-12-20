@@ -15,8 +15,7 @@ import traceback
 from examples.models.example_agent import ExampleAgent
 
 # Related to example
-from udacity_simulator import UdacitySimulatorAdapter
-from udacity_simulator2 import UdacitySimulator
+from examples.udacity.udacity_simulator import UdacitySimulator
 from Criticality import UdacityFitnessFunction, UdacityCriticality
 
 
@@ -45,7 +44,7 @@ def open_sbt():
         ],
         fitness_function=UdacityFitnessFunction(),
         critical_function=UdacityCriticality(),
-        simulate_function=UdacitySimulatorAdapter.simulate,
+        simulate_function=UdacitySimulator.simulate,
         simulation_time=30,
         sampling_time=0.25,
     )

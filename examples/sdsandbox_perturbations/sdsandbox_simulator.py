@@ -39,14 +39,15 @@ class SDSandboxSimulator(PerturbationSimulator):
         self.client = SimClient(address, handler)
 
         # wait for the first observation here
-        while len(self.client.sim_data) == 0:
+        while len(self.client.msg_handler.sim_data) == 0:
             print("SDSandBoxSimulator Waiting for inital obs")
             time.sleep(0.02)
         # the last value if the road width, which should be equivalent to max_xte * 2
+        print("We are at ", self.client.msg_handler.sim_data)
         self.initial_pos = (
-            self.client.sim_data["pos_x"],
-            self.client.sim_data["pos_y"],
-            self.client.sim_data["pos_z"],
+            self.client.msg_handler.sim_data["pos_x"],
+            self.client.msg_handler.sim_data["pos_y"],
+            self.client.msg_handler.sim_data["pos_z"],
             self.max_xte * 2,
         )
 
@@ -77,7 +78,7 @@ class SDSandboxSimulator(PerturbationSimulator):
                 time.sleep(0.02)
                 # we provide the actions and perturbed image here
                 obs: Dict[str, Any] = self.client.msg_handler.update(
-                    actions, perturbed_image
+                    actions, perturbed_image, perturbation_function_string
                 )
                 # check if we are done
                 if obs["done"]:
@@ -114,7 +115,7 @@ class SDSandboxSimulator(PerturbationSimulator):
             pos=pos_list,
             xte=xte_list,
             speeds=[],
-            actions=actions_list,
+            actions=[(f"{action[0][0]}", f"{action[0][0]}") for action in actions_list],
             scenario=scenario,
             isSuccess=isSuccess,
         )
@@ -213,7 +214,10 @@ class DonkeySimMsgHandler(IMesgHandler):
         }
 
     def update(
-        self, actions: List[List[float]], perturbed_image: Union[any, None]
+        self,
+        actions: List[List[float]],
+        perturbed_image: Union[any, None],
+        perturbation: str = "",
     ) -> Dict[str, Any]:
         """
         We take a action, send the action to the client and then return the latest telemetry data
@@ -233,7 +237,12 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.client.queue_message(msg)
         # run the image call back to inspect the image
         if perturbed_image is not None:
-            self.image_cb(perturbed_image, self.steering_angle, self.throttle)
+            self.image_cb(
+                perturbed_image,
+                f"{self.steering_angle}",
+                f"{self.throttle}",
+                perturbation,
+            )
         # return the sim_data so we can perturb it in the main loop and get a control action
         return output
 
@@ -242,14 +251,12 @@ class DonkeySimMsgHandler(IMesgHandler):
         Sends a new road to the sim
         """
 
-        print("requested reset")
         msg = {
             "msg_type": "regen_road",
             "wayPoints": waypoints.__str__(),
         }
 
         self.client.queue_message(msg)
-        print("Reset Donkey Scenario")
 
     def reset_car(self):
         """
@@ -281,7 +288,7 @@ class ImageCallBack:
         label = self.myfont.render(msg, 1, (255, 255, 0))
         screen.blit(label, (x, y))
 
-    def display_img(self, img, steering, throttle):
+    def display_img(self, img, steering, throttle, perturbation):
         # swap image axis
         img = img.swapaxes(0, 1)
         # draw frame
@@ -289,6 +296,7 @@ class ImageCallBack:
         camera_surface_2x = pygame.transform.scale2x(self.camera_surface)
         self.screen.blit(camera_surface_2x, (0, 0))
         # steering and throttle value
-        self.screen_print(10, 10, "NN(steering): " + str(steering), self.screen)
-        self.screen_print(10, 20, "NN(throttle): " + str(throttle), self.screen)
+        self.screen_print(10, 10, "NN(steering): " + steering, self.screen)
+        self.screen_print(10, 25, "NN(throttle): " + throttle, self.screen)
+        self.screen_print(10, 50, "Perturbation: " + perturbation, self.screen)
         pygame.display.flip()

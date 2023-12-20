@@ -187,6 +187,7 @@ class PerturbationDrive:
                 scale += 1
                 # we also generate a new track here
                 if not road_generator is None:
+                    # TODO: Insert here all kwargs needed for specific generator
                     waypoints = road_generator.generate(
                         starting_pos=self.simulator.initial_pos
                     )
@@ -195,7 +196,9 @@ class PerturbationDrive:
                 # we went through all scales
                 break
 
-            # get the road for the scenario
+            print(
+                f"{5 * '-'} Running Scenario: Perturbation {perturbation} on {scale} with road {waypoints} {5 * '-'}"
+            )
 
             # get the perturbation function for the scenario
             perturbation = perturbations[index]

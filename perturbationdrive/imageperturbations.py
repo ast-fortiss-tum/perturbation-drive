@@ -248,7 +248,6 @@ def _loadMaskFrames(path: str, isGreenScreen=True, height=240, width=320) -> lis
         # the image is rgb so we convert it to rgba
         ret, frame = cap.read()
         if not ret or frame is None:
-            print("failed to read frame")
             break
         frame = cv2.resize(frame, (width, height))
         if frame.shape[2] != 4:

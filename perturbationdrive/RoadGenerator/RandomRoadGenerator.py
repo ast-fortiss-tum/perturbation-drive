@@ -100,15 +100,14 @@ class RandomRoadGenerator(RoadGenerator):
         sample_nodes = None
 
         control_nodes = self.generate_control_nodes(starting_pos=kwargs["starting_pos"])
-        control_nodes = control_nodes[1:]
+        control_nodes = control_nodes[0:]
         sample_nodes = catmull_rom(control_nodes, self.num_spline_nodes)
 
-        road_points = [Point(node[0], node[1]) for node in sample_nodes]
-        print(f"Road Generator: Road Points {road_points}")
+        road_points = [Point(node[0], node[1], node[2]) for node in sample_nodes]
         control_points = [Point(node[0], node[1], node[2]) for node in control_nodes]
-        print(f"Road Generator: Control Points {control_points}")
+        _, _, _, width = self.initial_node
         self.previous_road = SimulatorRoad(
-            road_width=4.0,
+            road_width=width,
             road_points=road_points,
             control_points=control_points,
         )
@@ -123,7 +122,6 @@ class RandomRoadGenerator(RoadGenerator):
     def _get_initial_control_node(self) -> Tuple[float, float, float, float]:
         x0, y0, z, width = self.initial_node
         x, y = self._get_next_xy(x0, y0, 270)
-        # assert not (self.road_bbox.bbox.contains(Point(x, y)))
 
         return x, y, z, width
 

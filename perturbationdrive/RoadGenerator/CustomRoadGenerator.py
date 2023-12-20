@@ -132,15 +132,14 @@ class CustomRoadGenerator(RoadGenerator):
             angles=kwargs["angles"],
             seg_lengths=seg_lengths,
         )
-        control_nodes = control_nodes[1:]
+        control_nodes = control_nodes[0:]
         sample_nodes = catmull_rom(control_nodes, self.num_spline_nodes)
 
         road_points = [Point(node[0], node[1]) for node in sample_nodes]
-        print(f"Road Generator: Road Points {road_points}")
         control_points = [Point(node[0], node[1], node[2]) for node in control_nodes]
-        print(f"Road Generator: Control Points {control_points}")
+        _, _, _, width = self.initial_node
         self.previous_road = SimulatorRoad(
-            road_width=4.0,
+            road_width=width,
             road_points=road_points,
             control_points=control_points,
         )
