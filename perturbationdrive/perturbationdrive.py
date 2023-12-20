@@ -241,4 +241,29 @@ class PerturbationDrive:
 
         If log_dir is none, we return the scenario outcomes
         """
-        iamge_perturbation = ImagePerturbation()
+        # get all perturbations to set up this object
+        perturbations: List[str] = []
+        for sccenario in scenarios:
+            perturbations.append(sccenario.perturbation_function)
+
+        iamge_perturbation = ImagePerturbation(
+            funcs=perturbations, attention_map=attention_map, image_size=image_size
+        )
+        # set up sim
+        self.simulator.connect()
+
+        outcomes: List[ScenarioOutcome] = []
+        # iterate over all scenarios
+        for scenario in scenarios:
+            outcome = self.simulator.simulate_scanario(
+                self.ads, scenario=scenario, perturbation_controller=iamge_perturbation
+            )
+            outcomes.append(outcome)
+
+        # tear sim down
+        self.simulator.tear_down()
+        if log_dir is None:
+            return outcomes
+        else:
+            scenario_writer = ScenarioOutcomeWriter(log_dir, overwrite_logs)
+            scenario_writer.write(outcomes)
