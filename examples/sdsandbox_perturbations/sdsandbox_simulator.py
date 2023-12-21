@@ -15,9 +15,6 @@ import base64
 import cv2
 import numpy as np
 
-# used from this example
-import conf
-
 
 class SDSandboxSimulator(PerturbationSimulator):
     def __init__(
@@ -66,6 +63,7 @@ class SDSandboxSimulator(PerturbationSimulator):
         pos_list = []
         xte_list = []
         actions_list = []
+        speed_list = []
         isSuccess = False
 
         # reset the scene to match the scenario
@@ -99,6 +97,7 @@ class SDSandboxSimulator(PerturbationSimulator):
                 # save data for output
                 pos_list.append([obs["pos_x"], obs["pos_y"], obs["pos_z"]])
                 xte_list.append(obs["xte"])
+                speed_list.append(obs["speed"])
                 actions_list.append(actions)
 
             except KeyboardInterrupt:
@@ -114,7 +113,7 @@ class SDSandboxSimulator(PerturbationSimulator):
             frames=[x for x in range(len(pos_list))],
             pos=pos_list,
             xte=xte_list,
-            speeds=[],
+            speeds=speed_list,
             actions=[(f"{action[0][0]}", f"{action[0][0]}") for action in actions_list],
             scenario=scenario,
             isSuccess=isSuccess,
@@ -209,6 +208,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             "pos_x": data["pos_x"],
             "pos_y": data["pos_z"],
             "pos_z": data["pos_y"],
+            "speed": data["speed"],
             "done": False,  # TODO: This needs to be send by the simulator
             "image": image,
         }
@@ -276,7 +276,7 @@ class DonkeySimMsgHandler(IMesgHandler):
 class ImageCallBack:
     def __init__(self):
         pygame.init()
-        ch, row, col = conf.ch, conf.row, conf.col
+        ch, row, col = 3, 240, 320
 
         size = (col * 2, row * 2)
         pygame.display.set_caption("sdsandbox image monitor")

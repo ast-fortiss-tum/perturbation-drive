@@ -1,6 +1,8 @@
 import numpy as np
-import os 
+import os
 import requests
+from typing import Tuple
+
 
 def round_to_nearest_odd(n):
     """
@@ -82,3 +84,18 @@ def download_file(url, target_folder):
             for chunk in r.iter_content(chunk_size=8192):
                 f.write(chunk)
     return local_filename
+
+
+def calculate_velocities(positions, speeds) -> Tuple[float, float, float]:
+    """
+    Calculate velocities given a list of positions and corresponding speeds.
+    """
+    velocities = []
+
+    for i in range(len(positions) - 1):
+        displacement = np.array(positions[i + 1]) - np.array(positions[i])
+        direction = displacement / np.linalg.norm(displacement)
+        velocity = direction * speeds[i]
+        velocities.append(velocity)
+
+    return velocities

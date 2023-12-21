@@ -1,17 +1,22 @@
-from typing import Tuple
+# open sbt imports
 from evaluation.fitness import Fitness
 from evaluation.critical import Critical
 from simulation.simulator import SimulationOutput
+
+# other imports
+from typing import Tuple
 import numpy as np
-from udacity_utils.envs.udacity.config import MAX_CTE_ERROR
 
 
-class UdacityFitnessFunction(Fitness):
+class FitnessFunction(Fitness):
     """
     Fitness function simply returns average xte
 
     We aim at finding scenarios with a high xte since these exhibit bad driving scenarios
     """
+
+    def __init__(self, max_xte: float = 4.0):
+        self.max_xte = max_xte
 
     @property
     def min_or_max(self):
@@ -23,11 +28,13 @@ class UdacityFitnessFunction(Fitness):
 
     def eval(self, simout: SimulationOutput) -> Tuple[float]:
         traceXTE = [abs(x) for x in simout.otherParams["xte"]]
-
         return (np.average(traceXTE), max(traceXTE))
 
 
-class UdacityCriticality(Critical):
+class Criticality(Critical):
+    def __init__(self, max_xte: float = 4.0):
+        self.max_xte = max_xte
+
     def eval(self, vector_fitness, simout: SimulationOutput = None):
         # we fail the scenario, if max xte > 3
-        return vector_fitness[1] > MAX_CTE_ERROR
+        return vector_fitness[1] > self.max_xte

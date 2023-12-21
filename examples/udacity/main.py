@@ -2,12 +2,14 @@
 from problem.adas_problem import ADASProblem
 from evaluation.fitness import *
 from evaluation.critical import *
+from simulation.simulator import Simulator, SimulationOutput
+from model_ga.individual import Individual
 from algorithm.nsga2_optimizer import NsgaIIOptimizer
 from experiment.search_configuration import DefaultSearchConfiguration
 
 # imports
 from utils import log_utils
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Union
 import argparse
 import traceback
 
@@ -16,11 +18,157 @@ from examples.models.example_agent import ExampleAgent
 
 # Related to example
 from examples.udacity.udacity_simulator import UdacitySimulator
-from Criticality import UdacityFitnessFunction, UdacityCriticality
-
+from examples.open_sbt.Criticality import FitnessFunction, Criticality
 
 # related to perturbation drive
-from perturbationdrive import PerturbationDrive, RandomRoadGenerator
+from perturbationdrive import (
+    PerturbationDrive,
+    RandomRoadGenerator,
+    ScenarioOutcome,
+    Scenario,
+    CustomRoadGenerator,
+)
+
+
+class Udacity_OpenSBTWrapper(Simulator):
+    @staticmethod
+    def simulate(
+        list_individuals: List[Individual],
+        variable_names: List[str],
+        scenario_path: str,
+        sim_time: float,
+        time_step: float,
+        do_visualize: bool = False,
+    ) -> List[SimulationOutput]:
+        """
+        Runs all indicidual simulations and returns simulation outputs
+        """
+        # set up all perturbation drive objects
+        simulator = UdacitySimulator(
+            simulator_exe_path="./examples/udacity/udacity_utils/sim/udacity_sim.app",
+            host="127.0.0.1",
+            port=9091,
+        )
+        ads = ExampleAgent()
+        benchmarking_obj = PerturbationDrive(simulator, ads)
+        road_generator = CustomRoadGenerator(250)
+
+        # create all scenarios
+        scenarios: List[Scenario] = [
+            Udacity_OpenSBTWrapper.individualToScenario(
+                individual=ind,
+                variable_names=variable_names,
+                road_generator=road_generator,
+            )
+            for ind in list_individuals
+        ]
+
+        # run the individualts
+        outcomes: List[ScenarioOutcome] = benchmarking_obj.simulate_scenarios(
+            scenarios=scenarios,
+            attention_map={},
+            log_dir=None,
+            overwrite_logs=False,
+            image_size=(240, 320),
+        )
+
+        # convert the outcomes to sbt format
+        return [
+            SimulationOutput(
+                simTime=float(len(outcome.frames)),
+                times=outcome.frames,
+                location={"ego": [(x[0], x[1]) for x in outcome.pos]},
+                velocity={
+                    "ego": Udacity_OpenSBTWrapper._calculate_velocities(
+                        outcome.pos, outcome.speeds
+                    )
+                },
+                speed={"ego": outcome.speeds},
+                acceleration={"ego": []},
+                yaw={
+                    "ego": [],
+                },
+                collisions=[],
+                actors={
+                    1: "ego",
+                },
+                otherParams={"xte": outcome.xte},
+            )
+            for outcome in outcomes
+        ]
+
+    @staticmethod
+    def individualToScenario(
+        individual: Individual,
+        variable_names: List[str],
+        road_generator: CustomRoadGenerator,
+    ) -> Scenario:
+        instance_values = [v for v in zip(variable_names, individual)]
+        angles: List[str] = []
+        perturbation_scale: int = 0
+        perturbation_function_int: int = 1
+        perturbation_function: str = ""
+        seg_lengths: List[str] = []
+
+        for i in range(0, len(instance_values)):
+            # Check if the current item is the perturbation scale
+            if instance_values[i][0].startswith("perturbation_scale"):
+                perturbation_scale = int(instance_values[i][1])
+                break
+            elif instance_values[i][0].startswith("perturbation_function"):
+                perturbation_function_int = int(instance_values[i][1])
+                break
+            elif instance_values[i][0].startswith("angle"):
+                new_angle = int(instance_values[i][1])
+                angles.append(new_angle)
+            elif instance_values[i][0].startswith("seg_length"):
+                seg_length = int(instance_values[i][1])
+                seg_lengths.append(seg_length)
+
+        # generate the road string from the configuration
+        seg_lengths: Union[List[str], None] = (
+            seg_lengths if len(seg_lengths) > 0 else None
+        )
+        road_str: str = road_generator.generate(angles=angles, seg_lengths=seg_lengths)
+        # map the function
+        if perturbation_function_int > 0 and perturbation_function_int < len(
+            FUNCTION_MAPPING
+        ):
+            perturbation_function = FUNCTION_MAPPING[perturbation_function_int]
+
+        # return the sce ario
+        return Scenario(
+            waypoints=road_str,
+            perturbation_function=perturbation_function,
+            perturbation_scale=perturbation_scale,
+        )
+
+    @staticmethod
+    def _calculate_velocities(
+        positions: List[Tuple[float, float, float]], speeds: List[float]
+    ) -> Tuple[float, float, float]:
+        """
+        Calculate velocities given a list of positions and corresponding speeds.
+        """
+        velocities = []
+
+        for i in range(len(positions) - 1):
+            displacement = np.array(positions[i + 1]) - np.array(positions[i])
+            direction = displacement / np.linalg.norm(displacement)
+            velocity = direction * speeds[i]
+            velocities.append(velocity)
+
+        return velocities
+
+
+FUNCTION_MAPPING = {
+    1: "gaussian_noise",
+    2: "poisson_noise",
+    3: "impulse_noise",
+    4: "defocus_blur",
+    5: "glass_blur",
+    6: "increase_brightness",
+}
 
 
 def open_sbt():
@@ -42,9 +190,9 @@ def open_sbt():
             "perturbation_scale",
             "perturbation_function",
         ],
-        fitness_function=UdacityFitnessFunction(),
-        critical_function=UdacityCriticality(),
-        simulate_function=UdacitySimulator.simulate,
+        fitness_function=FitnessFunction(max_xte=4.0),
+        critical_function=Criticality(max_xte=4.0),
+        simulate_function=Udacity_OpenSBTWrapper.simulate,
         simulation_time=30,
         sampling_time=0.25,
     )

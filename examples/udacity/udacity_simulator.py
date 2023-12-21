@@ -60,6 +60,7 @@ class UdacitySimulator(PerturbationSimulator):
         pos_list = []
         xte_list = []
         actions_list = []
+        speed_list = []
         isSuccess = False
         done = False
 
@@ -68,7 +69,6 @@ class UdacitySimulator(PerturbationSimulator):
         obs: ndarray[uint8] = self.client.reset(
             skip_generation=False, track_string=waypoints
         )
-        # TODO: Resetting does not work!
 
         # action loop
         while not done:
@@ -88,28 +88,32 @@ class UdacitySimulator(PerturbationSimulator):
                     actions, self.client.action_space.low, self.client.action_space.high
                 )
 
-            monitor.display_img(perturbed_image, actions[0][0], actions[0][1], perturbation_function_string)
+            monitor.display_img(
+                perturbed_image,
+                actions[0][0],
+                actions[0][1],
+                perturbation_function_string,
+            )
             # obs is the image, info contains the road and the position of the car
             obs, done, info = self.client.step(actions)
 
             # log new info
             pos_list.append(info["pos"])
             xte_list.append(info["cte"])
+            speed_list.append(info["speed"])
             actions_list.append(actions)
 
         # determine if we were successful
         isSuccess = max([abs(xte) for xte in xte_list]) < self.max_xte
         print(f"{5 * '-'} Finished udacity scenario: {isSuccess} {5 * '_'}")
         # reset for the new track
-        _ = self.client.reset(
-            skip_generation=False, track_string=waypoints
-        )
+        _ = self.client.reset(skip_generation=False, track_string=waypoints)
         # return the scenario output
         return ScenarioOutcome(
             frames=[x for x in range(len(pos_list))],
             pos=pos_list,
             xte=xte_list,
-            speeds=[],
+            speeds=speed_list,
             actions=actions_list,
             scenario=scenario,
             isSuccess=isSuccess,

@@ -64,7 +64,7 @@ from perturbationdrive.perturbationfuncs import (
 
 from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
-from .utils.utilFuncs import download_file
+from .utils.utilFuncs import download_file, calculate_velocities
 from .SaliencyMap.saliencymap import (
     getActivationMap,
     getSaliencyMap,
@@ -88,5 +88,6 @@ from .perturbationdrive import PerturbationDrive
 from .AutomatedDrivingSystem.ADS import ADS
 from .RoadGenerator.RoadGenerator import RoadGenerator
 from .RoadGenerator.RandomRoadGenerator import RandomRoadGenerator
+from .RoadGenerator.CustomRoadGenerator import CustomRoadGenerator
 from .Simulator.Simulator import PerturbationSimulator
 from .Simulator.Scenario import Scenario, ScenarioOutcome, OfflineScenarioOutcome
