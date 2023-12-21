@@ -249,8 +249,8 @@ class PerturbationDrive:
         iamge_perturbation = ImagePerturbation(
             funcs=perturbations, attention_map=attention_map, image_size=image_size
         )
-        # set up sim
-        self.simulator.connect()
+        # sim is setup in main to get starting pos
+        #self.simulator.connect()
 
         outcomes: List[ScenarioOutcome] = []
         # iterate over all scenarios

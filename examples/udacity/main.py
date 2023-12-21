@@ -53,12 +53,17 @@ class Udacity_OpenSBTWrapper(Simulator):
         benchmarking_obj = PerturbationDrive(simulator, ads)
         road_generator = CustomRoadGenerator(250)
 
+        # we need to set the sim here up to get the starting position
+        benchmarking_obj.simulator.connect()
+        starting_pos = benchmarking_obj.simulator.initial_pos
+
         # create all scenarios
         scenarios: List[Scenario] = [
             Udacity_OpenSBTWrapper.individualToScenario(
                 individual=ind,
                 variable_names=variable_names,
                 road_generator=road_generator,
+                starting_pos=starting_pos,
             )
             for ind in list_individuals
         ]
@@ -102,6 +107,7 @@ class Udacity_OpenSBTWrapper(Simulator):
         individual: Individual,
         variable_names: List[str],
         road_generator: CustomRoadGenerator,
+        starting_pos: Tuple[float, float, float],
     ) -> Scenario:
         instance_values = [v for v in zip(variable_names, individual)]
         angles: List[str] = []
@@ -129,7 +135,9 @@ class Udacity_OpenSBTWrapper(Simulator):
         seg_lengths: Union[List[str], None] = (
             seg_lengths if len(seg_lengths) > 0 else None
         )
-        road_str: str = road_generator.generate(angles=angles, seg_lengths=seg_lengths)
+        road_str: str = road_generator.generate(
+            starting_pos=starting_pos, angles=angles, seg_lengths=seg_lengths
+        )
         # map the function
         if perturbation_function_int > 0 and perturbation_function_int < len(
             FUNCTION_MAPPING
@@ -292,10 +300,11 @@ if __name__ == "__main__":
     )
 
     print(f"{5 * '#'} Started Running Udacity Sim {5 * '#'}")
-    go(
-        simulator_exe_path=args.sim_exe,
-        host=args.host,
-        port=args.port,
-        pert_funcs=args.perturbation,
-        attention=attention,
-    )
+    # go(
+    #    simulator_exe_path=args.sim_exe,
+    #    host=args.host,
+    #    port=args.port,
+    #    pert_funcs=args.perturbation,
+    #    attention=attention,
+    # )
+    open_sbt()

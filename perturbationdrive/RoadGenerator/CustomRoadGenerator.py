@@ -135,7 +135,7 @@ class CustomRoadGenerator(RoadGenerator):
         control_nodes = control_nodes[0:]
         sample_nodes = catmull_rom(control_nodes, self.num_spline_nodes)
 
-        road_points = [Point(node[0], node[1]) for node in sample_nodes]
+        road_points = [Point(node[0], node[1], node[2]) for node in sample_nodes]
         control_points = [Point(node[0], node[1], node[2]) for node in control_nodes]
         _, _, _, width = self.initial_node
         self.previous_road = SimulatorRoad(
@@ -153,8 +153,7 @@ class CustomRoadGenerator(RoadGenerator):
 
     def _get_initial_control_node(self) -> Tuple[float, float, float, float]:
         x0, y0, z, width = self.initial_node
-        x, y = self._get_next_xy(x0, y0, 270)
-        # assert not (self.road_bbox.bbox.contains(Point(x, y)))
+        x, y = self._get_next_xy(x0, y0, 270, self.seg_length)
 
         return x, y, z, width
 
