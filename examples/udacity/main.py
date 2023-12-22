@@ -255,6 +255,37 @@ def go(
         )
 
 
+def offline(
+    simulator_exe_path: str,
+    host: str,
+    port: int,
+    data_set_path: str,
+    pert_funcs: List[str] = [],
+    attention: Dict[str, Any] = {},
+):
+    try:
+        simulator = UdacitySimulator(
+            simulator_exe_path=simulator_exe_path,
+            host=host,
+            port=port,
+        )
+        ads = ExampleAgent()
+        benchmarking_obj = PerturbationDrive(simulator, ads)
+
+        benchmarking_obj.offline_perturbation(
+            dataset_path=data_set_path,
+            perturbation_functions=pert_funcs,
+            attention_map=attention,
+            log_dir="./examples/udacity/offlone_logs.json",
+            overwrite_logs=True,
+            image_size=(240, 320),
+        )
+    except Exception as e:
+        print(
+            f"{5 * '#'} SDSandBox Error: Exception type: {type(e).__name__}, \nError message: {e}\nTract {traceback.print_exc()} {5 * '#'} "
+        )
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Udacity Example")
     parser.add_argument(
@@ -307,4 +338,12 @@ if __name__ == "__main__":
     #    pert_funcs=args.perturbation,
     #    attention=attention,
     # )
-    open_sbt()
+    # open_sbt()
+    offline(
+        simulator_exe_path=args.sim_exe,
+        host=args.host,
+        port=args.port,
+        data_set_path="../../../../Desktop/generatedRoadDataset/",
+        pert_funcs=args.perturbation,
+        attention=attention,
+    )

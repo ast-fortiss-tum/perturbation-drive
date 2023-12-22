@@ -62,21 +62,24 @@ class PerturbationDrive:
         image_files = [
             file for file in files if file.endswith((".jpg", ".jpeg", ".png"))
         ]
-
-        iamge_perturbation = ImagePerturbation(
-            perturbation_functions, attention_map, image_size
-        )
+        perturbations: List[str] = copy.deepcopy(perturbation_functions)
+        # populate all perturbations
+        if len(perturbations) == 0:
+            perturbation_fns = get_functions_from_module(
+                "perturbationdrive.perturbationfuncs"
+            )
+            perturbations = list(map(lambda f: f.__name__, perturbation_fns))
+        iamge_perturbation = ImagePerturbation(perturbations, attention_map, image_size)
 
         results: List[OfflineScenarioOutcome] = []
 
         print(f"{5 * '-'} Starting offline benchmarking {5 * '-'}")
-
         for image_path in image_files:
             # find the json output
             frame_number = os.path.basename(image_path).split("_")[0]
             # check if this file exists and only continues if it does
             json_filename = os.path.join(
-                os.path.dirname(image_path), "record_" + frame_number + ".json"
+                dataset_path, "record_" + frame_number + ".json"
             )
             if not os.path.exists(json_filename):
                 print(
@@ -89,15 +92,16 @@ class PerturbationDrive:
             throttle = float(data["user/throttle"])
 
             try:
-                image = cv2.imread(image_path)
+                image_full_path = os.path.join(dataset_path, image_path)
+                image = cv2.imread(image_full_path)
             except:
                 print(
-                    f"{5 * '+'} Warning: Offline Perturbation: Could not read {image_path} {5 * '+'}"
+                    f"{5 * '+'} Warning: Offline Perturbation: Could not read {image_full_path} {5 * '+'}"
                 )
                 continue
 
             # iterate over all perturbations
-            for function_str in perturbation_functions:
+            for function_str in perturbations:
                 # iterate over all scales
                 for intensity in range(5):
                     normal_image_actions = self.ads.action(image)
@@ -106,6 +110,8 @@ class PerturbationDrive:
                         image, function_str, intensity
                     )
                     perturbed_image_actions = self.ads.action(perturbed_image)
+                    steering = f"{perturbed_image_actions[0][0]}"
+                    throttle = f"{perturbed_image_actions[0][1]}"
 
                     # store the result
                     results.append(
@@ -115,8 +121,14 @@ class PerturbationDrive:
                             perturbation_function=function_str,
                             perturbation_scale=intensity,
                             ground_truth_actions=[steering, throttle],
-                            perturbed_image_actions=perturbed_image_actions,
-                            normal_image_actions=normal_image_actions,
+                            perturbed_image_actions=[
+                                steering,
+                                throttle,
+                            ],
+                            normal_image_actions=[
+                                f"{normal_image_actions[0][0]}",
+                                f"{normal_image_actions[0][1]}",
+                            ],
                         )
                     )
 
@@ -250,7 +262,7 @@ class PerturbationDrive:
             funcs=perturbations, attention_map=attention_map, image_size=image_size
         )
         # sim is setup in main to get starting pos
-        #self.simulator.connect()
+        # self.simulator.connect()
 
         outcomes: List[ScenarioOutcome] = []
         # iterate over all scenarios

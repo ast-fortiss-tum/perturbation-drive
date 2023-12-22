@@ -262,7 +262,6 @@ class DonkeySimMsgHandler(IMesgHandler):
         """
         Resets the car for a new scenario
         """
-        # TODO: Test this
         msg = {"msg_type": "quit_app"}
         self.client.queue_message(msg)
 
