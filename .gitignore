@@ -233,3 +233,9 @@ udacity_sim.app
 unitylog.txt
 placeholder.txt
 temp.txt
+
+# all unnecessary logs 
+*log*.json
+*log*.csv
+*logs*.json
+*logs*.csv
