@@ -29,7 +29,6 @@ class PerturbationDrive:
         assert isinstance(ads, ADS), "ADS must be a subclass of ADS"
         self.simulator = simulator
         self.ads = ads
-        self.iamge_perturbation = ImagePerturbation()
 
     def offline_perturbation(
         self,
