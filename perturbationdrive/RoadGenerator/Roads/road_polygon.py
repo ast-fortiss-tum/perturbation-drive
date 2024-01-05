@@ -2,8 +2,7 @@ from typing import List
 from typing import Tuple
 from shapely.geometry import Polygon, LineString
 
-from udacity_utils.global_log import GlobalLog
-from udacity_utils.driving.road_points import RoadPoints
+from .road_points import RoadPoints
 
 
 class RoadPolygon:
@@ -15,13 +14,16 @@ class RoadPolygon:
         return RoadPolygon(RoadPoints.from_nodes(nodes))
 
     def __init__(self, road_points: RoadPoints):
-        assert len(road_points.left) == len(road_points.right) == len(road_points.middle)
+        assert (
+            len(road_points.left) == len(road_points.right) == len(road_points.middle)
+        )
         assert len(road_points.left) >= 2
         assert all(len(x) == 4 for x in road_points.middle)
         assert all(len(x) == 2 for x in road_points.left)
         assert all(len(x) == 2 for x in road_points.right)
-        assert all(x[3] == road_points.middle[0][3] for x in
-                   road_points.middle), "The width of the road should be equal everywhere."
+        assert all(
+            x[3] == road_points.middle[0][3] for x in road_points.middle
+        ), "The width of the road should be equal everywhere."
         self.road_points = road_points
         self.road_width = road_points.middle[0][3]
         self.polygons = self._compute_polygons()
@@ -33,18 +35,29 @@ class RoadPolygon:
         self.left_polyline = self._compute_left_polyline()
         self.num_polygons = len(self.polygons)
 
-        self.logg = GlobalLog("road_polygon")
 
     def _compute_polygons(self) -> List[Polygon]:
         """Creates and returns a list of Polygon objects that represent the road.
         Each polygon represents a segment of the road. Two objects adjacent in
         the returned list represent adjacent segments of the road."""
         polygons = []
-        for left, right, left1, right1, in zip(self.road_points.left,
-                                               self.road_points.right,
-                                               self.road_points.left[1:],
-                                               self.road_points.right[1:]):
-            assert len(left) >= 2 and len(right) >= 2 and len(left1) >= 2 and len(right1) >= 2
+        for (
+            left,
+            right,
+            left1,
+            right1,
+        ) in zip(
+            self.road_points.left,
+            self.road_points.right,
+            self.road_points.left[1:],
+            self.road_points.right[1:],
+        ):
+            assert (
+                len(left) >= 2
+                and len(right) >= 2
+                and len(left1) >= 2
+                and len(right1) >= 2
+            )
             # Ignore the z coordinate.
             polygons.append(Polygon([left[:2], left1[:2], right1[:2], right[:2]]))
         return polygons
@@ -75,14 +88,22 @@ class RoadPolygon:
     def _compute_right_polyline(self) -> LineString:
         """Computes and returns a LineString representing the polyline
         of the spin (or middle) of the right lane of the road."""
-        return LineString([((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2) for p1, p2 in
-                           zip(self.road_points.middle, self.road_points.right)])
+        return LineString(
+            [
+                ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+                for p1, p2 in zip(self.road_points.middle, self.road_points.right)
+            ]
+        )
 
     def _compute_left_polyline(self) -> LineString:
         """Computes and returns a LineString representing the polyline
         of the spin (or middle) of the left lane of the road."""
-        return LineString([((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2) for p1, p2 in
-                           zip(self.road_points.left, self.road_points.middle)])
+        return LineString(
+            [
+                ((p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2)
+                for p1, p2 in zip(self.road_points.left, self.road_points.middle)
+            ]
+        )
 
     def _get_neighbouring_polygons(self, i: int) -> List[int]:
         """Returns the indices of the neighbouring polygons of the polygon
@@ -126,10 +147,14 @@ class RoadPolygon:
                 if polygon.contains(other) or other.contains(polygon):
                     # self.logg.debug("No polygon should contain any other polygon.")
                     return False
-                if not self._are_neighbouring_polygons(i, j) and other.intersects(polygon):
+                if not self._are_neighbouring_polygons(i, j) and other.intersects(
+                    polygon
+                ):
                     # self.logg.debug("The non-neighbouring polygons %s and %s intersect." % (polygon, other))
                     return False
-                if self._are_neighbouring_polygons(i, j) and not isinstance(other.intersection(polygon), LineString):
+                if self._are_neighbouring_polygons(i, j) and not isinstance(
+                    other.intersection(polygon), LineString
+                ):
                     # self.logg.debug("The neighbouring polygons %s and %s have an intersection of type %s." % (
                     #     polygon, other, type(other.intersection(polygon))))
                     return False

@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from udacity_utils.driving.road_points import RoadPoints
+from .road_points import RoadPoints
 
 
 class RoadImagery:
@@ -12,7 +12,7 @@ class RoadImagery:
         self._close()
         self._fig, self._ax = plt.subplots(1)
         self.road_points.plot_on_ax(self._ax)
-        self._ax.axis('equal')
+        self._ax.axis("equal")
 
     def save(self, image_path):
         if not self._fig:

@@ -7,17 +7,13 @@ from model_ga.individual import Individual
 from algorithm.nsga2_optimizer import NsgaIIOptimizer
 from experiment.search_configuration import DefaultSearchConfiguration
 
-# imports
 from utils import log_utils
-from typing import Dict, List, Any, Union
 import argparse
+from typing import List, Dict, Any, Union
 import traceback
 
-# other example modules
+from sdsandbox_simulator import SDSandboxSimulator
 from examples.models.example_agent import ExampleAgent
-
-# Related to example
-from examples.udacity.udacity_simulator import UdacitySimulator
 from examples.open_sbt.Criticality import FitnessFunction, Criticality
 
 # related to perturbation drive
@@ -30,7 +26,7 @@ from perturbationdrive import (
 )
 
 
-class Udacity_OpenSBTWrapper(Simulator):
+class SDSandBox_OpenSBTWrapper(Simulator):
     @staticmethod
     def simulate(
         list_individuals: List[Individual],
@@ -44,8 +40,8 @@ class Udacity_OpenSBTWrapper(Simulator):
         Runs all indicidual simulations and returns simulation outputs
         """
         # set up all perturbation drive objects
-        simulator = UdacitySimulator(
-            simulator_exe_path="./examples/udacity/udacity_utils/sim/udacity_sim.app",
+        simulator = SDSandboxSimulator(
+            simulator_exe_path="",
             host="127.0.0.1",
             port=9091,
         )
@@ -53,17 +49,12 @@ class Udacity_OpenSBTWrapper(Simulator):
         benchmarking_obj = PerturbationDrive(simulator, ads)
         road_generator = CustomRoadGenerator(250)
 
-        # we need to set the sim here up to get the starting position
-        benchmarking_obj.simulator.connect()
-        starting_pos = benchmarking_obj.simulator.initial_pos
-
         # create all scenarios
         scenarios: List[Scenario] = [
-            Udacity_OpenSBTWrapper.individualToScenario(
+            SDSandBox_OpenSBTWrapper.individualToScenario(
                 individual=ind,
                 variable_names=variable_names,
                 road_generator=road_generator,
-                starting_pos=starting_pos,
             )
             for ind in list_individuals
         ]
@@ -84,7 +75,7 @@ class Udacity_OpenSBTWrapper(Simulator):
                 times=outcome.frames,
                 location={"ego": [(x[0], x[1]) for x in outcome.pos]},
                 velocity={
-                    "ego": Udacity_OpenSBTWrapper._calculate_velocities(
+                    "ego": SDSandBox_OpenSBTWrapper._calculate_velocities(
                         outcome.pos, outcome.speeds
                     )
                 },
@@ -107,7 +98,6 @@ class Udacity_OpenSBTWrapper(Simulator):
         individual: Individual,
         variable_names: List[str],
         road_generator: CustomRoadGenerator,
-        starting_pos: Tuple[float, float, float],
     ) -> Scenario:
         instance_values = [v for v in zip(variable_names, individual)]
         angles: List[str] = []
@@ -135,9 +125,7 @@ class Udacity_OpenSBTWrapper(Simulator):
         seg_lengths: Union[List[str], None] = (
             seg_lengths if len(seg_lengths) > 0 else None
         )
-        road_str: str = road_generator.generate(
-            starting_pos=starting_pos, angles=angles, seg_lengths=seg_lengths
-        )
+        road_str: str = road_generator.generate(angles=angles, seg_lengths=seg_lengths)
         # map the function
         if perturbation_function_int > 0 and perturbation_function_int < len(
             FUNCTION_MAPPING
@@ -199,8 +187,8 @@ def open_sbt():
             "perturbation_function",
         ],
         fitness_function=FitnessFunction(max_xte=4.0),
-        critical_function=Criticality(max_xte=4.0),
-        simulate_function=Udacity_OpenSBTWrapper.simulate,
+        critical_function=Criticality(),
+        simulate_function=SDSandBox_OpenSBTWrapper.simulate,
         simulation_time=30,
         sampling_time=0.25,
     )
@@ -223,18 +211,13 @@ def open_sbt():
 
 
 def go(
-    simulator_exe_path: str,
     host: str,
     port: int,
     pert_funcs: List[str] = [],
     attention: Dict[str, Any] = {},
 ):
     try:
-        simulator = UdacitySimulator(
-            simulator_exe_path=simulator_exe_path,
-            host=host,
-            port=port,
-        )
+        simulator = SDSandboxSimulator(host=host, port=port)
         ads = ExampleAgent()
         road_generator = RandomRoadGenerator(map_size=250)
         benchmarking_obj = PerturbationDrive(simulator, ads)
@@ -244,42 +227,11 @@ def go(
             perturbation_functions=pert_funcs,
             attention_map=attention,
             road_generator=road_generator,
-            log_dir="./examples/udacity/logs.json",
+            log_dir="./examples/sdsandbox_perturbations/logs.json",
             overwrite_logs=True,
             image_size=(240, 320),  # images are resized to these values
         )
-        print(f"{5 * '#'} Finished Running Udacity Sim {5 * '#'}")
-    except Exception as e:
-        print(
-            f"{5 * '#'} SDSandBox Error: Exception type: {type(e).__name__}, \nError message: {e}\nTract {traceback.print_exc()} {5 * '#'} "
-        )
-
-
-def offline(
-    simulator_exe_path: str,
-    host: str,
-    port: int,
-    data_set_path: str,
-    pert_funcs: List[str] = [],
-    attention: Dict[str, Any] = {},
-):
-    try:
-        simulator = UdacitySimulator(
-            simulator_exe_path=simulator_exe_path,
-            host=host,
-            port=port,
-        )
-        ads = ExampleAgent()
-        benchmarking_obj = PerturbationDrive(simulator, ads)
-
-        benchmarking_obj.offline_perturbation(
-            dataset_path=data_set_path,
-            perturbation_functions=pert_funcs,
-            attention_map=attention,
-            log_dir="./examples/udacity/offlone_logs.json",
-            overwrite_logs=True,
-            image_size=(240, 320),
-        )
+        print(f"{5 * '#'} Finished Running SDSandBox Sim {5 * '#'}")
     except Exception as e:
         print(
             f"{5 * '#'} SDSandBox Error: Exception type: {type(e).__name__}, \nError message: {e}\nTract {traceback.print_exc()} {5 * '#'} "
@@ -287,13 +239,8 @@ def offline(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Udacity Example")
-    parser.add_argument(
-        "--sim_exe",
-        type=str,
-        default="./examples/udacity/udacity_utils/sim/udacity_sim.app",
-        help="sim executable path",
-    )
+    parser = argparse.ArgumentParser(description="SDSandBox Example")
+
     parser.add_argument("--host", type=str, default="127.0.0.1", help="server sim host")
     parser.add_argument("--port", type=int, default=9091, help="bind to port")
     parser.add_argument(
@@ -326,24 +273,15 @@ if __name__ == "__main__":
         if args.attention_map == ""
         else {
             "map": args.attention_map,
+            "threshold": args.attention_threshold,
             "layer": args.attention_layer,
         }
     )
 
-    print(f"{5 * '#'} Started Running Udacity Sim {5 * '#'}")
-    # go(
-    #    simulator_exe_path=args.sim_exe,
-    #    host=args.host,
-    #    port=args.port,
-    #    pert_funcs=args.perturbation,
-    #    attention=attention,
-    # )
-    # open_sbt()
-    offline(
-        simulator_exe_path=args.sim_exe,
+    print(f"{5 * '#'} Started Running SDSandBox Sim {5 * '#'}")
+    go(
         host=args.host,
         port=args.port,
-        data_set_path="../../../../Desktop/generatedRoadDataset/",
         pert_funcs=args.perturbation,
         attention=attention,
     )

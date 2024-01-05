@@ -1,197 +1,152 @@
-# imports related to OpenSBT
-from simulation.simulator import Simulator, SimulationOutput
-from model_ga.individual import Individual
+# used modules from perturbation drive
+from numpy import ndarray, uint8
+from perturbationdrive import PerturbationSimulator
+from perturbationdrive.AutomatedDrivingSystem.ADS import ADS
+from perturbationdrive.Simulator.Scenario import Scenario, ScenarioOutcome
+from perturbationdrive.imageperturbations import ImagePerturbation
 
-# all other imports
-from typing import List, Dict, Tuple
-import numpy as np
-import os
-import gym
+# used libraries
+from udacity_utils.envs.udacity.udacity_gym_env import UdacityGymEnv_RoadGen
+from typing import Union
 import cv2
-from numpy.typing import NDArray
-from numpy import uint8
-from perturbationdrive import ImagePerturbation, download_file
-from tensorflow.keras.models import load_model
-
-# related to this simulator
-from udacity_utils.generators.road_generator import RoadGenerator
-from udacity_utils.envs.udacity.udacity_gym_env import (
-    UdacityGymEnv_RoadGen,
-)
-from udacity_utils.config import NUM_CONTROL_NODES
+import gym
+import numpy as np
+import pygame
 
 
-class UdacitySimulator(Simulator):
-    @staticmethod
-    def simulate(
-        list_individuals: List[Individual],
-        variable_names: List[str],
-        scenario_path: str,
-        sim_time: float,
-        time_step: float,
-        do_visualize: bool = False,
-    ) -> List[SimulationOutput]:
-        """
-        Runs all indicidual simulations and returns simulation outputs
-        """
-        results = []
-        # load ADS system
-        if not os.path.exists("./examples/models/generatedRoadModel.h5"):
-            # if we do not have the model, we fetch it
-            download_file(
-                "https://syncandshare.lrz.de/dl/fiD9MBdQbQogMCuk5LDM3J/generatedRoadModel.h5",
-                "./examples/models/",
-            )
-        model = load_model(
-            "./examples/models/generatedRoadModel.h5",
-            compile=False,
+class UdacitySimulator(PerturbationSimulator):
+    def __init__(
+        self,
+        simulator_exe_path: str = "./examples/udacity/udacity_utils/sim/udacity_sim.app",
+        host: str = "127.0.0.1",
+        port: int = 9091,
+    ):
+        # udacity road is 8 units wide
+        super().__init__(
+            max_xte=4.0,
+            simulator_exe_path=simulator_exe_path,
+            host=host,
+            port=port,
+            initial_pos=None,
         )
-        # setup simulator
-        test_generator = RoadGenerator(map_size=250)
-        env = UdacityGymEnv_RoadGen(
+        self.client: Union[UdacityGymEnv_RoadGen, None] = None
+
+    def connect(self):
+        super().connect()
+        self.client = UdacityGymEnv_RoadGen(
             seed=1,
-            test_generator=test_generator,
-            exe_path="./examples/udacity/udacity_utils/sim/udacity_sim.app",
+            exe_path=self.simulator_exe_path,
         )
-        # setup perturbation object
-        iamge_perturbation = ImagePerturbation(funcs=list(FUNCTION_MAPPING.values()))
+        # set initial pos
+        obs, done, info = self.client.observe()
+        x, y, z = info["pos"]
+        self.initial_pos = (x, y, z, 2 * self.max_xte)
 
-        for ind in list_individuals:
-            try:
-                speeds = []
-                pos = []
-                xte = []
+    def simulate_scanario(
+        self, agent: ADS, scenario: Scenario, perturbation_controller: ImagePerturbation
+    ) -> ScenarioOutcome:
+        waypoints = scenario.waypoints
+        perturbation_function_string = scenario.perturbation_function
+        perturbation_scale = scenario.perturbation_scale
 
-                instance_values = [v for v in zip(variable_names, ind)]
+        # set up image monitor
+        monitor = ImageCallBack()
 
-                (
-                    angles,
-                    perturbation_scale,
-                    perturbation_func,
-                ) = UdacitySimulator._process_simulation_vars(instance_values)
+        # set all params for init loop
+        actions = [[0.0, 0.0]]
+        perturbed_image = None
 
-                # set up of params
-                done = False
-                perturbation_name = (
-                    UdacitySimulator._map_perturbation_func_scale_to_name(
-                        perturbation_func
-                    )
+        # set up params for saving data
+        pos_list = []
+        xte_list = []
+        actions_list = []
+        speed_list = []
+        isSuccess = False
+        done = False
+
+        # reset the scene to match the scenario
+        # Road generatior ir none because we currently do not build random roads
+        obs: ndarray[uint8] = self.client.reset(
+            skip_generation=False, track_string=waypoints
+        )
+
+        # action loop
+        while not done:
+            obs = cv2.resize(obs, (320, 240), cv2.INTER_NEAREST)
+
+            # perturb the image
+            perturbed_image = perturbation_controller.perturbation(
+                obs, perturbation_function_string, perturbation_scale
+            )
+
+            # agent makes a move, the agent also selects the dtype and adds a batch dimension
+            actions = agent.action(perturbed_image)
+
+            # clip action to avoid out of bound errors
+            if isinstance(self.client.action_space, gym.spaces.Box):
+                actions = np.clip(
+                    actions, self.client.action_space.low, self.client.action_space.high
                 )
 
-                obs: NDArray[uint8] = env.reset(skip_generation=False, angles=angles)
-                while not done:
-                    # resize to fit model
-                    obs = cv2.resize(obs, (320, 240), cv2.INTER_NEAREST)
-                    # perturb image and preprocess it
-                    img = iamge_perturbation.simple_perturbation(
-                        obs,
-                        perturbation_name=perturbation_name,
-                        intensity=perturbation_scale,
-                    )
-                    img_arr = np.asarray(img, dtype=np.float32)
-                    # add a batch dimension
-                    img_arr = img_arr.reshape((1,) + img_arr.shape)
+            monitor.display_img(
+                perturbed_image,
+                actions[0][0],
+                actions[0][1],
+                perturbation_function_string,
+            )
+            # obs is the image, info contains the road and the position of the car
+            obs, done, info = self.client.step(actions)
 
-                    actions = model(img_arr, training=False)
+            # log new info
+            pos_list.append(info["pos"])
+            xte_list.append(info["cte"])
+            speed_list.append(info["speed"])
+            actions_list.append(actions)
 
-                    # clip action to avoid out of bound errors
-                    if isinstance(env.action_space, gym.spaces.Box):
-                        actions = np.clip(
-                            actions, env.action_space.low, env.action_space.high
-                        )
+        # determine if we were successful
+        isSuccess = max([abs(xte) for xte in xte_list]) < self.max_xte
+        print(f"{5 * '-'} Finished udacity scenario: {isSuccess} {5 * '_'}")
+        # reset for the new track
+        _ = self.client.reset(skip_generation=False, track_string=waypoints)
+        # return the scenario output
+        return ScenarioOutcome(
+            frames=[x for x in range(len(pos_list))],
+            pos=pos_list,
+            xte=xte_list,
+            speeds=speed_list,
+            actions=actions_list,
+            scenario=scenario,
+            isSuccess=isSuccess,
+        )
 
-                    # obs is the image, info contains the road and the position of the car
-                    obs, done, info = env.step(actions)
-
-                    speeds.append(info["speed"])
-                    pos.append(info["pos"])
-                    xte.append(info["cte"])
-                # morph values into SimulationOutput Object
-                result = SimulationOutput(
-                    simTime=float(len(speeds)),
-                    times=[x for x in range(len(speeds))],
-                    location={
-                        "ego": [(x[0], x[1]) for x in pos],  # cut out z value
-                    },
-                    velocity={
-                        "ego": UdacitySimulator._calculate_velocities(pos, speeds),
-                    },
-                    speed={
-                        "ego": speeds,
-                    },
-                    acceleration={"ego": []},
-                    yaw={
-                        "ego": [],
-                    },
-                    collisions=[],
-                    actors={
-                        1: "ego",
-                    },
-                    otherParams={"xte": xte},
-                )
-
-                results.append(result)
-            except Exception as e:
-                print(f"Received exception during simulation {e}")
-
-                raise e
-            finally:
-                print("Finished individual")
-        # close the environment
-        env.close()
-        return results
-
-    @staticmethod
-    def _calculate_velocities(positions, speeds) -> Tuple[float, float, float]:
-        """
-        Calculate velocities given a list of positions and corresponding speeds.
-        """
-        velocities = []
-
-        for i in range(len(positions) - 1):
-            displacement = np.array(positions[i + 1]) - np.array(positions[i])
-            direction = displacement / np.linalg.norm(displacement)
-            velocity = direction * speeds[i]
-            velocities.append(velocity)
-
-        return velocities
-
-    @staticmethod
-    def _process_simulation_vars(
-        instance_values: List[Tuple[str, float]],
-    ) -> Tuple[List[int], int, int]:
-        angles = []
-        perturbation_scale = 0
-        perturbation_function = 1
-        for i in range(0, len(instance_values)):
-            # Check if the current item is the perturbation scale
-            if instance_values[i][0].startswith("perturbation_scale"):
-                perturbation_scale = int(instance_values[i][1])
-                break
-            elif instance_values[i][0].startswith("perturbation_function"):
-                perturbation_function = int(instance_values[i][1])
-                break
-
-            new_angle = int(instance_values[i][1])
-            angles.append(new_angle)
-
-        return angles, perturbation_scale, perturbation_function
-
-    @staticmethod
-    def _map_perturbation_func_scale_to_name(var: int) -> str:
-        return FUNCTION_MAPPING[var]
-
-    @staticmethod
-    def create_scenario_instance_xosc(filename: str, _: Dict, __=None):
-        return filename
+    def tear_down(self):
+        self.client.close()
 
 
-# here we can arbitrarly add functions
-FUNCTION_MAPPING = {
-    1: "gaussian_noise",
-    2: "poisson_noise",
-    3: "impulse_noise",
-    4: "defocus_blur",
-    5: "glass_blur",
-    6: "increase_brightness",
-}
+class ImageCallBack:
+    def __init__(self):
+        pygame.init()
+        ch, row, col = 3, 240, 320
+
+        size = (col * 2, row * 2)
+        pygame.display.set_caption("udacity sim image monitor")
+        self.screen = pygame.display.set_mode(size, pygame.DOUBLEBUF)
+        self.camera_surface = pygame.surface.Surface((col, row), 0, 24).convert()
+        self.myfont = pygame.font.SysFont("monospace", 15)
+
+    def screen_print(self, x, y, msg, screen):
+        label = self.myfont.render(msg, 1, (255, 255, 0))
+        screen.blit(label, (x, y))
+
+    def display_img(self, img, steering, throttle, perturbation):
+        # swap image axis
+        img = img.swapaxes(0, 1)
+        # draw frame
+        pygame.surfarray.blit_array(self.camera_surface, img)
+        camera_surface_2x = pygame.transform.scale2x(self.camera_surface)
+        self.screen.blit(camera_surface_2x, (0, 0))
+        # steering and throttle value
+        self.screen_print(10, 10, "NN(steering): " + str(steering), self.screen)
+        self.screen_print(10, 25, "NN(throttle): " + str(throttle), self.screen)
+        self.screen_print(10, 40, "Perturbation: " + perturbation, self.screen)
+        pygame.display.flip()

@@ -28,7 +28,7 @@ import base64
 import time
 from io import BytesIO
 from threading import Thread
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Union
 
 import numpy as np
 import socketio
@@ -38,8 +38,6 @@ from flask import Flask
 from udacity_utils.envs.udacity.config import INPUT_DIM, MAX_CTE_ERROR
 from udacity_utils.envs.udacity.core.client import start_app
 from udacity_utils.global_log import GlobalLog
-from udacity_utils.driving.road import Road
-from udacity_utils.generators.test_generator import TestGenerator
 
 sio = socketio.Server()
 flask_app = Flask(__name__)
@@ -123,12 +121,9 @@ def telemetry(sid, data) -> None:
 
         if done:
             send_reset()
-        elif (
-            generated_track_string is not None
-            and deployed_track_string != generated_track_string
-        ):
-            # TODO: add timeout
+        elif generated_track_string is not None and not track_sent:
             send_track(track_string=generated_track_string)
+            time.sleep(0.5)
         else:
             send_control(steering_angle=steering, throttle=throttle)
 
@@ -141,12 +136,10 @@ class UdacitySimController:
     def __init__(
         self,
         port: int,
-        test_generator: TestGenerator = None,
     ):
         self.port = port
         # sensor size - height, width, depth
         self.camera_img_size = INPUT_DIM
-        self.test_generator = test_generator
         self.max_cte_error = MAX_CTE_ERROR
 
         self.is_success = 0
@@ -164,10 +157,7 @@ class UdacitySimController:
             time.sleep(0.3)
 
     def reset(
-        self,
-        mut_point: int = None,
-        skip_generation: bool = False,
-        angles: List[int] = [],
+        self, skip_generation: bool = False, track_string: Union[str, None] = None
     ) -> None:
         global last_obs
         global speed
@@ -202,35 +192,16 @@ class UdacitySimController:
         self.is_success = 0
         self.current_track = None
 
-        if not skip_generation:
-            assert self.test_generator is not None, "Test generator is not instantiated"
-            self.generate_track(mut_point=mut_point, angles=angles)
+        if not skip_generation and track_string is not None:
+            generated_track_string = track_string
 
         time.sleep(1)
 
-    def generate_track(
-        self,
-        mut_point: int = None,
-        generated_track: Road = None,
-        angles: List[int] = [],
-    ):
+    def generate_track(self, track_string: Union[str, None] = None):
         global generated_track_string
 
-        if generated_track is None:
-            start_time = time.perf_counter()
-            self.logger.debug("Start generating track")
-            track = self.test_generator.generate(mut_point, angles=angles)
-            self.current_track = track
-            self.logger.debug(track.get_control_points())
-            self.logger.debug(
-                "Track generated: {:.2f}s".format(time.perf_counter() - start_time)
-            )
-        else:
-            self.current_track = generated_track
-
-        generated_track_string = self.current_track.serialize_concrete_representation(
-            cr=self.current_track.get_concrete_representation()
-        )
+        if track_string is not None:
+            generated_track_string = track_string
 
     @staticmethod
     def take_action(action: np.ndarray) -> None:
