@@ -2,10 +2,13 @@
 
 A library to test the robstuness of Self-Driving-Cars via image perturbations.
 
-This library is split up into two sections:
+This library is split up into three sections:
 
 1) A collection of the most common perturbation functions which can be used by itself.
-2) A benchmarking class which can be used to benchmark the robustness of models to common image perturbations.
+2) A benchmarking controller to benchmark the robustness of models to common image perturbations. This controller can be used for end-to-end tests and offline testing.
+3) Modular simulator integration. New simulators can be integrated by implementing a predefined interface and this project shows the example integration of the [Self Driving Sandbox Donkey](https://docs.donkeycar.com/guide/deep_learning/simulator/) (here often referred as SDSandbox) and [Udacity](https://github.com/udacity/self-driving-car-sim) Simulator. Note, that the simualtors used in this project have been adapted minimally to suits the scope of this project.
+
+![PerturbationDrive Overview Library Architecture](./docAssets/perturbationDriveOverview.png "PerturbationDrive Overview")
 
 ## Installation
 
@@ -14,6 +17,26 @@ You can install the library using pip
 ```Shell
 pip install perturbationdrive
 ```
+
+## Project Structure
+
+The projct has the following structure.
+
+perturbationdruve/
+│
+├── perturbationdrive/                  # All scripts related to running perturbations
+│   ├── imageperturbations.py           # Perturbation Controller
+│   ├── perturbationdrive.py            # Benchmarking Controller
+│   └── perturbationsfuncs.py           # Collection of image perturbations
+│
+├── examples /                          # Provides examples on simualtor integrations
+│   ├── sdsandbox_perturbations/        # Example integration of [Self Driving Sandbox Donkey](https://docs.donkeycar.com/guide/deep_learning/simulator/)
+│   │   └── main.py                     # Entry point to run the example
+│   └── udacity/                        # Example integration of [Udacity](https://github.com/udacity/self-driving-car-sim)
+│       └── file4.ext                   # Entry point to run the example
+│
+├── README.md                           # The top level ReadME of the project (this file)
+└── requirements.txt                    # Requirements for running this project
 
 ## Performing Image Perturbations
 
