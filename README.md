@@ -22,6 +22,7 @@ pip install perturbationdrive
 
 The projct has the following structure.
 
+```bash
 perturbationdruve/
 │
 ├── perturbationdrive/                  # All scripts related to running perturbations
@@ -30,13 +31,14 @@ perturbationdruve/
 │   └── perturbationsfuncs.py           # Collection of image perturbations
 │
 ├── examples /                          # Provides examples on simualtor integrations
-│   ├── sdsandbox_perturbations/        # Example integration of [Self Driving Sandbox Donkey](https://docs.donkeycar.com/guide/deep_learning/simulator/)
+│   ├── sdsandbox_perturbations/        # Example integration of Self Driving Sandbox Donkey Sim
 │   │   └── main.py                     # Entry point to run the example
-│   └── udacity/                        # Example integration of [Udacity](https://github.com/udacity/self-driving-car-sim)
+│   └── udacity/                        # Example integration of Udacity Sim
 │       └── file4.ext                   # Entry point to run the example
 │
 ├── README.md                           # The top level ReadME of the project (this file)
 └── requirements.txt                    # Requirements for running this project
+```
 
 ## Performing Image Perturbations
 
