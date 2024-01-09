@@ -31,7 +31,7 @@ class FitnessFunction(Fitness):
             traceXTE = [abs(x) for x in simout.otherParams["xte"]]
             return (np.average(traceXTE), max(traceXTE))
         except Exception as e:
-            print(f"exception is {e}")
+            print(f"Fitness Function: Exception is {e}")
             return (0.0, 0.0)
 
 

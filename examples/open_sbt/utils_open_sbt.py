@@ -50,7 +50,7 @@ def individualToScenario(
     else:
         perturbation_function = FUNCTION_MAPPING[1]
         print(
-            f"Perturbation function not found for values {perturbation_function_int}, using default"
+            f"IndividualToScenario: Perturbation function not found for values {perturbation_function_int}, using default"
         )
 
     # return the scenario

@@ -1,8 +1,13 @@
 # used modules from perturbation drive
-from perturbationdrive import PerturbationSimulator
-from perturbationdrive.AutomatedDrivingSystem.ADS import ADS
-from perturbationdrive.Simulator.Scenario import Scenario, ScenarioOutcome
-from perturbationdrive.imageperturbations import ImagePerturbation
+from perturbationdrive import (
+    PerturbationSimulator,
+    ADS,
+    Scenario,
+    ScenarioOutcome,
+    ImagePerturbation,
+    GlobalLog,
+    ImageCallBack,
+)
 
 # used libraries
 from gym_donkeycar.core.fps import FPSTimer
@@ -35,6 +40,7 @@ class SDSandboxSimulator(PerturbationSimulator):
         )
         self.client: Union[DonkeySimMsgHandler, None] = None
         self.process: DonkeyProcess = DonkeyProcess()
+        self.logger = GlobalLog("SDSandBoxSimulator")
 
     def connect(self):
         # launch the sim binary here
@@ -47,10 +53,9 @@ class SDSandboxSimulator(PerturbationSimulator):
 
         # wait for the first observation here
         while len(self.client.msg_handler.sim_data) == 0:
-            print("SDSandBoxSimulator Waiting for inital obs")
-            time.sleep(0.02)
+            self.logger.info("Waiting for inital obs")
+            time.sleep(0.04)
         # the last value if the road width, which should be equivalent to max_xte * 2
-        print("We are at ", self.client.msg_handler.sim_data)
         self.initial_pos = (
             self.client.msg_handler.sim_data["pos_x"],
             self.client.msg_handler.sim_data["pos_y"],
@@ -78,7 +83,7 @@ class SDSandboxSimulator(PerturbationSimulator):
 
         # reset the scene to match the scenario
         self.client.msg_handler.reset_scenario(waypoints)
-        print(f"SDSandBox: Reset the scenario {scenario}")
+        self.logger.info(f"Reset the scenario {scenario}")
         time.sleep(2.0)
 
         # run the scenario
@@ -93,7 +98,7 @@ class SDSandboxSimulator(PerturbationSimulator):
                 # check if we are done
                 if obs["done"]:
                     isSuccess = True
-                    print("SDSandBox: Done")
+                    self.logger.info("SDSandBox: Done")
                     break
                 elif obs["xte"] > self.max_xte:
                     break
@@ -114,7 +119,9 @@ class SDSandboxSimulator(PerturbationSimulator):
                 actions_list.append(actions)
 
             except KeyboardInterrupt:
-                print(f"{5 * '+'} SDSandBox Simulator Got Interrupted {5 * '+'}")
+                self.logger.info(
+                    f"{5 * '+'} SDSandBox Simulator Got Interrupted {5 * '+'}"
+                )
                 self.client.stop()
                 raise KeyboardInterrupt
 
@@ -142,218 +149,3 @@ class SDSandboxSimulator(PerturbationSimulator):
         """
         return client.is_connected()
 
-
-class DonkeySimMsgHandler(IMesgHandler):
-    """
-    This class needs to implement `on_connect`, `on_recv_message` and `on_close`
-    """
-
-    STEERING = 0
-    THROTTLE = 1
-
-    def __init__(
-        self,
-        rand_seed=0,
-    ):
-        self.client = None
-        self.timer = FPSTimer()
-        self.sim_data: Dict = {}
-        # we need this if we want to measure the diff in steering angles
-        self.unchanged_img_arr = None
-        # set the image call back to monitor the data
-        self.image_cb = ImageCallBack()
-        # display waiting screen
-        self.image_cb.display_waiting_screen()
-        self.steering_angle = 0.0
-        self.throttle = 0.0
-        self.rand_seed = rand_seed
-        # TcpCarHandler has the calls `telemetry`, `car_loaded`, `scene_selection_ready`
-        self.fns = {
-            "telemetry": self.on_telemetry,
-            "car_loaded": self.on_car_created,
-            "on_disconnect": self.on_disconnect,
-            "aborted": self.on_aborted,
-            "update": self.update,
-        }
-
-    def on_connect(self, client):
-        self.client = client
-        self.timer.reset()
-
-    def on_aborted(self, msg):
-        print(f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Aborted {5 * '+'}")
-        self.image_cb.display_disconnect_screen()
-        self.stop()
-
-    def on_disconnect(self):
-        self.image_cb.display_disconnect_screen()
-        msg = {
-            "msg_type": "disconnect",
-        }
-        self.client.queue_message(msg)
-        print(
-            f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Disconnected {5 * '+'}"
-        )
-
-    def on_car_created(self, data):
-        print(f"DonkeySimMsgHandler: {5 * '-'} Car Created With Data {data} {5 * '-'}")
-
-    def on_recv_message(self, message):
-        """
-        This function receives data from the simulator and then runs the tasks here
-        """
-        self.timer.on_frame()
-        if not "msg_type" in message:
-            print(
-                f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Message Type not Present {message} {5 * '+'}"
-            )
-            return
-
-        msg_type = message["msg_type"]
-        if msg_type in self.fns:
-            self.fns[msg_type](message)
-        else:
-            print(
-                f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Unknwon Message Type {msg_type} {5 * '+'}"
-            )
-
-    def on_telemetry(self, data):
-        imgString = data["image"]
-        # the sandbox mixes y and z value up, so we fix it here
-        img_data = base64.b64decode(imgString)
-        img_array = np.frombuffer(img_data, dtype=np.uint8)
-        image = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
-        # Convert BGR to RGB
-        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-        # stack the image into the image array so we can use it later
-        self.sim_data = {
-            "xte": data["cte"],
-            "pos_x": data["pos_x"],
-            "pos_y": data["pos_z"],
-            "pos_z": data["pos_y"],
-            "speed": data["speed"],
-            "done": False,  # TODO: This needs to be send by the simulator
-            "image": image,
-        }
-
-    def update(
-        self,
-        actions: List[List[float]],
-        perturbed_image: Union[any, None],
-        perturbation: str = "",
-    ) -> Dict[str, Any]:
-        """
-        We take a action, send the action to the client and then return the latest telemetry data
-        """
-        # take the output here to avoid race conditions
-        output = self.sim_data
-
-        self.steering_angle = actions[0][0]
-        self.throttle = actions[0][1]
-        msg = {
-            "msg_type": "control",
-            "steering": f"{self.steering_angle}",
-            "throttle": f"{self.throttle}",
-            "brake": "0.0",
-        }
-
-        self.client.queue_message(msg)
-        # run the image call back to inspect the image
-        if perturbed_image is not None:
-            self.image_cb.display_img(
-                perturbed_image,
-                f"{self.steering_angle}",
-                f"{self.throttle}",
-                perturbation,
-            )
-        # return the sim_data so we can perturb it in the main loop and get a control action
-        return output
-
-    def reset_scenario(self, waypoints: Union[str, None]):
-        """
-        Sends a new road to the sim
-        """
-
-        msg = {
-            "msg_type": "regen_road",
-            "wayPoints": waypoints.__str__(),
-        }
-
-        self.client.queue_message(msg)
-        # display waiting screen
-        self.image_cb.display_waiting_screen()
-
-    def reset_car(self):
-        """
-        Resets the car for a new scenario
-        """
-        msg = {"msg_type": "reset_car"}
-        self.client.queue_message(msg)
-        # display waiting screen
-        self.image_cb.display_waiting_screen()
-
-    def on_close(self):
-        self.image_cb.display_disconnect_screen()
-        print(
-            f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Message Closed by SimClient {5 * '+'}"
-        )
-
-    def stop(self):
-        self.image_cb.display_disconnect_screen()
-        print(
-            f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Message Stoped {5 * '+'}"
-        )
-
-    def __del__(self):
-        self.stop()
-
-
-class ImageCallBack:
-    def __init__(self):
-        pygame.init()
-        ch, row, col = 3, 240, 320
-
-        size = (col * 2, row * 2)
-        pygame.display.set_caption("sdsandbox image monitor")
-        self.screen = pygame.display.set_mode(size, pygame.DOUBLEBUF)
-        self.camera_surface = pygame.surface.Surface((col, row), 0, 24).convert()
-        self.myfont = pygame.font.SysFont("monospace", 15)
-
-    def screen_print(self, x, y, msg, screen):
-        """
-        Prints a message on the screen
-        """
-        label = self.myfont.render(msg, 1, (255, 255, 0))
-        screen.blit(label, (x, y))
-
-    def display_img(self, img, steering, throttle, perturbation):
-        """
-        Displays the image and the steering and throttle value
-        """
-        # swap image axis
-        img = img.swapaxes(0, 1)
-        # draw frame
-        pygame.surfarray.blit_array(self.camera_surface, img)
-        camera_surface_2x = pygame.transform.scale2x(self.camera_surface)
-        self.screen.blit(camera_surface_2x, (0, 0))
-        # steering and throttle value
-        self.screen_print(10, 10, "NN(steering): " + steering, self.screen)
-        self.screen_print(10, 25, "NN(throttle): " + throttle, self.screen)
-        self.screen_print(10, 40, "Perturbation: " + perturbation, self.screen)
-        pygame.display.flip()
-
-    def display_waiting_screen(self):
-        """
-        Displays a waiting screen
-        """
-        self.screen.fill((0, 0, 0))
-        self.screen_print(10, 10, "Waiting for the simulator to start", self.screen)
-        pygame.display.flip()
-
-    def display_disconnect_screen(self):
-        """
-        Displays a disconnect screen
-        """
-        self.screen.fill((0, 0, 0))
-        self.screen_print(10, 10, "Simulator disconnected", self.screen)
-        pygame.display.flip()

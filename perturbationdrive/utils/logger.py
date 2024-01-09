@@ -4,8 +4,10 @@ from dataclasses import asdict
 import json
 import os
 from typing import List
+import sys
 
 from ..Simulator.Scenario import ScenarioOutcome, OfflineScenarioOutcome
+from .custom_types import LOGGING_LEVEL
 
 
 class CSVLogHandler(logging.FileHandler):
@@ -39,6 +41,12 @@ class CSVLogHandler(logging.FileHandler):
 
 class ScenarioOutcomeWriter:
     def __init__(self, file_path: str, overwrite_logs: bool = True):
+        """
+        Write scenario outcomes to a json file
+
+        :param file_path: path to the json file
+        :param overwrite_logs: whether to overwrite the existing logs
+        """
         self._write = True
         if os.path.exists(file_path) and os.path.isfile(file_path):
             print(
@@ -52,6 +60,11 @@ class ScenarioOutcomeWriter:
         self.file_path = file_path
 
     def write(self, scenario_outcomes: List[ScenarioOutcome]):
+        """
+        Write scenario outcomes to a json file
+
+        :param scenario_outcomes: list of scenario outcomes
+        """
         if len(scenario_outcomes) == 0:
             print(f"{ 5* '+'} Error Scenario Writer: The scenario is empty {5 * '+'}")
             return
@@ -77,6 +90,12 @@ class ScenarioOutcomeWriter:
 
 class OfflineScenarioOutcomeWriter:
     def __init__(self, file_path: str, overwrite_logs: bool = True):
+        """
+        Write offline scenario outcomes to a json file
+
+        :param file_path: path to the json file
+        :param overwrite_logs: whether to overwrite the existing logs
+        """
         self._write = True
         if os.path.exists(file_path) and os.path.isfile(file_path):
             print(
@@ -90,6 +109,11 @@ class OfflineScenarioOutcomeWriter:
         self.file_path = file_path
 
     def write(self, scenario_outcomes: List[OfflineScenarioOutcome]):
+        """
+        Write offline scenario outcomes to a json file
+
+        :param scenario_outcomes: list of offline scenario outcomes
+        """
         if len(scenario_outcomes) == 0:
             print(
                 f"{ 5* '+'} Error Offline Scenario Writer: The scenario is empty {5 * '+'}"
@@ -113,3 +137,45 @@ class OfflineScenarioOutcomeWriter:
             # Write updated data back to file
             with open(self.file_path, "w") as file:
                 json.dump(data, file, indent=4)
+
+
+class GlobalLog:
+    """This class is used to log acress different modeles in the project"""
+
+    def __init__(self, logger_prefix: str):
+        """
+        We use the logger_prefix to distinguish between different loggers
+
+        :param logger_prefix: prefix of the logger
+        """
+        self.logger = logging.getLogger(logger_prefix)
+        # avoid creating another logger if it already exists
+        if len(self.logger.handlers) == 0:
+            self.logger = logging.getLogger(logger_prefix)
+            self.logger.setLevel(level=LOGGING_LEVEL)
+
+            formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
+            ch = logging.StreamHandler(sys.stdout)
+            ch.setFormatter(formatter)
+            ch.setLevel(level=logging.DEBUG)
+            self.logger.addHandler(ch)
+
+    def debug(self, message):
+        """Log debug message"""
+        self.logger.debug(message)
+
+    def info(self, message):
+        """Log info message"""
+        self.logger.info(message)
+
+    def warn(self, message):
+        """Log warning message"""
+        self.logger.warn(message)
+
+    def error(self, message):
+        """Log error message"""
+        self.logger.error(message)
+
+    def critical(self, message):
+        """Log critical message"""
+        self.logger.critical(message)

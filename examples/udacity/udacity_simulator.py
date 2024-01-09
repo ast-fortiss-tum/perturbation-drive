@@ -1,9 +1,14 @@
 # used modules from perturbation drive
 from numpy import ndarray, uint8
-from perturbationdrive import PerturbationSimulator
-from perturbationdrive.AutomatedDrivingSystem.ADS import ADS
-from perturbationdrive.Simulator.Scenario import Scenario, ScenarioOutcome
-from perturbationdrive.imageperturbations import ImagePerturbation
+from perturbationdrive import (
+    PerturbationSimulator,
+    ADS,
+    Scenario,
+    ScenarioOutcome,
+    ImageCallBack,
+    ImagePerturbation,
+    GlobalLog as Gl,
+)
 
 # used libraries
 from udacity_utils.envs.udacity.udacity_gym_env import UdacityGymEnv_RoadGen
@@ -11,7 +16,6 @@ from typing import Union
 import cv2
 import gym
 import numpy as np
-import pygame
 
 
 class UdacitySimulator(PerturbationSimulator):
@@ -30,6 +34,7 @@ class UdacitySimulator(PerturbationSimulator):
             initial_pos=None,
         )
         self.client: Union[UdacityGymEnv_RoadGen, None] = None
+        self.logger = Gl("UdacitySimulator")
 
     def connect(self):
         super().connect()
@@ -37,6 +42,7 @@ class UdacitySimulator(PerturbationSimulator):
             seed=1,
             exe_path=self.simulator_exe_path,
         )
+        self.logger.info("Connected to Udacity Simulator")
         # set initial pos
         obs, done, info = self.client.observe()
         x, y, z = info["pos"]
@@ -51,6 +57,8 @@ class UdacitySimulator(PerturbationSimulator):
 
         # set up image monitor
         monitor = ImageCallBack()
+        monitor.display_waiting_screen()
+        self.logger.info(f"{5 * '-'} Starting udacity scenario {5 * '_'}")
 
         # set all params for init loop
         actions = [[0.0, 0.0]]
@@ -105,7 +113,9 @@ class UdacitySimulator(PerturbationSimulator):
 
         # determine if we were successful
         isSuccess = max([abs(xte) for xte in xte_list]) < self.max_xte
-        print(f"{5 * '-'} Finished udacity scenario: {isSuccess} {5 * '_'}")
+        self.logger.info(f"{5 * '-'} Finished udacity scenario: {isSuccess} {5 * '_'}")
+        monitor.display_disconnect_screen()
+
         # reset for the new track
         _ = self.client.reset(skip_generation=False, track_string=waypoints)
         # return the scenario output
@@ -121,32 +131,3 @@ class UdacitySimulator(PerturbationSimulator):
 
     def tear_down(self):
         self.client.close()
-
-
-class ImageCallBack:
-    def __init__(self):
-        pygame.init()
-        ch, row, col = 3, 240, 320
-
-        size = (col * 2, row * 2)
-        pygame.display.set_caption("udacity sim image monitor")
-        self.screen = pygame.display.set_mode(size, pygame.DOUBLEBUF)
-        self.camera_surface = pygame.surface.Surface((col, row), 0, 24).convert()
-        self.myfont = pygame.font.SysFont("monospace", 15)
-
-    def screen_print(self, x, y, msg, screen):
-        label = self.myfont.render(msg, 1, (255, 255, 0))
-        screen.blit(label, (x, y))
-
-    def display_img(self, img, steering, throttle, perturbation):
-        # swap image axis
-        img = img.swapaxes(0, 1)
-        # draw frame
-        pygame.surfarray.blit_array(self.camera_surface, img)
-        camera_surface_2x = pygame.transform.scale2x(self.camera_surface)
-        self.screen.blit(camera_surface_2x, (0, 0))
-        # steering and throttle value
-        self.screen_print(10, 10, "NN(steering): " + str(steering), self.screen)
-        self.screen_print(10, 25, "NN(throttle): " + str(throttle), self.screen)
-        self.screen_print(10, 40, "Perturbation: " + perturbation, self.screen)
-        pygame.display.flip()
