@@ -27,8 +27,12 @@ class FitnessFunction(Fitness):
         return "Average xte", "Max xte"
 
     def eval(self, simout: SimulationOutput) -> Tuple[float]:
-        traceXTE = [abs(x) for x in simout.otherParams["xte"]]
-        return (np.average(traceXTE), max(traceXTE))
+        try:
+            traceXTE = [abs(x) for x in simout.otherParams["xte"]]
+            return (np.average(traceXTE), max(traceXTE))
+        except Exception as e:
+            print(f"exception is {e}")
+            return (0.0, 0.0)
 
 
 class Criticality(Critical):

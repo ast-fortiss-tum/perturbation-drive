@@ -239,3 +239,13 @@ temp.txt
 *log*.csv
 *logs*.json
 *logs*.csv
+
+# all simulator logs
+*simulator*.json
+*simulator*.csv
+*log*.txt
+
+# all simulator binaries
+*.app
+*.exe
+*.x86_64

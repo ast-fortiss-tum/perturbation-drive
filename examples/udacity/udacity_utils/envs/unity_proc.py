@@ -45,7 +45,6 @@ class UnityProcess(object):
         :param sim_path: (str) Path to the executable
         :param headless: (bool)
         :param port: (int)
-        :param simulation_mul: (int)
         """
         if not os.path.exists(sim_path):
             self.logger.info('{} does not exist'.format(sim_path))

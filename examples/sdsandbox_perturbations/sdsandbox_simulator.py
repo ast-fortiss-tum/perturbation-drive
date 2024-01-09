@@ -15,10 +15,16 @@ import base64
 import cv2
 import numpy as np
 
+# imports from this example
+from examples.sdsandbox_perturbations.donkey_exec import DonkeyProcess
+
 
 class SDSandboxSimulator(PerturbationSimulator):
     def __init__(
-        self, simulator_exe_path: str = "", host: str = "127.0.0.1", port: int = 9091
+        self,
+        simulator_exe_path: str = "./sim/donkey-sim.app",
+        host: str = "127.0.0.1",
+        port: int = 9091,
     ):
         super().__init__(
             max_xte=2.0,
@@ -28,8 +34,12 @@ class SDSandboxSimulator(PerturbationSimulator):
             initial_pos=None,
         )
         self.client: Union[DonkeySimMsgHandler, None] = None
+        self.process: DonkeyProcess = DonkeyProcess()
 
     def connect(self):
+        # launch the sim binary here
+        self.process.start(self.simulator_exe_path, port=9091)
+
         super().connect()
         address = (self.host, self.port)
         handler = DonkeySimMsgHandler()
@@ -68,6 +78,8 @@ class SDSandboxSimulator(PerturbationSimulator):
 
         # reset the scene to match the scenario
         self.client.msg_handler.reset_scenario(waypoints)
+        print(f"SDSandBox: Reset the scenario {scenario}")
+        time.sleep(2.0)
 
         # run the scenario
         while self._client_connected(self.client):
@@ -81,6 +93,7 @@ class SDSandboxSimulator(PerturbationSimulator):
                 # check if we are done
                 if obs["done"]:
                     isSuccess = True
+                    print("SDSandBox: Done")
                     break
                 elif obs["xte"] > self.max_xte:
                     break
@@ -120,7 +133,8 @@ class SDSandboxSimulator(PerturbationSimulator):
         )
 
     def tear_down(self):
-        self.client.stop()
+        self.client.msg_handler.on_disconnect()
+        self.process.quit()
 
     def _client_connected(self, client: SimClient) -> bool:
         """
@@ -147,8 +161,9 @@ class DonkeySimMsgHandler(IMesgHandler):
         # we need this if we want to measure the diff in steering angles
         self.unchanged_img_arr = None
         # set the image call back to monitor the data
-        image_cb = ImageCallBack()
-        self.image_cb = image_cb.display_img
+        self.image_cb = ImageCallBack()
+        # display waiting screen
+        self.image_cb.display_waiting_screen()
         self.steering_angle = 0.0
         self.throttle = 0.0
         self.rand_seed = rand_seed
@@ -166,14 +181,22 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.timer.reset()
 
     def on_aborted(self, msg):
-        print(f"{5 * '+'} Warning: Donkey Sim Aborted {5 * '+'}")
+        print(f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Aborted {5 * '+'}")
+        self.image_cb.display_disconnect_screen()
         self.stop()
 
     def on_disconnect(self):
-        print(f"{5 * '+'} Warning: Donkey Sim Disconnected {5 * '+'}")
+        self.image_cb.display_disconnect_screen()
+        msg = {
+            "msg_type": "disconnect",
+        }
+        self.client.queue_message(msg)
+        print(
+            f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Disconnected {5 * '+'}"
+        )
 
     def on_car_created(self, data):
-        print(f"{5 * '-'} Car Created With Data {data} {5 * '-'}")
+        print(f"DonkeySimMsgHandler: {5 * '-'} Car Created With Data {data} {5 * '-'}")
 
     def on_recv_message(self, message):
         """
@@ -182,7 +205,7 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.timer.on_frame()
         if not "msg_type" in message:
             print(
-                f"{5 * '+'} Warning: Donkey Sim Message Type not Present {message} {5 * '+'}"
+                f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Message Type not Present {message} {5 * '+'}"
             )
             return
 
@@ -191,7 +214,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             self.fns[msg_type](message)
         else:
             print(
-                f"{5 * '+'} Warning: Donkey Sim Unknwon Message Type {msg_type} {5 * '+'}"
+                f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Unknwon Message Type {msg_type} {5 * '+'}"
             )
 
     def on_telemetry(self, data):
@@ -237,7 +260,7 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.client.queue_message(msg)
         # run the image call back to inspect the image
         if perturbed_image is not None:
-            self.image_cb(
+            self.image_cb.display_img(
                 perturbed_image,
                 f"{self.steering_angle}",
                 f"{self.throttle}",
@@ -257,16 +280,29 @@ class DonkeySimMsgHandler(IMesgHandler):
         }
 
         self.client.queue_message(msg)
+        # display waiting screen
+        self.image_cb.display_waiting_screen()
 
     def reset_car(self):
         """
         Resets the car for a new scenario
         """
-        msg = {"msg_type": "quit_app"}
+        msg = {"msg_type": "reset_car"}
         self.client.queue_message(msg)
+        # display waiting screen
+        self.image_cb.display_waiting_screen()
 
     def on_close(self):
-        print(f"{5 * '+'} Warning: Donkey Sim Message Closed by SimClient {5 * '+'}")
+        self.image_cb.display_disconnect_screen()
+        print(
+            f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Message Closed by SimClient {5 * '+'}"
+        )
+
+    def stop(self):
+        self.image_cb.display_disconnect_screen()
+        print(
+            f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Message Stoped {5 * '+'}"
+        )
 
     def __del__(self):
         self.stop()
@@ -284,10 +320,16 @@ class ImageCallBack:
         self.myfont = pygame.font.SysFont("monospace", 15)
 
     def screen_print(self, x, y, msg, screen):
+        """
+        Prints a message on the screen
+        """
         label = self.myfont.render(msg, 1, (255, 255, 0))
         screen.blit(label, (x, y))
 
     def display_img(self, img, steering, throttle, perturbation):
+        """
+        Displays the image and the steering and throttle value
+        """
         # swap image axis
         img = img.swapaxes(0, 1)
         # draw frame
@@ -298,4 +340,20 @@ class ImageCallBack:
         self.screen_print(10, 10, "NN(steering): " + steering, self.screen)
         self.screen_print(10, 25, "NN(throttle): " + throttle, self.screen)
         self.screen_print(10, 40, "Perturbation: " + perturbation, self.screen)
+        pygame.display.flip()
+
+    def display_waiting_screen(self):
+        """
+        Displays a waiting screen
+        """
+        self.screen.fill((0, 0, 0))
+        self.screen_print(10, 10, "Waiting for the simulator to start", self.screen)
+        pygame.display.flip()
+
+    def display_disconnect_screen(self):
+        """
+        Displays a disconnect screen
+        """
+        self.screen.fill((0, 0, 0))
+        self.screen_print(10, 10, "Simulator disconnected", self.screen)
         pygame.display.flip()

@@ -261,15 +261,16 @@ class PerturbationDrive:
             funcs=perturbations, attention_map=attention_map, image_size=image_size
         )
         # sim is setup in main to get starting pos
-        # self.simulator.connect()
 
         outcomes: List[ScenarioOutcome] = []
         # iterate over all scenarios
         for scenario in scenarios:
+            print(f"Controller: Runnung {scenario}")
             outcome = self.simulator.simulate_scanario(
                 self.ads, scenario=scenario, perturbation_controller=iamge_perturbation
             )
             outcomes.append(outcome)
+            time.sleep(2.0)
 
         # tear sim down
         self.simulator.tear_down()
