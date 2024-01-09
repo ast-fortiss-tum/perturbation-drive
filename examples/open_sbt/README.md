@@ -4,13 +4,15 @@ This folder provides all python files to integrate [Open SBT](https://git.fortis
 
 ## SDSandBox Wrapper
 
-The file `sdsandbox_open_sbt` provides the implementation of the `Simulator` interface by implementing the following method
+The file `sdsandbox_open_sbt` provides the implementation of the `Simulator` interface by implementing the following method. The experiment searches for scenarios consisting of roads and perturbation functions.
+The road is defined by the angles between adjacent waypoints. See the `CustomRoadGenerator` in `perturbationdrive` for guidance on this road generation and definition.
 
 - `simulate`: Simulates a list of individuals by converting the individuals to scenarios, running the scenarios in perturbation drive and then returning a list of SimulationOutputs.
 
 ## Udacity Wrapper
 
-The file `udacity_open_sbt` provides the implementation of the `Simulator` interface by implementing the following mehotd
+The file `udacity_open_sbt` provides the implementation of the `Simulator` interface by implementing the following mehotd. The experiment searches for scenarios consisting of roads and perturbation functions.
+The road is defined by the angles between adjacent waypoints. See the `CustomRoadGenerator` in `perturbationdrive` for guidance on this road generation and definition.
 
 - `simulate`: Simulates a list of individuals by converting the individuals to scenarios, running the scenarios in perturbation drive and then returning a list of SimulationOutputs.
 
@@ -51,8 +53,8 @@ The fitness function returns a tuple of values which should either be maximized 
 
 The file `utils_open_sbt` provides util functions to interface with Open-SBT.
 
-- `individualToScenario`: Converts a individual Open-SBT experiment to a scenario.\\ :param individual: The individual.\\ :param variable_names: The List of variable names.\\ :param road_generator: The generator for generating a new road string.\\ :param starting_pos: Tuple of the starting position of the vehicel.\\ :returns Scenario: Returns the Scenario
-- `calculate_velocities`: Calculates the velocities at each time step based in the positions and vehicle speed.\\ :param positions: List of the positions (as tuple of x, y, z values).\\ :param speeds: List of the float speed values.\\ :returns Tuple[float, float, float]: Returns the velocities
+- `individualToScenario`: Converts a individual Open-SBT experiment to a scenario.<br/> :param individual: The individual.<br/> :param variable_names: The List of variable names.<br/> :param road_generator: The generator for generating a new road string.<br/> :param starting_pos: Tuple of the starting position of the vehicel.<br/> :returns Scenario: Returns the Scenario
+- `calculate_velocities`: Calculates the velocities at each time step based in the positions and vehicle speed.<br/> :param positions: List of the positions (as tuple of x, y, z values).<br/> :param speeds: List of the float speed values.<br/> :returns Tuple[float, float, float]: Returns the velocities
 
 ## Integration into an Experiment
 
