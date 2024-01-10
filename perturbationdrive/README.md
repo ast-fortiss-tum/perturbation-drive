@@ -134,6 +134,9 @@ cv2.imshow(poisson_img)
 gaussian_img = gaussian_noise(image, 4)
 cv2.imshow(gaussian_img)
 
+# this example will fail because the intensity is out of bounds
+gaussian_img = gaussian_noise(image, -1)
+
 # used the controller for perturbation
 
 controller1 = ImagePerturbation(funcs=[candy, poisson_noise])
@@ -146,6 +149,10 @@ demo_model = tf.keras.Model(inputs=inputs, outputs=outputs)
 controller2 = ImagePerturbation(funcs=[candy, poisson_noise], attention_map={"map": "grad_cam", "model": demo_model, "threshold": 0.4})
 poisson_img = controller1.perturbation("poisson_noise", 2)
 
+# this example will result in an exception because the controller does not know this perturbation
+_ = controller1.perturbation("gaussian_noise", 2)
+# this example will fail, because the intensity is out of bounds
+__ = controller1.perturbation("gaussian_noise", 5)
 ```
 
 ## Simulator
