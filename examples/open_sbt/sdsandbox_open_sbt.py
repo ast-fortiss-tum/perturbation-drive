@@ -7,7 +7,7 @@ from typing import List, Dict, Any, Union
 from examples.models.example_agent import ExampleAgent
 
 from examples.open_sbt.utils_open_sbt import individualToScenario, calculate_velocities
-from examples.sdsandbox_perturbations.sdsandbox_simulator import SDSandboxSimulator
+from examples.self_driving_sandbox_donkey.sdsandbox_simulator import SDSandboxSimulator
 
 # related to perturbation drive
 from perturbationdrive import (

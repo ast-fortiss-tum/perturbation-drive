@@ -4,7 +4,8 @@ Here you can find examples on how to use this library with different simulators 
 
 ## Installation
 
-Make sure you installed all dependencies using `pip install -r requirements.txt` for each example
+Make sure you installed all dependencies using `pip install -r requirements.txt` for each example.
+Make sure to read the `README.md` and docs on `perturbationdrive`.
 
 ## sdsandbox_perturbations
 

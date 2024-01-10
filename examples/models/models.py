@@ -14,7 +14,7 @@ try:
     import sdsandbox_perturbations.conf as conf
 except:
     print("trying to resolve conf import through relative path")
-    from ..sdsandbox_perturbations import conf
+    from ..self_driving_sandbox_donkey import conf
 
 def show_model_summary(model):
     model.summary()

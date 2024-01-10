@@ -21,7 +21,7 @@ import cv2
 import numpy as np
 
 # imports from this example
-from examples.sdsandbox_perturbations.donkey_exec import DonkeyProcess
+from examples.self_driving_sandbox_donkey.donkey_exec import DonkeyProcess
 
 
 class SDSandboxSimulator(PerturbationSimulator):
