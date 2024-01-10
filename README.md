@@ -18,24 +18,83 @@ You can install the library using pip
 pip install perturbationdrive
 ```
 
+After installing this library via `pip` you can use all perturbationdrive classes and functions via top level imports. See this examples for the usage.
+
+```Python
+from perturbationdrive import (
+    PerturbationDrive,
+    RandomRoadGenerator,
+    PerturbationSimulator,
+    ADS,
+    Scenario,
+    ScenarioOutcome,
+    ImageCallBack,
+    ImagePerturbation,
+    GlobalLog as Gl,
+)
+```
+
 ## Project Structure
 
-The projct has the following structure.
+The projct has the following structure. Please note that this only provides a high level overview and does not detail all files and scripts.
 
 ```bash
 perturbationdruve/
 │
 ├── perturbationdrive/                  # All scripts related to running perturbations
+│   ├── AutomatedDrivingSystem/         # Contains all script regarding the ADS interface
+│   │   └── ADS.py                      # Abstract Class of the driving system
+│   │
+│   ├── Generative/                     # Contains all script regarding cycle gan perturbations
+│   │   ├── Sim2RealGan.py              # Implementation of a CycleGAN from Donkey Sim to Real World
+│   │   └── TrainCycleGan.py            # Script to train a CycleGAN given a dataset
+│   │
+│   ├── kernels/                        # Util scripts regarding image kernels
+│   │
+│   ├── NeuralStyleTransfer/            # Implementation of the fast style transfer models
+│   │
+│   ├── OverlayImages/                  # Util Folder containing all images used for perturbations
+│   │
+│   ├── OverlayMasks/                   # Util Folder containing all videos for dynamic masks
+│   │
+│   ├── RoadGenerator/                  # Contains all script regarding road generation
+│   │   ├── RoadGenerator.py            # Abstract base class of the road generator
+│   │   ├── RandomRoadGenerator.py      # Generates a random road
+│   │   └── CustomRoadGenerator.py      # Generates a raod given angles and segment lengths between waypoints
+│   │
+│   ├── SaliencyMap/                    # Contains all scripts regarding attention map generation
+│   │
+│   ├── Simulator/                      # Contains all script regarding simualtors and scenarios
+│   │   ├── Simualtor.py                # Abstract base class of the simulator
+│   │   ├── Scenario.py                 # Data-Classes for Scenarios and Scenario Outcomes
+│   │   └── image_callback.py           # Provides functionality to view images in a second monitor
+│   │
+│   ├── utils/                          # Contains all util scripts of the library
+│   │
+│   ├── README.md                       # Further Documentation on the perturbations library
 │   ├── imageperturbations.py           # Perturbation Controller
 │   ├── perturbationdrive.py            # Benchmarking Controller
 │   └── perturbationsfuncs.py           # Collection of image perturbations
 │
 ├── examples /                          # Provides examples on simualtor integrations
+│   ├── models/                         # Example implenetation of the ADS class
+│   │   ├── README.md                   # Documentation and Explanation on the example
+│   │   └── example_agent.py            # Example subclass of the ADS
+│   │
+│   ├── open_sbt/                       # Documentation and Examples of OpenSBT integration
+│   │   └── README.md                   # Documentation and Explanation on the example
+│   │
 │   ├── sdsandbox_perturbations/        # Example integration of Self Driving Sandbox Donkey Sim
+│   │   ├── README.md                   # Documentation and Explanation on the SDSandbox Simualtor
+│   │   ├── sdsandbox_simulator.py      # Simulator class implementation for the SDSandbox Donkey Sim 
 │   │   └── main.py                     # Entry point to run the example
+│   │
 │   └── udacity/                        # Example integration of Udacity Sim
-│       └── file4.ext                   # Entry point to run the example
+│       ├── README.md                   # Documentation and Explanation on the Udacity Simualtor
+│       ├── udacity_simulator.py        # Simulator class implementation for the Udacity Simulator
+│       └── main.py                     # Entry point to run the example
 │
+├── work.pdf                            # TODO: Insert final thesis pdf here 
 ├── README.md                           # The top level ReadME of the project (this file)
 └── requirements.txt                    # Requirements for running this project
 ```
