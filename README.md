@@ -101,11 +101,11 @@ perturbationdrive/
 
 ## Performing Image Perturbations
 
-Apply common image perturbations and corruptions to images. Note, that each method expects a image with 3 color channels and the dtype `uint8`.
+Apply common image perturbations and corruptions to images. Note, that each method expects an image with 3 color channels and the dtype `uint8`.
 Each perturbation needs an input image and the scale of the perturbation as input. The scale is in the range from 0 to 4.
 
 ```Python
-from perturbationdrive import poisson_noise
+from perturbationdrive import poisson_noise, gaussian_noise
 
 height, width = 300, 300
 random_image = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
