@@ -7,11 +7,11 @@ This ReadMe provides documentation over all functionalities in the perturbation 
 - [Image Perturbations](#image-perturbations)
   - [ImagePerturbation Controller](#imageperturbation-controller)
   - [Example](#image-perturbation-example)
-- [PerturbationDrive Controller](#perturbationdrive-controller)
 - [Simulator](#simulator)
   - [Scenario](#scenario)
   - [ScenarioOutcome](#scenariooutcome)
 - [Automated Driving System](#ads)
+- [PerturbationDrive Controller](#perturbationdrive-controller)
 
 ## Image Perturbations
 
@@ -66,21 +66,68 @@ Each perturbation needs an input image and the scale of the perturbation as inpu
 | frost_filter            | Simulates the appearance of frost patterns which form on surfaces during cold conditions     |
 | snow_filter             | Simulates the effect of snow falling by artificially inserting snow crystals     |
 
+All of these functions share same parameters and return value:
+
+- Parameters
+  - scale: int. Perturbation intensity on a range from 0 to 4.
+  - image: ndarray[Any, dtype[dtype=uint8]]. Image which should be perturbed.
+- Returns
+  - image: ndarray[Any, dtype[dtype=uint8]]. Perturbed image.
+
 ### ImagePerturbation Controller
 
 The class `ImagePerturbation` provides a class interface for performing perturbations on images. This is also the controller used in this framework to provide easy to access perturbations. Note, that this class also provides access to the more advanced perturbations, such as Dynamic Perturbations, Generative Perturbations and Perturbations based on the Attention Map.
 
-By creating a subclass, one can extend the perturbations used in this library.
+#### ImagePerturbation Class
+
+When the class is initialized, all models for generative perturbations (such as Neural Style Transfer or CycleGAN) are loaded into memory. Furthermore the buffer for applying dynamic perturbations is initialized and all frames are stored in the buffer. Only when the user specified generative perturbations or dynamic perturbations, this preprocessing step is applied.
+This class has the following parameters:
+
+- `funcs` (`List[str]`, default: `[]`): List of the function names we want to use as perturbations. If this list is empty, all perturbations from the table above are used.
+- `attention_map` (`dict(map: str, model: tf.model, threshold: float, layer: str)`, default: `{}`): States if we perturbated the input based on the attention map and which attention map to use. Possible arguments for map are `grad_cam` or `vanilla`. If you want to perturb based on the attention map you will need to speciy the model, attention threshold as well as the map type here. You can use either the vanilla saliency map or the Grad Cam attention map. If this dict is empty we do not perturb based on the saliency regions. The treshold can be empty and is 0.5 per default. The default layer for the GradCam Map is `conv2d_5`.
+- `image_size` (`Tuple[float, float]`: default: `(240, 320)`). Input image size for all perturbations.
+
+By creating a subclass, one can extend the perturbations used in this library. Note, that the minimum requirement for the subclass are implenting the `perturbation` function.
+
+The table below details all function names of the generative and dynamic perturbations
+
+| Function Name | Description |
+| --------------- | --------------- |
+| candy          |  Applies Neural Styling in this style   |
+| la_muse          |  Applies Neural Styling in this style    |
+| mosaic          |   Applies Neural Styling in this style   |
+| feathers          |  Applies Neural Styling in this style    |
+| the_scream          |  Applies Neural Styling in this style    |
+| udnie          |  Applies Neural Styling in this style    |
+| sim2real          |  Converts images from the SDSandbox Donkey USCII Track to the domain of real world images   |
+| dynamic_snow_filter          | Adds artificial snow fall to the input image sequence    |
+| dynamic_rain_filter          | Adds artificial rain fall to the input image sequence    |
+| dynamic_sun_filter          | Artificially moves a sun across the input image sequence    |
+| dynamic_lightning_filter          | Generates multiple lightning strikes over the input image sequence    |
+| dynamic_smoke_filter          | Adds artificial smoke clouds to the input image sequence    |
+
+#### ImagePerturbation.perturbation
+
+Perturbs the input image based on the function name given. This class has the following parameters:
+
+- `image` (`ndarray[Any, dtype[dtype=uint8]]`): Input image
+- `perturbation_name` (`str`): Name of the perturbation to apply. If the string is empty, no perturbation will be appliesd. All possible perturbation names are detailed in the perturbation tables of this seection.
+- `intensity`: (`int`). Perturbation intensity on a range from 0 to 4.
+
+Returns:
+
+- `ndarray[Any, dtype[dtype=uint8]]` The perturbed image resized to the `image_size` dimensions.
 
 ### Image Perturbation Example
 
 ```Python
-from perturbationdrive import poisson_noise, gaussian_noise
+from perturbationdrive import poisson_noise, gaussian_noise, ImagePerturbation
 import cv2
 
 height, width = 300, 300
 random_image = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
 
+# perform perturbations
 poisson_img = poisson_noise(image, 0)
 cv2.imshow(poisson_img)
 
@@ -89,12 +136,17 @@ cv2.imshow(gaussian_img)
 
 # used the controller for perturbation
 
-# perturb the image based on the attention map
+controller1 = ImagePerturbation(funcs=[candy, poisson_noise])
+candy_img = controller1.perturbation("candy", 2)
 
+# perturb the image based on the attention map
+import tensorflow as tf
+
+demo_model = tf.keras.Model(inputs=inputs, outputs=outputs)
+controller2 = ImagePerturbation(funcs=[candy, poisson_noise], attention_map={"map": "grad_cam", "model": demo_model, "threshold": 0.4})
+poisson_img = controller1.perturbation("poisson_noise", 2)
 
 ```
-
-## PerturbationDrive Controller
 
 ## Simulator
 
@@ -103,3 +155,5 @@ cv2.imshow(gaussian_img)
 ### ScenarioOutcome
 
 ## ADS
+
+## PerturbationDrive Controller
