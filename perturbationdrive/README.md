@@ -317,6 +317,26 @@ callback.display_disconnect_screen()
 
 ## ADS
 
+`ADS` (Automated Driving System) is an abstract base class designed to simulate the behavior of automated driving systems. It acts as interface for creating implementations of end to end driving systems based on images from a single front facing camera.
+
+This repo contains an example agent implementation in the folder `/examples/ads/` and examples on training such an agent.
+
+### ADS.Class
+
+Initialized the ADS. Here one should load the model and store it in memory as well as warm up the model for faster computation during simulation. Does not have any parameters.
+
+### ADS.action
+
+This method represents a single action step for the automated driving system. It takes as input a image from a single front facing camera in the form of a OpenCV image and outputs an action in the form of a steering angle and throttle value. Takes the following parameters
+
+- `input: ndarray[Any, dtype[uint8]]`
+    The image from the single front facing camera of the vehicle as OpenCV image.
+
+Returns:
+
+- `Tuple[Tuple[float, float]]`
+    A tuple of tuple pf actions or decisions made by the automated driving system based on the input image. The first tuple value is the steering angle and the second tuple value is the throttle value.
+
 ## RoadGenerator
 
 ## PerturbationDrive Controller
