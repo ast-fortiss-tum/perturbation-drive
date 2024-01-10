@@ -83,7 +83,7 @@ def go(
             port=port,
         )
         ads = ExampleAgent()
-        road_generator = RandomRoadGenerator(map_size=250)
+        road_generator = RandomRoadGenerator(num_control_nodes=8)
         benchmarking_obj = PerturbationDrive(simulator, ads)
 
         # start the benchmarking
