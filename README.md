@@ -84,7 +84,7 @@ perturbationdrive/
 │   ├── open_sbt/                       # Documentation and Examples of OpenSBT integration
 │   │   └── README.md                   # Documentation and Explanation on the example
 │   │
-│   ├── sdsandbox_perturbations/        # Example integration of Self Driving Sandbox Donkey Sim
+│   ├── self_driving_sandbox_donkey/        # Example integration of Self Driving Sandbox Donkey Sim
 │   │   ├── README.md                   # Documentation and Explanation on the SDSandbox Simualtor
 │   │   ├── sdsandbox_simulator.py      # Simulator class implementation for the SDSandbox Donkey Sim 
 │   │   └── main.py                     # Entry point to run the example
@@ -174,7 +174,7 @@ class PerturbationSimulator(ABC):
         # tears down the connection to the simulator binary
 ```
 
-Read the README in the `perturbationdrive/simulator/` directory for more documentaion on simulator integration. Also view the example integrations in `examples/sdsandbox_perturbations/` and `examples/udacity/`.
+Read the README in the `perturbationdrive/simulator/` directory for more documentaion on simulator integration. Also view the example integrations in `examples/self_driving_sandbox_donkey/` and `examples/udacity/`.
 
 ### Installing locally
 

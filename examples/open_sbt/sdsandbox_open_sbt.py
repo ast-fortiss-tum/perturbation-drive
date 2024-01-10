@@ -33,7 +33,7 @@ class SDSandBox_OpenSBTWrapper(Simulator):
         """
         # set up all perturbation drive objects
         simulator = SDSandboxSimulator(
-            simulator_exe_path="./examples/sdsandbox_perturbations/sim/donkey-sim.app",
+            simulator_exe_path="./examples/self_driving_sandbox_donkey/sim/donkey-sim.app",
             host="127.0.0.1",
             port=9091,
         )

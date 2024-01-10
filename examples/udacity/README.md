@@ -23,7 +23,7 @@ To use this example, you need to install all pip packages, `open-sbt` and `pertu
 
 Download the binary of udacity. You can find precompilled files for Windows/Linux/macOS [here](https://drive.google.com/drive/folders/1wljVnkjUlYF3ILLqxybKowj0M6cZatAg?usp=drive_link).
 The binary needs to be placed in the following folder `examples/udacity/udacity_utils/sim/`
-Additionally you will need download the models for the ADS and place them here `examples/sdsandbox_perturbations`
+Additionally you will need download the models for the ADS and place them here `examples/self_driving_sandbox_donkey`
 
 ## Example
 

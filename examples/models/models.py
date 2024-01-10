@@ -11,7 +11,7 @@ from tensorflow.keras.layers import Dropout, Flatten, Dense
 from tensorflow.keras.optimizers import Adam
 
 try:
-    import sdsandbox_perturbations.conf as conf
+    import examples.self_driving_sandbox_donkey.conf as conf
 except:
     print("trying to resolve conf import through relative path")
     from ..self_driving_sandbox_donkey import conf

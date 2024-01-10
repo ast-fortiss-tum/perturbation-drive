@@ -82,7 +82,7 @@ def go(
             perturbation_functions=pert_funcs,
             attention_map=attention,
             road_generator=road_generator,
-            log_dir="./examples/sdsandbox_perturbations/logs.json",
+            log_dir="./examples/self_driving_sandbox_donkey/logs.json",
             overwrite_logs=True,
             image_size=(240, 320),  # images are resized to these values
         )

@@ -167,7 +167,7 @@ The directory `Simulator/` provides all interfaces for running end to end tests 
 ### PerturbationSimulator
 
 `PerturbationSimulator` serves as an abstract base class for creating simulator adapters. It is designed for automated driving system (ADS) simulations, where various scenarios with and without image perturbations are applied to evaluate and test ADS behavior in end to end tests. By creating a subclass for this abstract base class and implementing all methods a new simulator can be integrated into this library.
-For examples on creating subclasses of the `PerturbationSimulator` see the examples `examples/udacity` and `examples/sdsandbox_perturbations`.
+For examples on creating subclasses of the `PerturbationSimulator` see the examples `examples/udacity` and `examples/self_driving_sandbox_donkey`.
 
 #### PerturbationSimulator.Class
 
