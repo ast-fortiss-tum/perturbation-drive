@@ -11,6 +11,7 @@ This ReadMe provides documentation over all functionalities in the perturbation 
   - [PerturbationSimulator](#perturbationsimulator)
   - [Scenario](#scenario)
   - [ScenarioOutcome](#scenariooutcome)
+  - [ImageCallBack](#imagecallback)
 - [Automated Driving System](#ads)
 - [PerturbationDrive Controller](#perturbationdrive-controller)
 
@@ -124,6 +125,7 @@ Returns:
 ```Python
 from perturbationdrive import poisson_noise, gaussian_noise, ImagePerturbation
 import cv2
+import numpy as np
 
 height, width = 300, 300
 random_image = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
@@ -153,7 +155,7 @@ poisson_img = controller1.perturbation("poisson_noise", 2)
 # this example will result in an exception because the controller does not know this perturbation
 _ = controller1.perturbation("gaussian_noise", 2)
 # this example will fail, because the intensity is out of bounds
-__ = controller1.perturbation("gaussian_noise", 5)
+__ = controller1.perturbation("poisson_noise", 5)
 ```
 
 ## Simulator
@@ -255,6 +257,62 @@ res = ScenarioOutcome(
     scenario=,
     isSuccess=True,
 )
+```
+
+### ImageCallBack
+
+The `ImageCallBack` class provides functionality to view images and text messages on a `pygame` window. This project uses this functionality to display the pertubed image and the actions of the `ADS` during the simulation.
+
+#### ImageCallBack.Class
+
+The `ImageCallBack` class takes the following parameters at initialization.
+
+- `channels: int` (default: 3)
+    Amount of color channels on the images displayed.
+- `rows: int` (default: 240)
+    Height of the images diaplyed in pixels.
+- `cols: int` (default: 320)
+    Width of the images displayed in pixels.
+
+#### ImageCallBack.display_img
+
+Displays the image and the steering and throttle value
+
+- `img: ndarray[Any, dtype[dtype=uint8]]`
+    Image to display
+- `steering: str`
+    String value of the current steering angle
+- `throttle: str`
+    String value of the current throttle value
+- `perturbation: str`
+    Function name of the current perturbation function
+
+#### ImageCallBack.display_waiting_screen
+
+Displays the message `Waiting for the simulator to start` on a black screen. Takes no parameters.
+
+#### ImageCallBack.display_disconnect_screen
+
+Displays the message `Simulator disconnected` on a black screen. Takes no arguments
+
+#### Example
+
+```Python
+from perturbationdrive import ImageCallBack
+import time
+
+callback = ImageCallBack(3, 220, 220)
+
+callback.display_waiting_screen()
+
+# generate random image
+random_image = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
+# display random image for 10 seconds
+for _ in range(10):
+    callback.display(img, "2", "1", "None")
+    time.sleep(1)
+
+callback.display_disconnect_screen()
 ```
 
 ## ADS

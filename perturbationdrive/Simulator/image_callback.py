@@ -11,7 +11,7 @@ class ImageCallBack:
         :param cols: number of cols
         """
         pygame.init()
-        ch, row, col = 3, 240, 320
+        ch, row, col = channels, rows, cols
 
         size = (col * 2, row * 2)
         pygame.display.set_caption("sdsandbox image monitor")
