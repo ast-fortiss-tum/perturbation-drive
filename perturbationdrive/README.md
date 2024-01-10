@@ -8,6 +8,7 @@ This ReadMe provides documentation over all functionalities in the perturbation 
   - [ImagePerturbation Controller](#imageperturbation-controller)
   - [Example](#image-perturbation-example)
 - [Simulator](#simulator)
+  - [PerturbationSimulator](#perturbationsimulator)
   - [Scenario](#scenario)
   - [ScenarioOutcome](#scenariooutcome)
 - [Automated Driving System](#ads)
@@ -78,7 +79,7 @@ All of these functions share same parameters and return value:
 
 The class `ImagePerturbation` provides a class interface for performing perturbations on images. This is also the controller used in this framework to provide easy to access perturbations. Note, that this class also provides access to the more advanced perturbations, such as Dynamic Perturbations, Generative Perturbations and Perturbations based on the Attention Map.
 
-#### ImagePerturbation Class
+#### ImagePerturbation.Class
 
 When the class is initialized, all models for generative perturbations (such as Neural Style Transfer or CycleGAN) are loaded into memory. Furthermore the buffer for applying dynamic perturbations is initialized and all frames are stored in the buffer. Only when the user specified generative perturbations or dynamic perturbations, this preprocessing step is applied.
 This class has the following parameters:
@@ -157,10 +158,107 @@ __ = controller1.perturbation("gaussian_noise", 5)
 
 ## Simulator
 
+The directory `Simulator/` provides all interfaces for running end to end tests in simulators, specifying scenarios and receiving the output of the simulated scenario.
+
+### PerturbationSimulator
+
+`PerturbationSimulator` serves as an abstract base class for creating simulator adapters. It is designed for automated driving system (ADS) simulations, where various scenarios with and without image perturbations are applied to evaluate and test ADS behavior in end to end tests. By creating a subclass for this abstract base class and implementing all methods a new simulator can be integrated into this library.
+For examples on creating subclasses of the `PerturbationSimulator` see the examples `examples/udacity` and `examples/sdsandbox_perturbations`.
+
+#### PerturbationSimulator.Class
+
+Initilizer for the PerturbationSimulator object. The following
+
+- `max_xte: float` (default = 2.0):
+    Maximum cross-track error allowed.
+- `simulator_exe_path: str`(default = ""):
+    Path to the simulator executable.
+- `host: str` (default = "127.0.0.1"):
+    Host address for connecting to the simulator.
+- `port: int` (default = 9091):
+    Port number for the connection.
+- `initial_pos: Union[Tuple[float, float, float, float], None]` (default = None):
+    Initial position in the format (x, y, z, angle).
+
+#### PerturbationSimulator.connect
+
+Abstract method to connect the simulator instance to the simulator binary. If necessary, launch the binary here and perform all steps needed to ensure a connection. Does not take any parameters.
+
+#### PerturbationSimulator.simulate_scenario
+
+Simulates a single scenario and returns a scenario outcome. Has the following parameters
+
+- `agend: ADS`
+    The agent which is tested in this scenario. See [ADS](#ads) for the ADS definition.
+- `scenario: Scenario`
+    The scenario which should be evaluated on the agent. Before the agent performs any actions in the simulator, this scenario should be build in the simulator. See [Scenario](#scenario) for the scenario definition.
+- `perturbation_controller: ImagePerturbation`
+    The perturbation controller which is used to perturb the input of the ADS. See [ImagePerturbation](#imageperturbation-controller) for more details.
+
+Returns
+
+- `ScenarioOutcome`: The result of the simulation
+
+#### PerturbationSimulator.tear_down
+
+Tears down the connection to the simulator. If a binary was launched in `connect` this binary should be cleaned up and quit.
+
 ### Scenario
+
+The `Scenario` data class is designed to model a scenario in the context of automated driving system (ADS) simulations. It is made up of the waypoints defining the road of the scenario, perturbation function, and perturbation scale. The class has the following parameters:
+
+- `waypoints: Union[str, None]`
+    The waypoints define the road of the scenario. All wypoints are made up of (x, y, z)-coordinates seperated by `@`, e.g. `1.0,1.0,1.0@2.0,2.0,2.0@3.0,3.0,2.0`. If the waypoints are None, the default track of the scenario is used.
+- `perturbation_function: str`
+    Defines the perturbation of the scenario. Possible perturbation names are all detailed in the tables of section [Image Perturbations](#image-perturbations).
+- `perturbation_scale: int`
+    Defines the intensity of the perturbation. Must be in the range of `[0;4]` with 0 being a lowest intensity and 4 being the highest intensity.
 
 ### ScenarioOutcome
 
+The `ScenarioOutcome` data class defines the result of running a scenario in a simulator. It should be generated when running a simulation. The class has the following parameters:
+
+- `frames: List[int]`
+    The frames of the simulation. Is an ordered list starting from 0 going up until the last frame of the perturbation.
+- `pos: List[Tuple[float, float, float]]`
+    The (x, y, z)-position of the vehicle at every frame of the simulation.
+- `xte: List[float]`
+    The Cross Track Error of the vehicle at every frame of the simulation. Used as performance measure.
+- `speeds: List[float]`
+    The speed of the vehicle at every framne of the simulation.
+- `actions: List[List[float]]`
+    The actions take by the `ADS` at every frame of the simulation. The first value of the list is the steering angle and the second value is the throttle.
+- `scenario: Union[Scenario, None]`
+    The scenario which has been simulated.
+- `isSuccess: bool`
+    Binary indicator stating if the scenario resulted in a success or failure.
+
+Note, that all lists must be of the same length.
+
+Example ScenarioOutcome and Scenario.
+
+```Python
+from perturbationdrive import Scenario, ScenarioOutcome
+
+scenario = Scenario(
+    waypoints="1.0,1.0,1.0@2.0,2.0,2.0@3.0,3.0,2.0",
+    perturbation_function="gaussian_noise",
+    perturbation_scale=1,
+)
+
+res = ScenarioOutcome(
+    frames=[1, 2, 3],
+    pos=[(1., 1., 1.), (1., 2., 1.), (1., 3., 1.)],
+    xte=[0.1, 0.2, 0.3],
+    speeds=[0.0, 0.1, 0.1],
+    actions=[[0.1, 0.1], [0.01, 0.1], [0.15, 0.1]],
+    scenario=,
+    isSuccess=True,
+)
+```
+
 ## ADS
+
+## RoadGenerator
 
 ## PerturbationDrive Controller
