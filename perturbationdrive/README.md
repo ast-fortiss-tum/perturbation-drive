@@ -13,7 +13,9 @@ This ReadMe provides documentation over all functionalities in the perturbation 
   - [ScenarioOutcome](#scenariooutcome)
   - [ImageCallBack](#imagecallback)
 - [Automated Driving System](#ads)
+- [RoadGenerator](#roadgenerator)
 - [PerturbationDrive Controller](#perturbationdrive-controller)
+- [Util Files](#util-files)
 
 ## Image Perturbations
 
@@ -259,6 +261,25 @@ res = ScenarioOutcome(
 )
 ```
 
+### OfflineScenarioOutcome
+
+The `OfflineScenarioOutcome` data class defines the result of running a based test on an image. Here we test the model under test on a image which is perturbed to evaluate the difference in driving commands on the perturbed image, the image which has not been perturbed and the grund truth driving actions. This class has the following parameters.
+
+- `image_file_name: str`
+    Path to the image used for testing
+- `json_file_name: str`
+    Path to the json containing the ground truth actions on the image
+- `perturbation_function: str`
+    Name of the function to perturb the input
+- `perturbation_scale: int`
+    Intensity of the perturbation on the image
+- `ground_truth_actions: List[float]`
+    Ground truth actions, e.g. taken by a human driver
+- `perturbed_image_actions: List[float]`
+    Actions of the model based on the perturbed image
+- `normal_image_actions: List[float]`
+    Actions of the model based on the normal image
+
 ### ImageCallBack
 
 The `ImageCallBack` class provides functionality to view images and text messages on a `pygame` window. This project uses this functionality to display the pertubed image and the actions of the `ADS` during the simulation.
@@ -459,3 +480,158 @@ generator.generate(
 ```
 
 ## PerturbationDrive Controller
+
+Performs the robustness benchmarking of an ADS by either simulating scenarios in a simulator to perform end to end tests or by iterating over a given dataset to perform model based testing. The ADS is an end to end system, performing actions on the camera image of a single front facing camera. The robustness of the ADS is tested by applying common image perturbations on the input of the ADS.
+
+### PerturbationDrive.class
+
+The class has the following attributes
+
+- `simulator: PerturbationSimulator`
+    Interface to the simulator in which the ADS is tested as defined in section [Simulator](#simulator)
+- `ads: ADS`
+    System under test as defined in section [ADS](#ads)
+
+### PerturbationDrive.grid_search
+
+Performs grid search over the whole space of the perturbation functions selected. For each perturbation function specified as parameter we find the highest perturbation intensity on which the ADS manages to drive the track defined by the RoadGenerator.
+For each perturbation intensity level, also the empty perturbation is tested to compare the performance on corrupted input to the performance on normal input.
+
+Parameters:
+
+- `perturbation_functions: List[str]`
+    The set of perturbations functions to use. If this list is empty, all perturbation functions detailed in the table in [Image Perturbations](#image-perturbations) are used.
+- `attention_map: dict(map: str, model: tf.model, threshold: float, layer: str) = {}`
+    Determines if the input image is perturbed on the attention map of the SUT or not. If the dict is empty, the input image is not perturbed based on the attention map. The parameters are identical to the [ImagePerturbation class](#imageperturbationclass).
+- `road_generator: Union[RoadGenerator, None] = None`
+    The generator which generates the road for the grid search. If no road generator is suplied, the default road of the simulator is choosen.
+- `log_dir: Union[str, None] = "logs.json"`
+    Optional directory to log the `ScenarioOutcome`s of each individual `Scenario`. If this param is None, the results are not written to a log file and returned from this method. If this is not None, the logs are written to the file and the `ScenarioOutcome` is not returned from this method.
+- `overwrite_logs: bool = True`
+    Boolean variable indicating if existing log files should be overwritten, if the `log_dir` already exists. If this is false and the file already exists, the `ScenarioOutcome`s are not written or returned and discarded.
+- `image_size: Tuple[float, float] = (240, 320)`
+    Image size of the input images during the scenario.
+
+Returns:
+
+- `Union[None, List[ScenarioOutcome]]` Returns the results of all simulated scenarios if the `log_dir` is None, otherwise returns None.
+
+Example:
+
+```Python
+from perturbationdrive import PerturbationDrive, RandomRoadGenerator
+
+# setup demo objects
+simulator = ExampleSimulator()
+ads = ExampleADS()
+
+# perform grid search as end to end test
+benchmarking_object.grid_seach(
+    perturbation_functions=["gaussian_noise", "impulse_noise"],
+    attention_map={},
+    road_generator=RandomRoadGenerator(),
+    log_dir="./logs/grid_search.json",
+    overwrite_logs=False,
+    image_size=(240,240)
+)
+```
+
+### PerturbationDrive.sumulate_scenarios
+
+Simulates a list of scenarios on the simualtor using the SUT to generate actions during the scenario.
+
+Parameters:
+
+- `scenarios: List[Scenario]`
+    The list of scenarios which are simulated.
+- `attention_map: dict(map: str, model: tf.model, threshold: float, layer: str) = {}`
+    Determines if the input image is perturbed on the attention map of the SUT or not. If the dict is empty, the input image is not perturbed based on the attention map. The parameters are identical to the [ImagePerturbation class](#imageperturbationclass).
+- `log_dir: Union[str, None] = "logs.json"`
+    Optional directory to log the `ScenarioOutcome`s of each individual `Scenario`. If this param is None, the results are not written to a log file and returned from this method. If this is not None, the logs are written to the file and the `ScenarioOutcome` is not returned from this method.
+- `overwrite_logs: bool = True`
+    Boolean variable indicating if existing log files should be overwritten, if the `log_dir` already exists. If this is false and the file already exists, the `ScenarioOutcome`s are not written or returned and discarded.
+- `image_size: Tuple[float, float] = (240, 320)`
+    Image size of the input images during the scenario.
+
+Returns:
+
+- `Union[None, List[ScenarioOutcome]]` Returns the results of all simulated scenarios if the `log_dir` is None, otherwise returns None.
+
+Example:
+
+```Python
+from perturbationdrive import PerturbationDrive
+
+# setup demo objects
+simulator = ExampleSimulator()
+ads = ExampleADS()
+
+# demo scenarios
+scenarios: List[Scenario] = getDemoScenario()
+
+# perform grid search as end to end test
+res: List[ScenarioOutcome] = benchmarking_object.simulate_scenarios(
+    scenarios=scenarios,
+    attention_map={},
+    log_dir=None,
+    overwrite_logs=False,
+    image_size=(240,240)
+)
+```
+
+### PerturbationDrive.offline_perturbation
+
+Used as for model based testing. Iterates over all images, perturbations and perturbation intensity. On each unique combination of intensity, perturbation and image, we generate driving commands for the normal image and the perturbed image. These commands are stored for later evaluation along with the ground truth actions.
+Generates an output in the form of an `OfflineScenarioOutcome` for each unique image and perturbation combination.
+
+Specifications on the dataset:
+
+- The dataset needs to contain the frames and a json file for each frame:
+  - The images name needs to be in the format of "`frame number`_`free_string`.{jpg | jpeg | png}" where `free_string` can be any string with length of more than 1
+  - The json file name needs to be in the format of "record_`frame number`.json" where the `frame number` needs to correlate to the image
+  - The json file needs to contain the ground truth values for steering angle and throttle in the files `user/angle` and `user/throttle`
+
+Parameters:
+
+- `dataset_path: str`
+    The path to the dataset.
+- `perturbation_functions: List[str]`
+    The set of perturbations functions to use. If this list is empty, all perturbation functions detailed in the table in [Image Perturbations](#image-perturbations) are used.
+- `attention_map: dict(map: str, model: tf.model, threshold: float, layer: str) = {}`
+    Determines if the input image is perturbed on the attention map of the SUT or not. If the dict is empty, the input image is not perturbed based on the attention map. The parameters are identical to the [ImagePerturbation class](#imageperturbationclass).
+- `log_dir: Union[str, None] = "logs.json"`
+    Optional directory to log the `ScenarioOutcome`s of each individual `Scenario`. If this param is None, the results are not written to a log file and returned from this method. If this is not None, the logs are written to the file and the `ScenarioOutcome` is not returned from this method.
+- `overwrite_logs: bool = True`
+    Boolean variable indicating if existing log files should be overwritten, if the `log_dir` already exists. If this is false and the file already exists, the `ScenarioOutcome`s are not written or returned and discarded.
+- `image_size: Tuple[float, float] = (240, 320)`
+    Image size of the input images during the scenario.
+
+Returns:
+
+- `Union[None, List[OfflineScenarioOutcome]]` Returns the results of all evaluated combinations of image, intensity, and perturbation function if the `log_dir` is None, otherwise returns None.
+
+Example:
+
+```Python
+from perturbationdrive import PerturbationDrive
+
+# setup demo objects
+simulator = ExampleSimulator()
+ads = ExampleADS()
+
+# perform grid search as end to end test
+res: List[OfflineScenarioOutcome] = benchmarking_object.offline_perturbation(
+    dataset_path="./dataset/model_test/",
+    perturbation_functions=["gaussian_noise", "impulse_noise"],
+    attention_map={},
+    log_dir=None,
+    overwrite_logs=False,
+    image_size=(240,240)
+)
+```
+
+## Util Files
+
+### GlobalLog
+
+### TrainCycleGAN
