@@ -15,7 +15,7 @@ This ReadMe provides documentation over all functionalities in the perturbation 
 - [Automated Driving System](#ads)
 - [RoadGenerator](#roadgenerator)
 - [PerturbationDrive Controller](#perturbationdrive-controller)
-- [Util Files](#util-files)
+- [Utils](#utils)
 
 ## Image Perturbations
 
@@ -536,7 +536,18 @@ benchmarking_object.grid_seach(
 )
 ```
 
-### PerturbationDrive.sumulate_scenarios
+The grid search method implemets the following control flow
+
+1. The grid_search method executes a grid search over different perturbations and scales to assess the performance of an ADS in various scenarios. The method follows these steps:
+2. Initialize Image Perturbation: Based on the provided perturbation functions, attention map, and image size.
+3. Perturbation and Scenario Setup: Iterates over the perturbation functions and scales, generating new scenarios each time. An empty perturbation is always included for comparison.
+4. Simulator Setup and Connection: Connects to the simulator and waits for the connection to establish.
+5. Road Generation: If a road_generator is provided, generates new roads using the starting position from the simulator.
+6. Grid Search Loop: Iterates over the perturbations and scales. For each iteration, a new Scenario is created and simulated. The outcome is then evaluated, and unsuccessful perturbations (except the empty one) are removed from the list.
+7. Logging and Returning Outcomes: If a log directory is specified, the outcomes are written to the logs. Otherwise, the list of outcomes is returned.
+8. Simulator Teardown: Disconnects and tears down the simulator setup.
+
+### PerturbationDrive.simulate_scenarios
 
 Simulates a list of scenarios on the simualtor using the SUT to generate actions during the scenario.
 
@@ -630,8 +641,75 @@ res: List[OfflineScenarioOutcome] = benchmarking_object.offline_perturbation(
 )
 ```
 
-## Util Files
+#### PerturbationDrive.offline_perturbation Dataset Specifications
+
+Image Files
+
+- Format: `{frame_number}_{free_string}.{extension}`
+- Components:
+  - {frame_number}: A unique identifier for each frame, typically a number. This should correlate directly with the frame number used in the corresponding JSON file.
+  - {free_string}: Any string of length greater than one character. This part of the filename can be used for additional descriptive information or identifiers.
+  - {extension}: The file extension, indicating the image format. Accepted formats are .jpg, .jpeg, or .png.
+
+JSON Files
+
+- Format: `record_{frame_number}.json`
+- Components:
+  - record_: A fixed prefix for all JSON files in the dataset.
+  - {frame_number}: The same frame number as used in the corresponding image file. This ensures that each JSON file is correctly associated  ith its respective image.
+  - .json: The file extension for JSON files.
+- JSON File Content
+  - Each JSON file must contain the following ground truth values:
+    - `user/angle`: The steering angle.
+    - `user/throttle`: The throttle value.
+
+## Utils
+
+This section provides documentation on the util scripts which can be used as part of this library.
 
 ### GlobalLog
 
+The GlobalLog class is a utility designed for centralized logging across different modules in the PerturbationDrive project. It provides a standardized way to log messages, making it easier to track and debug the system's operations.
+
+#### GloabalLog.class
+
+Takes the following parameters:
+
+- `logger_prefix: str`:
+    A prefix used to identify the logger. This allows for the distinction between loggers from different modules.
+
+Checks if a logger with the given prefix already exists. If not, it creates a new logger and sets it up with a specific logging level and format.
+The logger is configured to output log messages to the standard output (stdout) using a StreamHandler. The format for log messages is set to display the log level, logger name, and the log message.
+
+#### GloabalLog Functions
+
+- `debug(self, message)`
+    Logs a debug message. Useful for detailed information, typically of interest only when diagnosing problems.
+- `info(self, message)`
+    Logs an informational message. Used for general information about system operation.
+- `warn(self, message)`
+    Logs a warning message. Indicates that something unexpected happened, or indicative of some problem in the near future (e.g., 'disk space low'). The software is still working as expected.
+- `error(self, message)`
+    Logs an error message. Due to a more serious problem, the software has not been able to perform some function.
+- `critical(self, message)`
+    Logs a critical message. A serious error, indicating that the program itself may be unable to continue running.
+
 ### TrainCycleGAN
+
+You can train your own cycle gan given a dataset of two image domains
+
+```Python
+from perturbationdrive import train_cycle_gan
+
+train(
+    input_dir="./relative/path/to/folder",
+    output_dir="./relative/path/to/folder",
+    image_extension_input="jpg",
+    image_extension_output="jpg",
+    buffer_size=100,
+    batch_size=2,
+    early_stop_patience=None,
+    epochs=50,
+    steps_per_epoch=300,
+)
+```
