@@ -39,7 +39,7 @@ from perturbationdrive import (
 The projct has the following structure. Please note that this only provides a high level overview and does not detail all files and scripts.
 
 ```bash
-perturbationdruve/
+perturbationdrive/
 │
 ├── perturbationdrive/                  # All scripts related to running perturbations
 │   ├── AutomatedDrivingSystem/         # Contains all script regarding the ADS interface
@@ -101,28 +101,138 @@ perturbationdruve/
 
 ## Performing Image Perturbations
 
-Apply common image perturbations and corruptions to images.
-Each perturbation needs an input image and the scale of the perturbation as input.
-The scale is in the range from 0 to 4.
+Apply common image perturbations and corruptions to images. Note, that each method expects a image with 3 color channels and the dtype `uint8`.
+Each perturbation needs an input image and the scale of the perturbation as input. The scale is in the range from 0 to 4.
 
 ```Python
 from perturbationdrive import poisson_noise
 
+height, width = 300, 300
+random_image = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
 perturbed_image = poisson_noise(image, 0)
 
 ```
 
-## Benchmarking Self-Driving Cars
+Read the README in the `perturbationdrive/` directory for more details on performing standalone image perturbations.
 
-View the examples folder for examples on how to run this benchmarking library with different simulators. There are examples for the SDSandbox simulator and the udacity simulator.
+## Benchmarking Self-Driving Cars
 
 The benchmarking is performed by the `PerturbationDrive` class. This class can perform either offline evaluation of a dataset, perform gird search over the entire search space or simulate a list of specific scenarions.
 
 A benchmarking object can be created by instanciating a new `PerturbationDrive` object. Each object needs to be constructed with the simulator under test and the system under test. The system under test is an `Autonomous Driving System (ADS)`.
 
 ```Python
+from perturbationdrive import PerturbationDrive
+
+# setup demo objects
+simulator = ExampleSimulator()
+ads = ExampleADS()
+
+# create a new perturbation controller
 benchmarking_object = PerturbationDrive(simulator=simulator, ads=ads)
+
+# perform grid search as end to end test
+benchmarking_object.grid_seach()
+
+# simulate scenarios as end to end test
+benchmarking_obj.simulate_scenarios(scenarios=getDemoScenarios())
+
+# perform model based testing on a dataset
+benchmarking_obj.offline_perturbation(dataset_path="./dataset/")
 ```
+
+Read the README in the `perturbationdrive/` directory for more documentation on running end to end or model based tests based on image perturbations.
+
+## Simulator Integration
+
+The simulator provides an easy to use interface for running simulations with this library, with or without image perturbations (TODO: Make perturbation optional). A simulator integration can be achieved by creating a subclass from the simulator and implementing all class methods. All class methods are depicted in the following class signature.
+
+```Python
+class PerturbationSimulator(ABC):
+    def __init__(
+        self,
+        max_xte: float = 2.0,
+        simulator_exe_path: str = "",
+        host: str = "127.0.0.1",
+        port: int = 9091,
+        initial_pos: Union[Tuple[float, float, float, float], None] = None,
+    ):
+        # inits a new simulator object
+
+    @abstractmethod
+    def connect(self):
+        # connects the class to the simulator binary
+
+    @abstractmethod
+    def simulate_scanario(
+        self, agent: ADS, scenario: Scenario, perturbation_controller: ImagePerturbation
+    ) -> ScenarioOutcome:
+        # simulates a scenario
+
+    @abstractmethod
+    def tear_down(self):
+        # tears down the connection to the simulator binary
+```
+
+Read the README in the `perturbationdrive/simulator/` directory for more documentaion on simulator integration. Also view the example integrations in `examples/sdsandbox_perturbations/` and `examples/udacity/`.
+
+### Installing locally
+
+Clone this library from [GitHub](https://github.com/HannesLeonhard/PerturbationDrive/tree/main).
+
+* HTTPS
+
+    ```Shell
+    git clone https://github.com/HannesLeonhard/PerturbationDrive.git
+    ```
+
+* SSH
+
+    ```Shell
+    git clone git@github.com:HannesLeonhard/PerturbationDrive.git
+    ```
+
+* GitHub CLI
+
+    ```Shell
+    gh repo clone HannesLeonhard/PerturbationDrive
+    ```
+
+Create a new virtual environment using Python >= 3.6. This can be done for example via [Micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html).
+
+1. Install Micromamba. If you currently do not have Micromamba install it and set it up locally.
+2. Create a new environment
+
+    ```Shell
+    micromamba create -n myenv python=3.6
+    ```
+
+3. Activate the environment
+
+    ```Shell
+    micromamba activate myenv
+    ```
+
+4. Install all requirements
+
+    ```Shell
+    pip install -r requirements.txt
+    ```
+
+5. (Optionally) Install this library locally
+
+    ```Shell
+    cd PerturbationDrive
+    pip install .
+    ```
+
+6. Deactivate environment after use
+
+    ```Shell
+    micromamba deactivate myenv
+    ```
+
+# TODO: Remove all beyond this point and move it into other READMEs or docs
 
 ### Simulator
 
@@ -130,8 +240,8 @@ benchmarking_object = PerturbationDrive(simulator=simulator, ads=ads)
 
 This repo contains two example simulator adapters.
 
-- Udacity Simulator Adapter:<br/>This example along with instructions on running it can be found in the `examples/udacity/` folder.
-- SDSandBox Simulator Adapter:<br/>This example along with instruction on running it can be found in the `examples/sdsandbox_perturbations` folder.
+* Udacity Simulator Adapter:<br/>This example along with instructions on running it can be found in the `examples/udacity/` folder.
+* SDSandBox Simulator Adapter:<br/>This example along with instruction on running it can be found in the `examples/sdsandbox_perturbations` folder.
 
 #### Simulator-Constructor
 
@@ -159,13 +269,13 @@ Simulates a given scenario.
 
 Parameters:
 
-- `agent: ADS`: The automated driving system agent.
-- `scenario: Scenario`: The scenario to be simulated.
-- `perturbation_controller`: ImagePerturbation: Controller for image perturbations.
+* `agent: ADS`: The automated driving system agent.
+* `scenario: Scenario`: The scenario to be simulated.
+* `perturbation_controller`: ImagePerturbation: Controller for image perturbations.
 
 Returns:
 
-- `ScenarioOutcome`: The outcome of the scenario simulation.
+* `ScenarioOutcome`: The outcome of the scenario simulation.
 
 Description:
 This method simulates the specified scenario, applying perturbations to the observations and evaluating the ADS's actions. The process includes resetting the simulator, building the scenario waypoints, and running an action loop where the ADS responds to perturbed observations.
@@ -187,11 +297,11 @@ This method represents a single action step for the automated driving system. It
 
 Parameters:
 
-- `input: ndarray[Any, dtype[uint8]]`: The input image to the system, typically in the form of an array with uint8 data type. This image is processed and used to make driving decisions.
+* `input: ndarray[Any, dtype[uint8]]`: The input image to the system, typically in the form of an array with uint8 data type. This image is processed and used to make driving decisions.
 
 Returns:
 
-- `Tuple[Tuple[float, float]]`: A tuple of tuple pf actions or decisions made by the automated driving system based on the input image. The first tuple value is the steering angle and the second tuple value is the throttle value.
+* `Tuple[Tuple[float, float]]`: A tuple of tuple pf actions or decisions made by the automated driving system based on the input image. The first tuple value is the steering angle and the second tuple value is the throttle value.
 
 Implementation Requirements:
 Implementers of this method should include all the necessary preprocessing of the input image and the logic for making driving decisions. This may involve using machine learning models, heuristic algorithms, or a combination of different techniques.
@@ -202,18 +312,18 @@ The `Scenario` data class is designed to model a scenario in the context of auto
 
 `waypoints: Union[str, None]`
 
-- Description:<br/>This attribute represents the waypoints for the scenario. Waypoints are critical in defining the path or route that the ADS should follow or react to during the simulation.
-- Type:<br/>`Union[str, None]` – It can be a string representing the waypoints' data or None if waypoints are not applicable or not defined. Waypoints should be seperated by the `@`-char, e.g. `1.0,1.0,1.0@2.0,2.0,2.0@3.0,3.0,2.0`.
+* Description:<br/>This attribute represents the waypoints for the scenario. Waypoints are critical in defining the path or route that the ADS should follow or react to during the simulation.
+* Type:<br/>`Union[str, None]` – It can be a string representing the waypoints' data or None if waypoints are not applicable or not defined. Waypoints should be seperated by the `@`-char, e.g. `1.0,1.0,1.0@2.0,2.0,2.0@3.0,3.0,2.0`.
 
 `perturbation_function: str`
 
-- Description:<br/>Defines the specific function or method used to introduce perturbations in the scenario. Perturbations are variations or disturbances introduced in the simulation environment, which can affect the behavior or performance of the ADS.
-- Type:<br/>`str` – A string that identifies or names the perturbation function to be applied in the scenario.
+* Description:<br/>Defines the specific function or method used to introduce perturbations in the scenario. Perturbations are variations or disturbances introduced in the simulation environment, which can affect the behavior or performance of the ADS.
+* Type:<br/>`str` – A string that identifies or names the perturbation function to be applied in the scenario.
 
 `perturbation_scale: int`
 
-- Description:<br/>Specifies the scale or intensity of the perturbation. This determines how significantly the perturbation will impact the scenario, allowing for control over the difficulty or complexity of the simulation for the ADS.
-- Type:<br/>`int` – An integer value representing the magnitude or extent of the perturbation. This should be in the range of [0;4].
+* Description:<br/>Specifies the scale or intensity of the perturbation. This determines how significantly the perturbation will impact the scenario, allowing for control over the difficulty or complexity of the simulation for the ADS.
+* Type:<br/>`int` – An integer value representing the magnitude or extent of the perturbation. This should be in the range of [0;4].
 
 ### Road Generator
 
@@ -221,16 +331,16 @@ The `Scenario` data class is designed to model a scenario in the context of auto
 
 There are already two concrete `RoadGenerator` subclasses implemented in this project
 
-- `RandomRoadGenerator`:<br/>Generates a random road for a given map size. The map size needs to be spcified in the constructor of this road.
-- `CustomRoadGenerator`:<br/> Generates a road based on the specified angles and segment lengths. The constructor also requires a map size for this generator.<br/>The `generate` method expects the parameter `angles` containing a list of integer angles and optionaly the parameter `seg_lengths`, containing a list of integer segment lengths.
+* `RandomRoadGenerator`:<br/>Generates a random road for a given map size. The map size needs to be spcified in the constructor of this road.
+* `CustomRoadGenerator`:<br/> Generates a road based on the specified angles and segment lengths. The constructor also requires a map size for this generator.<br/>The `generate` method expects the parameter `angles` containing a list of integer angles and optionaly the parameter `seg_lengths`, containing a list of integer segment lengths.
 
 #### Road Generator Method
 
 `generate(self, *args, **kwargs) -> Union[str, None]`
 
-- Description:<br/>This method is responsible for generating a new road and returning its string representation. The method allows for flexibility in terms of input parameters using *args and **kwargs. A key requirement is that kwargs must contain the initial starting position as an argument named starting_pos.
-- Return Type: <br/>`Union[str, None]` - The method returns a string representation of the generated road. An example format could be 1.0,1.0,1.0@2.0,2.0,2.0@3.0,3.0,2.0, representing a sequence of waypoints or coordinates. The method can also return None if a road cannot be generated under given conditions or parameters.
-- Implementation Requirements:<br/>Subclasses must provide a concrete implementation of this method, defining how roads are generated. This could involve algorithms for random road generation, procedures for creating roads based on specific criteria, or methods to produce roads that challenge the ADS in unique ways.
+* Description:<br/>This method is responsible for generating a new road and returning its string representation. The method allows for flexibility in terms of input parameters using *args and **kwargs. A key requirement is that kwargs must contain the initial starting position as an argument named starting_pos.
+* Return Type: <br/>`Union[str, None]` - The method returns a string representation of the generated road. An example format could be 1.0,1.0,1.0@2.0,2.0,2.0@3.0,3.0,2.0, representing a sequence of waypoints or coordinates. The method can also return None if a road cannot be generated under given conditions or parameters.
+* Implementation Requirements:<br/>Subclasses must provide a concrete implementation of this method, defining how roads are generated. This could involve algorithms for random road generation, procedures for creating roads based on specific criteria, or methods to produce roads that challenge the ADS in unique ways.
 
 ## Grid-Search
 
@@ -267,16 +377,16 @@ If the list of perturbation functions supplied is empty, we perform all non-gene
 
 Parameters
 
-- perturbation_functions: `List[str]`:<br/>A list of strings representing the perturbation functions to be tested.
-- attention_map: `Dict (default = {})`:<br/>A dictionary representing the attention map for image perturbations.
-- road_generator: `Union[RoadGenerator, None]` (default = None):<br/>An optional RoadGenerator instance to generate roads for the scenarios. If None, no road generation is performed.
-- log_dir: `Union[str, None]` (default = "logs.json"):<br/>The directory for storing log files. If None, scenario outcomes are returned instead of being logged.
-- overwrite_logs: `bool` (default = True):<br/>Indicates whether to overwrite existing logs.
-- image_size: `Tuple[float, float]` (default = (240, 320)):<br/>The size of the images to be used for perturbations.
+* perturbation_functions: `List[str]`:<br/>A list of strings representing the perturbation functions to be tested.
+* attention_map: `Dict (default = {})`:<br/>A dictionary representing the attention map for image perturbations.
+* road_generator: `Union[RoadGenerator, None]` (default = None):<br/>An optional RoadGenerator instance to generate roads for the scenarios. If None, no road generation is performed.
+* log_dir: `Union[str, None]` (default = "logs.json"):<br/>The directory for storing log files. If None, scenario outcomes are returned instead of being logged.
+* overwrite_logs: `bool` (default = True):<br/>Indicates whether to overwrite existing logs.
+* image_size: `Tuple[float, float]` (default = (240, 320)):<br/>The size of the images to be used for perturbations.
 
 Return Value
 
-- `Union[None, List[ScenarioOutcome]]`:<br/>The method returns a list of ScenarioOutcome objects if log_dir is None. Otherwise, the outcomes are logged, and None is returned.
+* `Union[None, List[ScenarioOutcome]]`:<br/>The method returns a list of ScenarioOutcome objects if log_dir is None. Otherwise, the outcomes are logged, and None is returned.
 
 Method Description
 
@@ -293,10 +403,10 @@ Method Description
 
 Optionally, you can perturbate the images based on the attention map of the model on the input image. To enable this feature, you will need to specify the attention parameters when creating the `ImagePerturbation` object. The `ImagePerturbation` constructor requires an dictionary contining the following information:
 
-- `map`: A string value if the object should calculate the vanilla saliency map or calculate the Grad Cam map. This parameter is required. Possible values are either `vanilla` or `grad_cam`.
-- `model`: The underlying model. This value if required.
-- `threshold=0.5`: A float value in the range of [0, 1]. If a input image pixel achieves a value higher or equal to this threshold we apply the perturbation in this region. This param is not required and the default is 0.5.
-- `layer="conv2d_5"`: The string name of the model layer which shalll be used to calculate the Grad Cam map. This param is not required and the default is "conv2d_5".
+* `map`: A string value if the object should calculate the vanilla saliency map or calculate the Grad Cam map. This parameter is required. Possible values are either `vanilla` or `grad_cam`.
+* `model`: The underlying model. This value if required.
+* `threshold=0.5`: A float value in the range of [0, 1]. If a input image pixel achieves a value higher or equal to this threshold we apply the perturbation in this region. This param is not required and the default is 0.5.
+* `layer="conv2d_5"`: The string name of the model layer which shalll be used to calculate the Grad Cam map. This param is not required and the default is "conv2d_5".
 
  ```Python
 # Instantiate a perturbation object
@@ -334,15 +444,15 @@ outcomes: List[ScenarioOutcome] = benchmarking_obj.simulate_scenarios(
 
 Parameters
 
-- scenarios: `List[Scenario]``:<br/>A list of Scenario objects to be simulated.
-- attention_map: `Dict` (default = {}):<br/>A dictionary representing the attention map for image perturbations.
-- log_dir: `Union[str, None]` (default = "logs.json"):<br/>The directory for storing log files. If None, scenario outcomes are returned directly.
-- overwrite_logs: `bool` (default = True):<br/>Indicates whether to overwrite existing log files.
-- image_size: `Tuple[float, float]` (default = (240, 320)):<br/>The size of the images to be used for perturbations.
+* scenarios: `List[Scenario]``:<br/>A list of Scenario objects to be simulated.
+* attention_map: `Dict` (default = {}):<br/>A dictionary representing the attention map for image perturbations.
+* log_dir: `Union[str, None]` (default = "logs.json"):<br/>The directory for storing log files. If None, scenario outcomes are returned directly.
+* overwrite_logs: `bool` (default = True):<br/>Indicates whether to overwrite existing log files.
+* image_size: `Tuple[float, float]` (default = (240, 320)):<br/>The size of the images to be used for perturbations.
 
 Return Value
 
-- `Union[None, List[ScenarioOutcome]]`:<br/>Returns a list of ScenarioOutcome objects if log_dir is None. If log_dir is specified, the outcomes are written to the logs, and None is returned.
+* `Union[None, List[ScenarioOutcome]]`:<br/>Returns a list of ScenarioOutcome objects if log_dir is None. If log_dir is specified, the outcomes are written to the logs, and None is returned.
 
 Method Description
 
@@ -362,16 +472,16 @@ The `offline_perturbation` method is designed to apply perturbations to a datase
 
 Parameters
 
-- dataset_path: str:<br/>Path to the dataset directory containing images and JSON files.
-- perturbation_functions: List[str]:<br/>A list of perturbation function names to be applied to the images.
-- attention_map: Dict (default = {}):<br/>A dictionary representing the attention map for image perturbations.
-- log_dir: Union[str, None] (default = "logs.json"):<br/>Directory for storing log files. If None, the scenario outcomes are returned.
-- overwrite_logs: bool (default = True):<br/>Indicates whether to overwrite existing log files.
-- image_size: Tuple[float, float] (default = (240, 320)):<br/>The size of the images for perturbations.
+* dataset_path: str:<br/>Path to the dataset directory containing images and JSON files.
+* perturbation_functions: List[str]:<br/>A list of perturbation function names to be applied to the images.
+* attention_map: Dict (default = {}):<br/>A dictionary representing the attention map for image perturbations.
+* log_dir: Union[str, None] (default = "logs.json"):<br/>Directory for storing log files. If None, the scenario outcomes are returned.
+* overwrite_logs: bool (default = True):<br/>Indicates whether to overwrite existing log files.
+* image_size: Tuple[float, float] (default = (240, 320)):<br/>The size of the images for perturbations.
 
 Return Value
 
-- Union[None, List[OfflineScenarioOutcome]]:<br/>Returns a list of OfflineScenarioOutcome objects if log_dir is None. Otherwise, the outcomes are logged, and None is returned.
+* Union[None, List[OfflineScenarioOutcome]]:<br/>Returns a list of OfflineScenarioOutcome objects if log_dir is None. Otherwise, the outcomes are logged, and None is returned.
 Method Description
 
 The offline_perturbation method performs the following steps:
@@ -379,10 +489,10 @@ The offline_perturbation method performs the following steps:
 1. Dataset Validation: Checks if the dataset directory exists and contains the required JSON and image files.
 2. Perturbation Setup: Initializes the ImagePerturbation object with the specified perturbation functions, attention map, and image size.
 3. Processing Each Image: Iterates through each image in the dataset, performing the following actions:
-    - Retrieves the corresponding JSON file for ground truth data (steering angle and throttle).
-    - Reads the image and applies each perturbation function at different intensities.
-    - For each perturbed image, calculates the ADS's response and compares it with the response to the original image.
-    - Storing Results: Collects the outcomes in a list of OfflineScenarioOutcome objects, including details like file names, perturbation functions, scales, and actions.
+    * Retrieves the corresponding JSON file for ground truth data (steering angle and throttle).
+    * Reads the image and applies each perturbation function at different intensities.
+    * For each perturbed image, calculates the ADS's response and compares it with the response to the original image.
+    * Storing Results: Collects the outcomes in a list of OfflineScenarioOutcome objects, including details like file names, perturbation functions, scales, and actions.
 4. Logging or Returning Outcomes: If a log directory is provided, the results are written to the specified file. Otherwise, the results are returned directly.
 
 ### Offline Perturbation DataSet Spefifications
@@ -391,23 +501,23 @@ All files in the dataset must adhere to this naming specification for the offlin
 
 Image Files
 
-- Format: `{frame_number}_{free_string}.{extension}`
-- Components:
-  - {frame_number}: A unique identifier for each frame, typically a number. This should correlate directly with the frame number used in the corresponding JSON file.
-  - {free_string}: Any string of length greater than one character. This part of the filename can be used for additional descriptive information or identifiers.
-  - {extension}: The file extension, indicating the image format. Accepted formats are .jpg, .jpeg, or .png.
+* Format: `{frame_number}_{free_string}.{extension}`
+* Components:
+  * {frame_number}: A unique identifier for each frame, typically a number. This should correlate directly with the frame number used in the corresponding JSON file.
+  * {free_string}: Any string of length greater than one character. This part of the filename can be used for additional descriptive information or identifiers.
+  * {extension}: The file extension, indicating the image format. Accepted formats are .jpg, .jpeg, or .png.
 
 JSON Files
 
-- Format: `record_{frame_number}.json`
-- Components:
-  - record_: A fixed prefix for all JSON files in the dataset.
-  - {frame_number}: The same frame number as used in the corresponding image file. This ensures that each JSON file is correctly associated with its respective image.
-  - .json: The file extension for JSON files.
-- JSON File Content
-  - Each JSON file must contain the following ground truth values:
-    - `user/angle`: The steering angle.
-    - `user/throttle`: The throttle value.
+* Format: `record_{frame_number}.json`
+* Components:
+  * record_: A fixed prefix for all JSON files in the dataset.
+  * {frame_number}: The same frame number as used in the corresponding image file. This ensures that each JSON file is correctly associated with its respective image.
+  * .json: The file extension for JSON files.
+* JSON File Content
+  * Each JSON file must contain the following ground truth values:
+    * `user/angle`: The steering angle.
+    * `user/throttle`: The throttle value.
 
 ## Open-SBT Adapter
 
