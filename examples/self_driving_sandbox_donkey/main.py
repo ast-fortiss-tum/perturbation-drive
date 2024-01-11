@@ -70,9 +70,12 @@ def go(
     port: int,
     pert_funcs: List[str] = [],
     attention: Dict[str, Any] = {},
+    simulator_exe_path: str = "./sim/donkey-sim.app",
 ):
     try:
-        simulator = SDSandboxSimulator(host=host, port=port)
+        simulator = SDSandboxSimulator(
+            simulator_exe_path=simulator_exe_path, host=host, port=port
+        )
         ads = ExampleAgent()
         road_generator = RandomRoadGenerator(num_control_nodes=8)
         benchmarking_obj = PerturbationDrive(simulator, ads)
@@ -107,6 +110,12 @@ if __name__ == "__main__":
         help="perturbations to use on the model. by default all are used",
     )
     parser.add_argument(
+        "--sim_exe",
+        type=str,
+        default="./examples/self_driving_sandbox_donkey/sim/donkey-sim.app",
+        help="sim executable path",
+    )    
+    parser.add_argument(
         "--attention_map", type=str, default="", help="which attention map to use"
     )
     parser.add_argument(
@@ -140,4 +149,5 @@ if __name__ == "__main__":
     #    port=args.port,
     #    pert_funcs=args.perturbation,
     #    attention=attention,
+    #   simulator_exe_path=args.sim_exe,
     # )

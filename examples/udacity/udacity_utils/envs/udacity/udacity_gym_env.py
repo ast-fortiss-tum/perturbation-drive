@@ -16,8 +16,7 @@ from udacity_utils.global_log import GlobalLog
 
 class UdacityGymEnv_RoadGen(gym.Env):
     """
-    Gym interface for DonkeyCar with support for using
-    a VAE encoded observation instead of raw pixels if needed.
+    Gym interface for udacity simulator
     """
 
     metadata = {

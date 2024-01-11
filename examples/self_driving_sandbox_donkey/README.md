@@ -9,7 +9,7 @@ Note, that both the fortiss implementation and the fork are identical to the ori
 The [fork](https://github.com/HannesLeonhard/sdsandbox_perturbations) differs from the [fortiss SDSandbox](https://github.com/ast-fortiss-tum/sdsandbox) via the following points:
 
 - Road Generation API: The fork offers the API interface to build custom roads via waypoints send from the client.
-- Automatic Setup: The fork offers the possibility to automatically start select the `GeneratedTrack`-Scene on initial connection of a client.
+- Automatic Setup: The fork offers the possibility to automatically select the `GeneratedTrack`-Scene on initial connection of a client.
 
 Before running these examples
 
@@ -172,7 +172,11 @@ The `SDSandboxSimulator` can easily be integrated into the `PerturbationDrive` l
 
 ```Python
 try:
-    simulator = SDSandboxSimulator(host="127.0.0.1", port="9091")
+    simulator = SDSandboxSimulator(
+        simulator_exe_path="./examples/self_driving_sandbox_donkey/sim/donkey-sim.app",
+        host="127.0.0.1", 
+        port=9091
+    )
     ads = ExampleAgent()
     road_generator = RandomRoadGenerator(num_control_nodes=8)
     benchmarking_obj = PerturbationDrive(simulator, ads)
