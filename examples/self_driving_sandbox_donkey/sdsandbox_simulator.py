@@ -6,23 +6,16 @@ from perturbationdrive import (
     ScenarioOutcome,
     ImagePerturbation,
     GlobalLog,
-    ImageCallBack,
 )
 
 # used libraries
-from gym_donkeycar.core.fps import FPSTimer
-from gym_donkeycar.core.message import IMesgHandler
 from gym_donkeycar.core.sim_client import SimClient
 from typing import Any, Union, List, Tuple, Dict
-import pygame
 import time
-import base64
-import cv2
-import numpy as np
 
 # imports from this example
 from examples.self_driving_sandbox_donkey.donkey_exec import DonkeyProcess
-
+from examples.self_driving_sandbox_donkey.donkey_sim_msg_handler import DonkeySimMsgHandler
 
 class SDSandboxSimulator(PerturbationSimulator):
     def __init__(
@@ -38,13 +31,14 @@ class SDSandboxSimulator(PerturbationSimulator):
             port=port,
             initial_pos=None,
         )
+        self.port = port
         self.client: Union[DonkeySimMsgHandler, None] = None
         self.process: DonkeyProcess = DonkeyProcess()
         self.logger = GlobalLog("SDSandBoxSimulator")
 
     def connect(self):
         # launch the sim binary here
-        self.process.start(self.simulator_exe_path, port=9091)
+        self.process.start(self.simulator_exe_path, port=self.port)
 
         super().connect()
         address = (self.host, self.port)

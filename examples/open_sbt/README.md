@@ -2,6 +2,8 @@
 
 This folder provides all python files to integrate [Open SBT](https://git.fortiss.org/opensbt) with this project.
 
+You can find the [Open SBT Research Paper here](https://www.fortiss.org/ergebnisse/publikationen/details/opensbt-a-modular-framework-for-search-based-testing-of-automated-driving-systems).
+
 ## SDSandBox Wrapper
 
 The file `sdsandbox_open_sbt` provides the implementation of the `Simulator` interface by implementing the following method. The experiment searches for scenarios consisting of roads and perturbation functions.
