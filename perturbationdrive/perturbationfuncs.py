@@ -385,32 +385,6 @@ def rotate_image(scale, image):
     return rotated
 
 
-def stripe_mapping(scale, image):
-    """
-    Apply Stripe mapping to an image with different severities.
-
-    Parameters:
-        - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4
-
-    Returns: numpy array:
-    """
-    width = [10, 20, 30, 40, 50][scale]
-    rows, cols, _ = image.shape
-
-    # Clone the original image
-    striped = image.copy()
-
-    # Define stripe boundaries
-    start_col = (cols - width) // 2
-    end_col = start_col + width
-
-    # Invert the pixel values in the stripe
-    striped[:, start_col:end_col] = 255 - striped[:, start_col:end_col]
-
-    return striped
-
-
 def fog_mapping(scale, image):
     """
     Apply fog effect to an image with different severities using Diamond-Square algorithm.
@@ -746,36 +720,6 @@ def phase_scrambling(scale, image):
     return scrambled_rgb
 
 
-def power_equalisation(scale, image):
-    """
-    Apply power equalisation to an image with different severities while
-    preserving color.
-    We equalize or modify the energy distribution of the image across different frequencies.
-    By adjustingthe magnitude of the Fourier transform (which represents the frequency
-    content of the image), we can change how the energy (or power) is spread
-    across frequencies.
-
-    Parameters:
-        - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4
-
-    Returns: numpy array:
-    """
-    alpha = [1.15, 1.08, 1.02, 0.98, 0.92][scale]
-    # Convert the image to HSV color space
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
-    H, S, V = cv2.split(hsv_image)
-    # Equalise each channel
-    equalised_V = equalise_power(V, alpha)
-
-    # Merging the equalised channel with original H and S
-    equalised_hsv = cv2.merge([H, S, equalised_V])
-
-    # Convert back to RGB color space
-    equalised_rgb = cv2.cvtColor(equalised_hsv, cv2.COLOR_HSV2RGB)
-    return equalised_rgb
-
-
 def histogram_equalisation(scale, image):
     """
     Apply histogram equalisation to an image with different severities while
@@ -899,31 +843,6 @@ def grayscale_filter(scale, image):
     return grayed_img
 
 
-def silhouette_filter(scale, image):
-    """
-    Applies a silhouette filter using canny edge detection to highlight edges and
-    return a gray scale image
-
-    Parameters:
-        - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4
-
-    Returns: numpy array:
-    """
-    thresholds = [(10, 60), (20, 80), (30, 100), (40, 120), (50, 150)]
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    lower_threshold, upper_threshold = thresholds[scale]
-
-    # Apply Canny edge detection
-    edges = cv2.Canny(gray, lower_threshold, upper_threshold)
-
-    # Invert the binary output to get the silhouette
-    silhouette = cv2.bitwise_not(edges)
-    silhouette = cv2.cvtColor(silhouette, cv2.COLOR_GRAY2BGR)
-
-    return silhouette
-
-
 def invert_filter(scale, image):
     """
     Applies a invert filter, inverting each color channel seperately
@@ -945,23 +864,6 @@ def invert_filter(scale, image):
     blended = cv2.addWeighted(image, original_weight, inverted, inverted_weight, 0)
 
     return blended
-
-
-def solarite_filter(scale, image):
-    """
-    Inverts the tonesnof the image pixels which are above a certain threshold
-
-    Parameters:
-        - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4
-
-    Returns: numpy array:
-    """
-    threshold = [230, 200, 170, 140, 110][scale]
-
-    solarized = np.where(image > threshold, 255 - image, image)
-
-    return solarized
 
 
 def posterize_filter(scale, image):

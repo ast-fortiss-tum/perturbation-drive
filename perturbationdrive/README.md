@@ -40,8 +40,7 @@ Each perturbation needs an input image and the scale of the perturbation as inpu
 | translate_image         | Moves every pixel of the image by the same distance into a certain direction     |
 | scale_image             | Increases or decreases the size of an image by a certain factor     |
 | rotate_image            | Rotates the image by a certain angle in the euclidean space     |
-| stripe_mapping          | a     |
-| fog_mapping             | a     |
+| fog_mapping             | Applies fog effect to an image using the Diamond-Square algorithm.     |
 | splatter_mapping        | Randomly adds black patches of varying size on the image     |
 | dotted_lines_mapping    | Randomly adds straight dotted lines on the image     |
 | zigzag_mapping          | Randomly adds black zig-zag lines on the image     |
@@ -51,15 +50,12 @@ Each perturbation needs an input image and the scale of the perturbation as inpu
 | high_pass_filter        | Retains high frequency information in the image while reducing the low frequency information in the image, resulting in sharpened image     |
 | low_pass_filter         | Calculates the average of each pixel to its neighbors     |
 | phase_scrambling        | Also called power scrambling, scrambles all image channels by using Fast Fourier Transform     |
-| power_equalisation      | a     |
 | histogram_equalisation  | Spreads out the pixel intensity in an image via the images histogram resulting in enhancing the contrast of the image     |
 | reflection_filter       | Creates a mirror effect to the input image and appends the mirrored image to the bottom of the image     |
 | white_balance_filter    | Globally adjusts the intensity of image colors to render white surfaces correctly     |
 | sharpen_filter          | Enhances local regions and removes blurring by using the sharpen kernel      |
 | grayscale_filter        | Converts all colors to gray tones     |
-| silhouette_filter       | a     |
 | invert_filter           | Inverts all color channels of the image separately     |
-| solarite_filter         | a     |
 | posterize_filter        | Reduces the number of distinct colors while maintaining essential image features by quantization of color channels     |
 | cutout_filter           | Inserts random black rectangular shapes over the image     |
 | sample_pairing_filter   | Randomly samples two regions of the image together. The sampled regions are blended together with a varying alpha value     |
