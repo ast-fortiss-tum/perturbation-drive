@@ -61,8 +61,8 @@ def open_sbt():
     # Run search
     res = optimizer.run()
 
-    # Write results
-    res.write_results()
+    # Write results. This currently does not work
+    # res.write_results()
 
 
 def go(
@@ -143,11 +143,11 @@ if __name__ == "__main__":
     )
 
     print(f"{5 * '#'} Started Running SDSandBox Sim {5 * '#'}")
+    go(
+       host=args.host,
+       port=args.port,
+       pert_funcs=args.perturbation,
+       attention=attention,
+      simulator_exe_path=args.sim_exe,
+    )
     open_sbt()
-    # go(
-    #    host=args.host,
-    #    port=args.port,
-    #    pert_funcs=args.perturbation,
-    #    attention=attention,
-    #   simulator_exe_path=args.sim_exe,
-    # )

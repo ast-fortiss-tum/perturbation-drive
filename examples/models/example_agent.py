@@ -16,12 +16,12 @@ class ExampleAgent(ADS):
 
     def __init__(self):
         if not (
-            os.path.exists("./examples/models/generatedRoadModel.h5")
-            and os.path.isfile("./examples/models/generatedRoadModel.h5")
+            os.path.exists("./examples/models/donkeyUdacityModel.h5")
+            and os.path.isfile("./examples/models/donkeyUdacityModel.h5")
         ):
             print(f"{5 * '+'} Warning: ADS file does not exists {5 * '+'}")
         self.model = load_model(
-            "./examples/models/generatedRoadModel.h5", compile=False
+            "./examples/models/donkeyUdacityModel.h5", compile=False
         )
         self.model.compile(loss="sgd", metrics=["mse"])
 

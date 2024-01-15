@@ -15,7 +15,10 @@ import time
 
 # imports from this example
 from examples.self_driving_sandbox_donkey.donkey_exec import DonkeyProcess
-from examples.self_driving_sandbox_donkey.donkey_sim_msg_handler import DonkeySimMsgHandler
+from examples.self_driving_sandbox_donkey.donkey_sim_msg_handler import (
+    DonkeySimMsgHandler,
+)
+
 
 class SDSandboxSimulator(PerturbationSimulator):
     def __init__(
@@ -60,78 +63,86 @@ class SDSandboxSimulator(PerturbationSimulator):
     def simulate_scanario(
         self, agent: ADS, scenario: Scenario, perturbation_controller: ImagePerturbation
     ) -> ScenarioOutcome:
-        waypoints = scenario.waypoints
-        perturbation_function_string = scenario.perturbation_function
-        perturbation_scale = scenario.perturbation_scale
+        try:
+            waypoints = scenario.waypoints
+            perturbation_function_string = scenario.perturbation_function
+            perturbation_scale = scenario.perturbation_scale
 
-        # set all params for init loop
-        actions = [[0.0, 0.0]]
-        perturbed_image = None
+            # set all params for init loop
+            actions = [[0.0, 0.0]]
+            perturbed_image = None
 
-        # set up params for saving data
-        pos_list = []
-        xte_list = []
-        actions_list = []
-        speed_list = []
-        isSuccess = False
+            # set up params for saving data
+            pos_list = []
+            xte_list = []
+            actions_list = []
+            speed_list = []
+            isSuccess = False
 
-        # reset the scene to match the scenario
-        self.client.msg_handler.reset_scenario(waypoints)
-        self.logger.info(f"Reset the scenario {scenario}")
-        time.sleep(2.0)
+            # reset the scene to match the scenario
+            self.client.msg_handler.reset_scenario(waypoints)
+            self.logger.info(f"Reset the scenario {scenario}")
+            time.sleep(2.0)
 
-        # run the scenario
-        while self._client_connected(self.client):
-            try:
-                # TODO: Play around with this value
-                time.sleep(0.02)
-                # we provide the actions and perturbed image here
-                obs: Dict[str, Any] = self.client.msg_handler.update(
-                    actions, perturbed_image, perturbation_function_string
-                )
-                # check if we are done
-                if obs["done"]:
-                    isSuccess = True
-                    self.logger.info("SDSandBox: Done")
-                    break
-                elif obs["xte"] > self.max_xte:
-                    break
+            # run the scenario
+            while self._client_connected(self.client):
+                try:
+                    # TODO: Play around with this value
+                    time.sleep(0.02)
+                    # we provide the actions and perturbed image here
+                    obs: Dict[str, Any] = self.client.msg_handler.update(
+                        actions, perturbed_image, perturbation_function_string
+                    )
+                    # check if we are done
+                    if obs["done"]:
+                        isSuccess = True
+                        self.logger.info("SDSandBox: Done")
+                        break
+                    elif obs["xte"] > self.max_xte:
+                        break
 
-                # perturb the image
-                perturbed_image = perturbation_controller.perturbation(
-                    obs["image"],
-                    perturbation_name=perturbation_function_string,
-                    intensity=perturbation_scale,
-                )
-                # get ads actions
-                actions = agent.action(perturbed_image)
+                    # perturb the image
+                    perturbed_image = perturbation_controller.perturbation(
+                        obs["image"],
+                        perturbation_name=perturbation_function_string,
+                        intensity=perturbation_scale,
+                    )
+                    # get ads actions
+                    actions = agent.action(perturbed_image)
 
-                # save data for output
-                pos_list.append([obs["pos_x"], obs["pos_y"], obs["pos_z"]])
-                xte_list.append(obs["xte"])
-                speed_list.append(obs["speed"])
-                actions_list.append(actions)
+                    # save data for output
+                    pos_list.append([obs["pos_x"], obs["pos_y"], obs["pos_z"]])
+                    xte_list.append(obs["xte"])
+                    speed_list.append(obs["speed"])
+                    actions_list.append(actions)
 
-            except KeyboardInterrupt:
-                self.logger.info(
-                    f"{5 * '+'} SDSandBox Simulator Got Interrupted {5 * '+'}"
-                )
-                self.client.stop()
-                raise KeyboardInterrupt
+                except KeyboardInterrupt:
+                    self.logger.info(
+                        f"{5 * '+'} SDSandBox Simulator Got Interrupted {5 * '+'}"
+                    )
+                    self.client.stop()
+                    raise KeyboardInterrupt
 
-        # send reset to sim client
-        self.client.msg_handler.reset_car()
+            # send reset to sim client
+            self.client.msg_handler.reset_car()
 
-        # return the resul of this simulation
-        return ScenarioOutcome(
-            frames=[x for x in range(len(pos_list))],
-            pos=pos_list,
-            xte=xte_list,
-            speeds=speed_list,
-            actions=[(f"{action[0][0]}", f"{action[0][0]}") for action in actions_list],
-            scenario=scenario,
-            isSuccess=isSuccess,
-        )
+            # return the resul of this simulation
+            return ScenarioOutcome(
+                frames=[x for x in range(len(pos_list))],
+                pos=pos_list,
+                xte=xte_list,
+                speeds=speed_list,
+                actions=[
+                    (f"{action[0][0]}", f"{action[0][0]}") for action in actions_list
+                ],
+                scenario=scenario,
+                isSuccess=isSuccess,
+            )
+        except Exception as e:
+            # close the simulator
+            self.tear_down()
+            # throw the exception
+            raise e
 
     def tear_down(self):
         self.client.msg_handler.on_disconnect()
@@ -142,4 +153,3 @@ class SDSandboxSimulator(PerturbationSimulator):
         Retruns true if the client is still connected
         """
         return client.is_connected()
-

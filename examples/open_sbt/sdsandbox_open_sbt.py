@@ -39,7 +39,7 @@ class SDSandBox_OpenSBTWrapper(Simulator):
         )
         ads = ExampleAgent()
         benchmarking_obj = PerturbationDrive(simulator, ads)
-        road_generator = CustomRoadGenerator(250)
+        road_generator = CustomRoadGenerator()
 
         # we need to set the sim here up to get the starting position
         benchmarking_obj.simulator.connect()

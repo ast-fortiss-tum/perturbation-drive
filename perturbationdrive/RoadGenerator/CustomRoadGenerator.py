@@ -163,9 +163,9 @@ class CustomRoadGenerator(RoadGenerator):
         start_angle = int(np.degrees(np.arctan2(v[1], v[0])))
         if angle > start_angle + max_angle or angle < start_angle - max_angle:
             print(
-                f"{5 * '+'} Warning {angle} is not in range of {start_angle - max_angle} and {start_angle + max_angle}. Selecting random angle now {5 * '+'}"
+                f"{5 * '+'} Warning {angle} is not in range of {start_angle - max_angle} and {start_angle + max_angle}. {5 * '+'}"
             )
-            angle = randint(start_angle - max_angle, start_angle + max_angle)
+            # angle = randint(start_angle - max_angle, start_angle + max_angle)
         x0, y0, z0, width0 = second_node
         if seg_length is None:
             seg_length = self.seg_length

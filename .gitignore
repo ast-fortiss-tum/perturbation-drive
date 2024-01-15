@@ -249,3 +249,6 @@ temp.txt
 *.app
 *.exe
 *.x86_64
+
+# internal dataset file
+examples/models/main.py

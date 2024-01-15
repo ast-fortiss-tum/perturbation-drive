@@ -65,8 +65,8 @@ def open_sbt():
     # Run search
     res = optimizer.run()
 
-    # Write results
-    res.write_results(params=optimizer.parameters)
+    # Write results. This currently does not work
+    # res.write_results(params=optimizer.parameters)
 
 
 def go(
@@ -178,19 +178,19 @@ if __name__ == "__main__":
     )
 
     print(f"{5 * '#'} Started Running Udacity Sim {5 * '#'}")
-    # go(
-    #    simulator_exe_path=args.sim_exe,
-    #    host=args.host,
-    #    port=args.port,
-    #    pert_funcs=args.perturbation,
-    #    attention=attention,
-    # )
-    # open_sbt()
-    offline(
+    go(
         simulator_exe_path=args.sim_exe,
         host=args.host,
         port=args.port,
-        data_set_path="../../../../Desktop/generatedRoadDataset/",
         pert_funcs=args.perturbation,
         attention=attention,
     )
+    open_sbt()
+    # offline(
+    #    simulator_exe_path=args.sim_exe,
+    #    host=args.host,
+    #    port=args.port,
+    #    data_set_path="../../../../Desktop/generatedRoadDataset/",
+    #    pert_funcs=args.perturbation,
+    #    attention=attention,
+    # )

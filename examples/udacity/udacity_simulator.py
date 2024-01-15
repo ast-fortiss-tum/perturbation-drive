@@ -51,83 +51,93 @@ class UdacitySimulator(PerturbationSimulator):
     def simulate_scanario(
         self, agent: ADS, scenario: Scenario, perturbation_controller: ImagePerturbation
     ) -> ScenarioOutcome:
-        waypoints = scenario.waypoints
-        perturbation_function_string = scenario.perturbation_function
-        perturbation_scale = scenario.perturbation_scale
+        try:
+            waypoints = scenario.waypoints
+            perturbation_function_string = scenario.perturbation_function
+            perturbation_scale = scenario.perturbation_scale
 
-        # set up image monitor
-        monitor = ImageCallBack()
-        monitor.display_waiting_screen()
-        self.logger.info(f"{5 * '-'} Starting udacity scenario {5 * '_'}")
+            # set up image monitor
+            monitor = ImageCallBack()
+            monitor.display_waiting_screen()
+            self.logger.info(f"{5 * '-'} Starting udacity scenario {5 * '_'}")
 
-        # set all params for init loop
-        actions = [[0.0, 0.0]]
-        perturbed_image = None
+            # set all params for init loop
+            actions = [[0.0, 0.0]]
+            perturbed_image = None
 
-        # set up params for saving data
-        pos_list = []
-        xte_list = []
-        actions_list = []
-        speed_list = []
-        isSuccess = False
-        done = False
+            # set up params for saving data
+            pos_list = []
+            xte_list = []
+            actions_list = []
+            speed_list = []
+            isSuccess = False
+            done = False
 
-        # reset the scene to match the scenario
-        # Road generatior ir none because we currently do not build random roads
-        obs: ndarray[uint8] = self.client.reset(
-            skip_generation=False, track_string=waypoints
-        )
-
-        # action loop
-        while not done:
-            obs = cv2.resize(obs, (320, 240), cv2.INTER_NEAREST)
-
-            # perturb the image
-            perturbed_image = perturbation_controller.perturbation(
-                obs, perturbation_function_string, perturbation_scale
+            # reset the scene to match the scenario
+            # Road generatior ir none because we currently do not build random roads
+            obs: ndarray[uint8] = self.client.reset(
+                skip_generation=False, track_string=waypoints
             )
 
-            # agent makes a move, the agent also selects the dtype and adds a batch dimension
-            actions = agent.action(perturbed_image)
+            # action loop
+            while not done:
+                obs = cv2.resize(obs, (320, 240), cv2.INTER_NEAREST)
 
-            # clip action to avoid out of bound errors
-            if isinstance(self.client.action_space, gym.spaces.Box):
-                actions = np.clip(
-                    actions, self.client.action_space.low, self.client.action_space.high
+                # perturb the image
+                perturbed_image = perturbation_controller.perturbation(
+                    obs, perturbation_function_string, perturbation_scale
                 )
 
-            monitor.display_img(
-                perturbed_image,
-                actions[0][0],
-                actions[0][1],
-                perturbation_function_string,
+                # agent makes a move, the agent also selects the dtype and adds a batch dimension
+                actions = agent.action(perturbed_image)
+
+                # clip action to avoid out of bound errors
+                if isinstance(self.client.action_space, gym.spaces.Box):
+                    actions = np.clip(
+                        actions,
+                        self.client.action_space.low,
+                        self.client.action_space.high,
+                    )
+
+                monitor.display_img(
+                    perturbed_image,
+                    f"{actions[0][0]}",
+                    f"{actions[0][1]}",
+                    perturbation_function_string,
+                )
+                # obs is the image, info contains the road and the position of the car
+                obs, done, info = self.client.step(actions)
+
+                # log new info
+                pos_list.append(info["pos"])
+                xte_list.append(info["cte"])
+                speed_list.append(info["speed"])
+                actions_list.append(actions)
+
+            # determine if we were successful
+            isSuccess = max([abs(xte) for xte in xte_list]) < self.max_xte
+            self.logger.info(
+                f"{5 * '-'} Finished udacity scenario: {isSuccess} {5 * '_'}"
             )
-            # obs is the image, info contains the road and the position of the car
-            obs, done, info = self.client.step(actions)
+            monitor.display_disconnect_screen()
 
-            # log new info
-            pos_list.append(info["pos"])
-            xte_list.append(info["cte"])
-            speed_list.append(info["speed"])
-            actions_list.append(actions)
-
-        # determine if we were successful
-        isSuccess = max([abs(xte) for xte in xte_list]) < self.max_xte
-        self.logger.info(f"{5 * '-'} Finished udacity scenario: {isSuccess} {5 * '_'}")
-        monitor.display_disconnect_screen()
-
-        # reset for the new track
-        _ = self.client.reset(skip_generation=False, track_string=waypoints)
-        # return the scenario output
-        return ScenarioOutcome(
-            frames=[x for x in range(len(pos_list))],
-            pos=pos_list,
-            xte=xte_list,
-            speeds=speed_list,
-            actions=actions_list,
-            scenario=scenario,
-            isSuccess=isSuccess,
-        )
+            # reset for the new track
+            _ = self.client.reset(skip_generation=False, track_string=waypoints)
+            # return the scenario output
+            return ScenarioOutcome(
+                frames=[x for x in range(len(pos_list))],
+                pos=pos_list,
+                xte=xte_list,
+                speeds=speed_list,
+                actions=actions_list,
+                scenario=scenario,
+                isSuccess=isSuccess,
+            )
+        except Exception as e:
+            # close the simulator
+            self.tear_down()
+            # throw the exception
+            raise e
 
     def tear_down(self):
         self.client.close()
