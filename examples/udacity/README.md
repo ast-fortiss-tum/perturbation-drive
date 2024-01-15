@@ -1,43 +1,191 @@
-# Instructions
+# Udacity Simulator Interface
 
-Instructions on running OpenSBT in the udacity simulator to search for failure scenarios. Each scenario considers a road
-and a perturbation with a scale of the perturbation.
+This directory provides an example on integrating the [Self-Driving Sandbox Donkey (also referred to as SDSandbox)](https://github.com/udacity/self-driving-car-sim) Simulator with this project.
+Please note, that this project uses a fork of the project provided by [fortiss automated software testing](https://www.fortiss.org/forschung/forschungsfelder/detail/automated-software-testing).
 
-## Installation
+➜ The precompilled binaries can be found in [this google drive](https://drive.google.com/drive/folders/1wljVnkjUlYF3ILLqxybKowj0M6cZatAg?usp=drive_link) or in [this GitHub Repo](https://github.com/ast-fortiss-tum/udacity-test-generation?tab=readme-ov-file#udacity-driving-simulator).
 
-To use this example, you need to install all pip packages, `open-sbt` and `perturbationdrive`
+Note, that the fortiss implementation and the fork are identical to the original Udacity Sim other than the default-tracks and the styling of the tracks.
 
-- Create a virual environment for your packages.
-- Download `open-sbt` via git `https://git.fortiss.org/opensbt/opensbt-core.git` and install it locally via pip.
-  - Clone the Core Open SBT repo from GitLab
-  - Navigate into the root folder (opensbt-core)
-  - You might need to add additionaly `__init__.py` files in the following folders: `experiment`, `algorithm/classification/decision_tree`, `quality_indicators`, `exception`, and `visualization`.
-  This will gurantee a smooth import of all Open SBT packages.
-  - Install all packages locally `pip install .`
-- Download `perturbationdrive` via git `https://github.com/HannesLeonhard/PerturbationDrive/tree/feature/open_sbt` and install it locally via pip.
-  - Clone the repository from GitHub.
-  - Navigate into the root folder (Perturbationdrive)
-  - Install all packages locally `pip install .`
-- Download all required python packages via pip from via the requirements.txt. If you have a Mac with an M1/M2 chip, use the requirements_macM1.txt.
-  - Navigate into `perturbationdrive/examples/udacity` and install all requirements `pip install -r requirements.txt`
+Before running these examples
 
-Download the binary of udacity. You can find precompilled files for Windows/Linux/macOS [here](https://drive.google.com/drive/folders/1wljVnkjUlYF3ILLqxybKowj0M6cZatAg?usp=drive_link).
-The binary needs to be placed in the following folder `examples/udacity/udacity_utils/sim/`
-Additionally you will need download the models for the ADS and place them here `examples/sdsandbox_perturbations`
+- Install all requirements for this example using `pip install -r requirements.txt`
+- Install Open-SBT via pip
+- Install perturbation drive via pip
 
-## Example
+## Table of Contents
 
-Run the example via
+- [Simulator Implementation](#simulator-implementation)
+  - [UdacitySimulator](#udacitysimulator)
+  - [UdacityGymEnv_RoadGen](#udacitygymenv_roadgen)
+  - [UdacitySimController]()
+  - [UnityProcess](#unityprocess)
+- [Interface with PerturbationDrive](#interface-with-perturbationdrive)
+- [Interface with SDSandBox](#interface-with-sdsandbox)
 
-```Bash
-python examples/udacity/main.py
-```
+## Simulator Implementation
 
-This will create an ADAS Problem with the following configuration. The problem creates roads with 8 waypoints where two adjacent waypoints are
-are connected via a curve having the angle specified in the simulation variables. Additionally, it selected one out of six perturbation functions
-and a scale to perturbate the input.
+This section provides concrete details on the simulator interface implementation and tips on altering your implementation
+
+### UdacitySimulator
+
+This section details the implementation of the `PerturbationSimulator` in the `udacity_simulator.py` script via the `UdacitySimulator`-class.
+The class implements the abstract class methods `connect`, `simulate_scenario` and `tear_down`.
+
+Additionally, this class is used to display the current input of the ADS in a dedicated `pygame`-window via the `ImageCallBack` class.
+
+#### UdacitySimulator.Class
+
+Initializes the simualtor and sets all class variables.
+Here one should set the path to the simualtor binary in the `simulator_exe_path` parameters to gurantee an automatic launch of the binary. Please note, that on mac the file should be an `.app` file, on linux an `.x64_84` or `.x64` and on windows an `.exe` file. The binary should be placed in the `./sim/`-directory.
+
+The class initilaizes the `GlobalLog` logger util class.
+
+#### UdacitySimulator.connect
+
+Establishes a connection to the Udacity Sim via the following steps:
+
+1. Launches the Udacity Sim Binary via the creation of a new UdacityGymEnv_RoadGen (line 41).
+2. Waits for the first observation from the Udacity Sim (line 47-49).
+
+#### UdacitySimulator.simulate_scenario
+
+Simulates the given scenario on the given agent with a given perturbation controller via the following steps:
+
+1. Uses the `UdacityGymEnv_RoadGen` env to build the given waypoints in the simulator (line 77).
+2. Performs the control loop
+   1. Perturbs the image based on the scenario (line 86)
+   2. Generates the next actions based on the perturbed input (line 91)
+   3. Displays the perturbed image via the `ImageCallBack` class
+   4. Sends the next driving commands via the env to the simulator and receives the observation from the simulator (line 106).
+   5. Logs simulator metrics (line 109-112)
+3. Uses the env to reset the position of the vehicle to the starting position (line 120)
+4. Returns the `ScenarioOutcome` (line 122)
+
+#### UdacitySimulator.tear_down
+
+Disconnects the simualtor interface from the simulator binary via the `UdacityGymEnv_RoadGen.close` method.
+
+### UdacityGymEnv_RoadGen
+
+The file `udacity_utils/envs/udacity_gym_env.py` provides a gmy interface for the udacity simulator
+
+#### UdacityGymEnv_RoadGen.Class
+
+Initializes the gym env
+
+- `seed: int`: Random seed
+- `exe_path: str`: Path to the udacity binary used to simulate the scenario
+
+Additionally, the following steps are performed:
+
+1. `GlobalLog`-class is initialized (line 34)
+2. The `UnityProcess` is initialized and started (line 41-60)
+3. The `UdacitySimController` is initialized (line 62)
+4. The action and observation space are set (line 65-71)
+
+#### UdacityGymEnv_RoadGen.step
+
+Performs an action in the udacity env and returns the observation and info after taking the action
+
+Parameters
+
+- `action: np.ndarray`: Next driving commands. action[0] is the steering angle and action[1] is the throttle value
+
+Returns
+
+- `Tuple[np.ndarray, bool, Dict]`: Returns a tuple of next observation (equal to image of the cars camera), if the scenario is done and environment indo dict.
+
+#### UdacityGymEnv_RoadGen.reset
+
+This method is called to build a new road in the Simualtor Binary via a string of waypoints.
+
+Parameters
+
+- `skip_generation: bool=False`: Boolean value indicating if the track generation should be skipped
+- `track_string: Union[str, None]=None`: String of the waypoints (x,y,z) of the new track sperated by `@`.
+
+Returns
+
+- `np.ndarray`: Observation after the track is reset.
+
+#### DonkeySimMsgHandler.observe
+
+Used to get the current observation from the env.
+
+Returns:
+
+- `Tuple[np.ndarray, bool, Dict]`: Returns a tuple of next observation (equal to image of the cars camera), if the scenario is done and environment indo dict.
+
+#### DonkeySimMsgHandler.close
+
+Closes the environment and quits the `UnityProcess`
+
+### UnityProcess
+
+The file `donkey_exec` contains the class `DonkeyProcess`. This class launches the SDSandbox Simulator Binary in a dedicated process. The launched simualtor binary can then interface with the `SDSandboxSimulator`-class.
+
+#### UnityProcess.class
+
+Util class to launch the simulator in a dedicated subprocess.
+
+#### UnityProcess.start
+
+Starts a process running the Udacity Simualtor.
+
+Parameters:
+
+- `sim_path: str`: Path to the simualtor binary. The binary should be placed in `/examples/udacity/sim/`. On windows, the binary is a `.exe` file, on mac a `.app` file and on linux a `.x86` or `.x86_64` file.
+- `port: int=9091`: The port of the SDSandbox
+
+#### UnityProcess.quit
+
+Kills the process running the Udacity Simualtor.
+
+### UdacitySimController
+
+The `UdacitySimController` class in `examples/udacity/udacity_utils/envs/udacity/core/udacity_sim.py` provides a wrapper for communicating with unity simulation.
+
+It utilizes `socketio` and `flask` to create a client for communication with the Udacity Sim Binary.
+
+## Interface with PerturbationDrive
+
+The `SDSandboxSimulator` can easily be integrated into the `PerturbationDrive` library.
 
 ```Python
+try:
+    simulator = UdacitySimulator(
+        simulator_exe_path="./examples/udacity/udacity_utils/sim/udacity_sim.app",
+        host="127.0.0.1",
+        port=9091,
+    )    
+    ads = ExampleAgent()
+    road_generator = RandomRoadGenerator(num_control_nodes=8)
+    benchmarking_obj = PerturbationDrive(simulator, ads)
+    # start the benchmarking
+    benchmarking_obj.grid_seach(
+        perturbation_functions=["gaussian_noise"],
+        attention_map={},
+        road_generator=road_generator,
+        log_dir="./examples/udacity/logs.json",
+        overwrite_logs=True,
+        image_size=(240, 320),  # images are resized to these values
+    )
+    print(f"{5 * '#'} Finished Running Udacity Sim {5 * '#'}")
+except Exception as e:
+    print(
+        f"{5 * '#'} Udacity Error: Exception type: {type(e).__name__}, \nError message: {e}\nTract {traceback.print_exc()} {5 * '#'} "
+    )
+```
+
+The method `go` in the file `main.py` provides an example on running the SDSandbox Simulator with the `PerturbationDrive.grid_search method`.
+
+## Interface with SDSandBox
+
+The `UdacitySimulator` can easily be intergrated into `OpenSBT` via the wrapper class provieded in `examples/open_sbt`. Please refer to the README.md in `examples/open_sbt` for details on the wrapper class.
+
+```Python
+# Define search problem
 problem = ADASProblem(
     problem_name="UdacityRoadGenerationProblem",
     scenario_path="",
@@ -55,58 +203,21 @@ problem = ADASProblem(
         "perturbation_scale",
         "perturbation_function",
     ],
-    fitness_function=UdacityFitnessFunction(),
-    critical_function=UdacityCriticality(),
-    simulate_function=UdacitySimulator.simulate,
+    fitness_function=FitnessFunction(max_xte=4.0),
+    critical_function=Criticality(),
+    simulate_function=Udacity_OpenSBTWrapper.simulate,
     simulation_time=30,
     sampling_time=0.25,
 )
+log_utils.setup_logging("./log.txt")
+# Set search configuration
+config = DefaultSearchConfiguration()
+config.n_generations = 10
+config.population_size = 2
+# Instantiate search algorithm
+optimizer = NsgaIIOptimizer(problem=problem, config=config)
+# Run search
+res = optimizer.run()
 ```
 
-The fitness function tries to maximize both the average and maximum cross track error to find failure scenarios.
-
-```Python
-class UdacityFitnessFunction(Fitness):
-    @property
-    def min_or_max(self):
-        return "max", "max"
-
-    @property
-    def name(self):
-        return "Average xte", "Max xte"
-
-    def eval(self, simout: SimulationOutput) -> Tuple[float]:
-        traceXTE = [abs(x) for x in simout.otherParams["xte"]]
-
-        return (np.average(traceXTE), max(traceXTE))
-```
-
-We consider a scenario as ciritcal, if the maximum cross track error during the scenario is higher than half of the road width, e.g. the
-car goes off the road during the scenario.
-
-```Python
-from udacity_utils.envs.udacity.config import MAX_CTE_ERROR
-
-class UdacityCriticality(Critical):
-    def eval(self, vector_fitness, simout: SimulationOutput = None):
-        return vector_fitness[1] > MAX_CTE_ERROR
-```
-
-## ADS Selection
-
-Per default we use a pretrained ADS based on the Dave2 architecture. If this model is not present when executing the experiment, the model is downloaded and
-stored in the appropriate folder.
-If you want to use your own model, you need to place it in this folder `./examples/models/` and call it `generatedRoadModel.h5`.
-
-Please notice, that this model will receive an image with the dimensions (1, 240, 320, 3) and the dtype float32 and the model must return an array [[steering_angle, throttle]].
-
-## Trouble Shooting
-
-- If the udacity simulator fails to start, check your available ports. Per default, we use `BASE_PORT = 4567` to connect to the simulator.
-  You can change the port by updating the port in `examples/udacity/udactiy_utils/envs_udacity`.
-
-## Known Issues
-
-- If no road can be generated for the given configuration, we generate a random road. This behavior should be reflected in the SimulationOutput.
-- Currently the perturbation functions have an ordering, i.e. from 1 to 6. This does not make sense, as there is no natural ordering between perturbations.
-- Setup a monitor to view the perturbated images.
+The method `open_sbt` in the file `main.py` provides an example on running the SDSandbox Simulator with Open SBT.

@@ -20,7 +20,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
 # Now you can use absolute imports
-from sdsandbox_perturbations import conf
+from self_driving_sandbox_donkey import conf
 from models import get_nvidia_model
 
 """

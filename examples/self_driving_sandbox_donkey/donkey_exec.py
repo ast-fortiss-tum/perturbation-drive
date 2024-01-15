@@ -3,6 +3,7 @@ import subprocess
 import os
 import platform
 import time
+from perturbationdrive import GlobalLog as Gl
 
 
 class DonkeyProcess(object):
@@ -12,15 +13,21 @@ class DonkeyProcess(object):
 
     def __init__(self) -> None:
         self.process = None
+        self.logger = Gl("DonkeyProcess")
 
-    def start(self, sim_path: str = "./sim/donkey-sim.app", port: int = 9091, headless: bool = False):
+    def start(
+        self,
+        sim_path: str = "./sim/donkey-sim.app",
+        port: int = 9091,
+        headless: bool = False,
+    ):
         """
         :param sim_path: (str) Path to the executable
         :param headless: (bool)
         :param port: (int)
         """
         if not os.path.exists(sim_path):
-            print("{} does not exist".format(sim_path))
+            self.logger.error("{} does not exist".format(sim_path))
             return
 
         cwd = os.getcwd()
@@ -74,9 +81,9 @@ class DonkeyProcess(object):
                 launch_string = candidates[0]
 
         if launch_string is None:
-            print("Launch string is Null")
+            self.logger.critical("Launch string is Null")
         else:
-            print("This is the launch string {}".format(launch_string))
+            self.logger.info("This is the launch string {}".format(launch_string))
 
             # Launch Unity environment
             if headless:
@@ -90,13 +97,13 @@ class DonkeyProcess(object):
                 # hack to wait for the simulator to start
                 time.sleep(20)
 
-        print("donkey subprocess started")
+        self.logger.info("donkey subprocess started")
 
     def quit(self):
         """
         Shutdown donkey environment
         """
         if self.process is not None:
-            print("Closing donkey sim subprocess")
+            self.logger.info("Closing donkey sim subprocess")
             self.process.kill()
             self.process = None

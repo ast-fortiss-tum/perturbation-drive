@@ -1,9 +1,14 @@
 # used modules from perturbation drive
 from numpy import ndarray, uint8
-from perturbationdrive import PerturbationSimulator
-from perturbationdrive.AutomatedDrivingSystem.ADS import ADS
-from perturbationdrive.Simulator.Scenario import Scenario, ScenarioOutcome
-from perturbationdrive.imageperturbations import ImagePerturbation
+from perturbationdrive import (
+    PerturbationSimulator,
+    ADS,
+    Scenario,
+    ScenarioOutcome,
+    ImageCallBack,
+    ImagePerturbation,
+    GlobalLog as Gl,
+)
 
 # used libraries
 from udacity_utils.envs.udacity.udacity_gym_env import UdacityGymEnv_RoadGen
@@ -11,7 +16,6 @@ from typing import Union
 import cv2
 import gym
 import numpy as np
-import pygame
 
 
 class UdacitySimulator(PerturbationSimulator):
@@ -30,6 +34,7 @@ class UdacitySimulator(PerturbationSimulator):
             initial_pos=None,
         )
         self.client: Union[UdacityGymEnv_RoadGen, None] = None
+        self.logger = Gl("UdacitySimulator")
 
     def connect(self):
         super().connect()
@@ -37,6 +42,7 @@ class UdacitySimulator(PerturbationSimulator):
             seed=1,
             exe_path=self.simulator_exe_path,
         )
+        self.logger.info("Connected to Udacity Simulator")
         # set initial pos
         obs, done, info = self.client.observe()
         x, y, z = info["pos"]
@@ -45,108 +51,93 @@ class UdacitySimulator(PerturbationSimulator):
     def simulate_scanario(
         self, agent: ADS, scenario: Scenario, perturbation_controller: ImagePerturbation
     ) -> ScenarioOutcome:
-        waypoints = scenario.waypoints
-        perturbation_function_string = scenario.perturbation_function
-        perturbation_scale = scenario.perturbation_scale
+        try:
+            waypoints = scenario.waypoints
+            perturbation_function_string = scenario.perturbation_function
+            perturbation_scale = scenario.perturbation_scale
 
-        # set up image monitor
-        monitor = ImageCallBack()
+            # set up image monitor
+            monitor = ImageCallBack()
+            monitor.display_waiting_screen()
+            self.logger.info(f"{5 * '-'} Starting udacity scenario {5 * '_'}")
 
-        # set all params for init loop
-        actions = [[0.0, 0.0]]
-        perturbed_image = None
+            # set all params for init loop
+            actions = [[0.0, 0.0]]
+            perturbed_image = None
 
-        # set up params for saving data
-        pos_list = []
-        xte_list = []
-        actions_list = []
-        speed_list = []
-        isSuccess = False
-        done = False
+            # set up params for saving data
+            pos_list = []
+            xte_list = []
+            actions_list = []
+            speed_list = []
+            isSuccess = False
+            done = False
 
-        # reset the scene to match the scenario
-        # Road generatior ir none because we currently do not build random roads
-        obs: ndarray[uint8] = self.client.reset(
-            skip_generation=False, track_string=waypoints
-        )
-
-        # action loop
-        while not done:
-            obs = cv2.resize(obs, (320, 240), cv2.INTER_NEAREST)
-
-            # perturb the image
-            perturbed_image = perturbation_controller.perturbation(
-                obs, perturbation_function_string, perturbation_scale
+            # reset the scene to match the scenario
+            # Road generatior ir none because we currently do not build random roads
+            obs: ndarray[uint8] = self.client.reset(
+                skip_generation=False, track_string=waypoints
             )
 
-            # agent makes a move, the agent also selects the dtype and adds a batch dimension
-            actions = agent.action(perturbed_image)
+            # action loop
+            while not done:
+                obs = cv2.resize(obs, (320, 240), cv2.INTER_NEAREST)
 
-            # clip action to avoid out of bound errors
-            if isinstance(self.client.action_space, gym.spaces.Box):
-                actions = np.clip(
-                    actions, self.client.action_space.low, self.client.action_space.high
+                # perturb the image
+                perturbed_image = perturbation_controller.perturbation(
+                    obs, perturbation_function_string, perturbation_scale
                 )
 
-            monitor.display_img(
-                perturbed_image,
-                actions[0][0],
-                actions[0][1],
-                perturbation_function_string,
+                # agent makes a move, the agent also selects the dtype and adds a batch dimension
+                actions = agent.action(perturbed_image)
+
+                # clip action to avoid out of bound errors
+                if isinstance(self.client.action_space, gym.spaces.Box):
+                    actions = np.clip(
+                        actions,
+                        self.client.action_space.low,
+                        self.client.action_space.high,
+                    )
+
+                monitor.display_img(
+                    perturbed_image,
+                    f"{actions[0][0]}",
+                    f"{actions[0][1]}",
+                    perturbation_function_string,
+                )
+                # obs is the image, info contains the road and the position of the car
+                obs, done, info = self.client.step(actions)
+
+                # log new info
+                pos_list.append(info["pos"])
+                xte_list.append(info["cte"])
+                speed_list.append(info["speed"])
+                actions_list.append(actions)
+
+            # determine if we were successful
+            isSuccess = max([abs(xte) for xte in xte_list]) < self.max_xte
+            self.logger.info(
+                f"{5 * '-'} Finished udacity scenario: {isSuccess} {5 * '_'}"
             )
-            # obs is the image, info contains the road and the position of the car
-            obs, done, info = self.client.step(actions)
+            monitor.display_disconnect_screen()
 
-            # log new info
-            pos_list.append(info["pos"])
-            xte_list.append(info["cte"])
-            speed_list.append(info["speed"])
-            actions_list.append(actions)
-
-        # determine if we were successful
-        isSuccess = max([abs(xte) for xte in xte_list]) < self.max_xte
-        print(f"{5 * '-'} Finished udacity scenario: {isSuccess} {5 * '_'}")
-        # reset for the new track
-        _ = self.client.reset(skip_generation=False, track_string=waypoints)
-        # return the scenario output
-        return ScenarioOutcome(
-            frames=[x for x in range(len(pos_list))],
-            pos=pos_list,
-            xte=xte_list,
-            speeds=speed_list,
-            actions=actions_list,
-            scenario=scenario,
-            isSuccess=isSuccess,
-        )
+            # reset for the new track
+            _ = self.client.reset(skip_generation=False, track_string=waypoints)
+            # return the scenario output
+            return ScenarioOutcome(
+                frames=[x for x in range(len(pos_list))],
+                pos=pos_list,
+                xte=xte_list,
+                speeds=speed_list,
+                actions=actions_list,
+                scenario=scenario,
+                isSuccess=isSuccess,
+            )
+        except Exception as e:
+            # close the simulator
+            self.tear_down()
+            # throw the exception
+            raise e
 
     def tear_down(self):
         self.client.close()
-
-
-class ImageCallBack:
-    def __init__(self):
-        pygame.init()
-        ch, row, col = 3, 240, 320
-
-        size = (col * 2, row * 2)
-        pygame.display.set_caption("udacity sim image monitor")
-        self.screen = pygame.display.set_mode(size, pygame.DOUBLEBUF)
-        self.camera_surface = pygame.surface.Surface((col, row), 0, 24).convert()
-        self.myfont = pygame.font.SysFont("monospace", 15)
-
-    def screen_print(self, x, y, msg, screen):
-        label = self.myfont.render(msg, 1, (255, 255, 0))
-        screen.blit(label, (x, y))
-
-    def display_img(self, img, steering, throttle, perturbation):
-        # swap image axis
-        img = img.swapaxes(0, 1)
-        # draw frame
-        pygame.surfarray.blit_array(self.camera_surface, img)
-        camera_surface_2x = pygame.transform.scale2x(self.camera_surface)
-        self.screen.blit(camera_surface_2x, (0, 0))
-        # steering and throttle value
-        self.screen_print(10, 10, "NN(steering): " + str(steering), self.screen)
-        self.screen_print(10, 25, "NN(throttle): " + str(throttle), self.screen)
-        self.screen_print(10, 40, "Perturbation: " + perturbation, self.screen)
-        pygame.display.flip()

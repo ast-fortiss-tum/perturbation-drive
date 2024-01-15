@@ -33,25 +33,21 @@ class CustomRoadGenerator(RoadGenerator):
 
     def __init__(
         self,
-        map_size: int,
         num_control_nodes=8,
         max_angle=90,
         seg_length=25,
         num_spline_nodes=20,
         initial_node=(0.0, 0.0, 0.0, 0.0),
-        bbox_size=(0, 0, 250, 250),
     ):
         assert num_control_nodes > 1 and num_spline_nodes > 0
         assert 0 <= max_angle <= 360
         assert seg_length > 0
-        assert len(initial_node) == 4 and len(bbox_size) == 4
-        self.map_size = map_size
+        assert len(initial_node) == 4
         self.num_control_nodes = num_control_nodes
         self.num_spline_nodes = num_spline_nodes
         self.initial_node = initial_node
         self.max_angle = max_angle
         self.seg_length = seg_length
-        self.road_bbox = RoadBoundingBox(bbox_size=bbox_size)
         self.road_to_generate = None
 
         self.previous_road: Road = None
@@ -106,9 +102,7 @@ class CustomRoadGenerator(RoadGenerator):
     def is_valid(self, control_nodes, sample_nodes):
         return RoadPolygon.from_nodes(
             sample_nodes
-        ).is_valid() and self.road_bbox.contains(
-            RoadPolygon.from_nodes(control_nodes[1:-1])
-        )
+        ).is_valid()
 
     def generate(self, *args, **kwargs) -> str:
         """
@@ -169,9 +163,9 @@ class CustomRoadGenerator(RoadGenerator):
         start_angle = int(np.degrees(np.arctan2(v[1], v[0])))
         if angle > start_angle + max_angle or angle < start_angle - max_angle:
             print(
-                f"{5 * '+'} Warning {angle} is not in range of {start_angle - max_angle} and {start_angle + max_angle}. Selecting random angle now {5 * '+'}"
+                f"{5 * '+'} Warning {angle} is not in range of {start_angle - max_angle} and {start_angle + max_angle}. {5 * '+'}"
             )
-            angle = randint(start_angle - max_angle, start_angle + max_angle)
+            # angle = randint(start_angle - max_angle, start_angle + max_angle)
         x0, y0, z0, width0 = second_node
         if seg_length is None:
             seg_length = self.seg_length

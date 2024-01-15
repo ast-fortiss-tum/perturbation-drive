@@ -5,19 +5,15 @@ from evaluation.critical import *
 from algorithm.nsga2_optimizer import NsgaIIOptimizer
 from experiment.search_configuration import DefaultSearchConfiguration
 
-# imports
 from utils import log_utils
-from typing import Dict, List, Any, Union
 import argparse
+from typing import List, Dict, Any, Union
 import traceback
 
-# other example modules
+from sdsandbox_simulator import SDSandboxSimulator
 from examples.models.example_agent import ExampleAgent
-
-# Related to example
-from examples.udacity.udacity_simulator import UdacitySimulator
 from examples.open_sbt.criticality import FitnessFunction, Criticality
-from examples.open_sbt.udacity_open_sbt import Udacity_OpenSBTWrapper
+from examples.open_sbt.sdsandbox_open_sbt import SDSandBox_OpenSBTWrapper
 
 # related to perturbation drive
 from perturbationdrive import (
@@ -46,8 +42,8 @@ def open_sbt():
             "perturbation_function",
         ],
         fitness_function=FitnessFunction(max_xte=4.0),
-        critical_function=Criticality(max_xte=4.0),
-        simulate_function=Udacity_OpenSBTWrapper.simulate,
+        critical_function=Criticality(),
+        simulate_function=SDSandBox_OpenSBTWrapper.simulate,
         simulation_time=30,
         sampling_time=0.25,
     )
@@ -57,7 +53,7 @@ def open_sbt():
     # Set search configuration
     config = DefaultSearchConfiguration()
     config.n_generations = 10
-    config.population_size = 20
+    config.population_size = 2
 
     # Instantiate search algorithm
     optimizer = NsgaIIOptimizer(problem=problem, config=config)
@@ -66,21 +62,19 @@ def open_sbt():
     res = optimizer.run()
 
     # Write results. This currently does not work
-    # res.write_results(params=optimizer.parameters)
+    # res.write_results()
 
 
 def go(
-    simulator_exe_path: str,
     host: str,
     port: int,
     pert_funcs: List[str] = [],
     attention: Dict[str, Any] = {},
+    simulator_exe_path: str = "./sim/donkey-sim.app",
 ):
     try:
-        simulator = UdacitySimulator(
-            simulator_exe_path=simulator_exe_path,
-            host=host,
-            port=port,
+        simulator = SDSandboxSimulator(
+            simulator_exe_path=simulator_exe_path, host=host, port=port
         )
         ads = ExampleAgent()
         road_generator = RandomRoadGenerator(num_control_nodes=8)
@@ -91,42 +85,11 @@ def go(
             perturbation_functions=pert_funcs,
             attention_map=attention,
             road_generator=road_generator,
-            log_dir="./examples/udacity/logs.json",
+            log_dir="./examples/self_driving_sandbox_donkey/logs.json",
             overwrite_logs=True,
             image_size=(240, 320),  # images are resized to these values
         )
-        print(f"{5 * '#'} Finished Running Udacity Sim {5 * '#'}")
-    except Exception as e:
-        print(
-            f"{5 * '#'} SDSandBox Error: Exception type: {type(e).__name__}, \nError message: {e}\nTract {traceback.print_exc()} {5 * '#'} "
-        )
-
-
-def offline(
-    simulator_exe_path: str,
-    host: str,
-    port: int,
-    data_set_path: str,
-    pert_funcs: List[str] = [],
-    attention: Dict[str, Any] = {},
-):
-    try:
-        simulator = UdacitySimulator(
-            simulator_exe_path=simulator_exe_path,
-            host=host,
-            port=port,
-        )
-        ads = ExampleAgent()
-        benchmarking_obj = PerturbationDrive(simulator, ads)
-
-        benchmarking_obj.offline_perturbation(
-            dataset_path=data_set_path,
-            perturbation_functions=pert_funcs,
-            attention_map=attention,
-            log_dir="./examples/udacity/offlone_logs.json",
-            overwrite_logs=True,
-            image_size=(240, 320),
-        )
+        print(f"{5 * '#'} Finished Running SDSandBox Sim {5 * '#'}")
     except Exception as e:
         print(
             f"{5 * '#'} SDSandBox Error: Exception type: {type(e).__name__}, \nError message: {e}\nTract {traceback.print_exc()} {5 * '#'} "
@@ -134,13 +97,8 @@ def offline(
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Udacity Example")
-    parser.add_argument(
-        "--sim_exe",
-        type=str,
-        default="./examples/udacity/udacity_utils/sim/udacity_sim.app",
-        help="sim executable path",
-    )
+    parser = argparse.ArgumentParser(description="SDSandBox Example")
+
     parser.add_argument("--host", type=str, default="127.0.0.1", help="server sim host")
     parser.add_argument("--port", type=int, default=9091, help="bind to port")
     parser.add_argument(
@@ -151,6 +109,12 @@ if __name__ == "__main__":
         default=[],
         help="perturbations to use on the model. by default all are used",
     )
+    parser.add_argument(
+        "--sim_exe",
+        type=str,
+        default="./examples/self_driving_sandbox_donkey/sim/donkey-sim.app",
+        help="sim executable path",
+    )    
     parser.add_argument(
         "--attention_map", type=str, default="", help="which attention map to use"
     )
@@ -173,24 +137,17 @@ if __name__ == "__main__":
         if args.attention_map == ""
         else {
             "map": args.attention_map,
+            "threshold": args.attention_threshold,
             "layer": args.attention_layer,
         }
     )
 
-    print(f"{5 * '#'} Started Running Udacity Sim {5 * '#'}")
+    print(f"{5 * '#'} Started Running SDSandBox Sim {5 * '#'}")
     go(
-        simulator_exe_path=args.sim_exe,
-        host=args.host,
-        port=args.port,
-        pert_funcs=args.perturbation,
-        attention=attention,
+       host=args.host,
+       port=args.port,
+       pert_funcs=args.perturbation,
+       attention=attention,
+      simulator_exe_path=args.sim_exe,
     )
     open_sbt()
-    # offline(
-    #    simulator_exe_path=args.sim_exe,
-    #    host=args.host,
-    #    port=args.port,
-    #    data_set_path="../../../../Desktop/generatedRoadDataset/",
-    #    pert_funcs=args.perturbation,
-    #    attention=attention,
-    # )
