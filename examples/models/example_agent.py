@@ -16,13 +16,12 @@ class ExampleAgent(ADS):
 
     def __init__(self):
         if not (
-            os.path.exists("./examples/models/donkeyUdacityModel.h5")
-            and os.path.isfile("./examples/models/donkeyUdacityModel.h5")
+            os.path.exists("./examples/models/generated_dave_60k_v6.h5")
+            and os.path.isfile("./examples/models/generated_dave_60k_v6.h5")
         ):
             print(f"{5 * '+'} Warning: ADS file does not exists {5 * '+'}")
-        self.model = load_model(
-            "./examples/models/donkeyUdacityModel.h5", compile=False
-        )
+        self.model = load_model("./examples/models/generated_dave_60k_v6.h5", compile=False)
+        print(f"Using model: generated_dave_60k_v6")
         self.model.compile(loss="sgd", metrics=["mse"])
 
     def action(self, input: ndarray[Any, dtype[uint8]]) -> List:
@@ -34,4 +33,8 @@ class ExampleAgent(ADS):
         img_arr = np.asarray(input, dtype=np.float32)
         # add batch dimension
         img_arr = img_arr.reshape((1,) + img_arr.shape)
-        return self.model(img_arr, training=False)
+        actions = self.model(img_arr, training=False)
+        # deep copy action
+        # actions = actions.numpy().tolist()
+        # actions[0][0] = 0.1
+        return actions

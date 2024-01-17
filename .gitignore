@@ -252,3 +252,4 @@ temp.txt
 
 # internal dataset file
 examples/models/main.py
+generate_test_image.py
