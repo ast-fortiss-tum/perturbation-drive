@@ -27,8 +27,8 @@ def open_sbt():
     problem = ADASProblem(
         problem_name="UdacityRoadGenerationProblem",
         scenario_path="",
-        xl=[-10, -10, -10, -10, -10, -10, -10, -10, 0, 1],
-        xu=[10, 10, 10, 10, 10, 10, 10, 10, 4, 6],
+        xl=[-20, -20, -20, -20, -20, -20, -20, -20, 0, 1],
+        xu=[20, 20, 20, 20, 20, 20, 20, 20, 4, 6],
         simulation_variables=[
             "angle1",
             "angle2",
@@ -143,11 +143,11 @@ if __name__ == "__main__":
     )
 
     print(f"{5 * '#'} Started Running SDSandBox Sim {5 * '#'}")
-    go(
-       host=args.host,
-       port=args.port,
-       pert_funcs=args.perturbation,
-       attention=attention,
-      simulator_exe_path=args.sim_exe,
-    )
+    #go(
+    #   host=args.host,
+    #   port=args.port,
+    #   pert_funcs=args.perturbation,
+    #   attention=attention,
+    #  simulator_exe_path=args.sim_exe,
+    #)
     open_sbt()

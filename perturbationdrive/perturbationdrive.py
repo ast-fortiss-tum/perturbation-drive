@@ -205,7 +205,7 @@ class PerturbationDrive:
             # get the perturbation function for the scenario
             perturbation = perturbations[index]
             print(
-                f"{5 * '-'} Running Scenario: Perturbation {perturbation} on {scale} with road {waypoints} {5 * '-'}"
+                f"{5 * '-'} Running Scenario: Perturbation {perturbation} on {scale} {5 * '-'}"
             )
             scenario = Scenario(
                 waypoints=waypoints,
@@ -260,7 +260,6 @@ class PerturbationDrive:
         outcomes: List[ScenarioOutcome] = []
         # iterate over all scenarios
         for scenario in scenarios:
-            print(f"Controller: Runnung {scenario}")
             outcome = self.simulator.simulate_scanario(
                 self.ads, scenario=scenario, perturbation_controller=iamge_perturbation
             )

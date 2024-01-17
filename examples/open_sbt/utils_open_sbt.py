@@ -17,25 +17,22 @@ def individualToScenario(
     road_generator: CustomRoadGenerator,
     starting_pos: Tuple[float, float, float],
 ) -> Scenario:
-    instance_values = [v for v in zip(variable_names, individual)]
     angles: List[str] = []
     perturbation_scale: int = 0
     perturbation_function_int: int = 1
     perturbation_function: str = ""
     seg_lengths: List[str] = []
-    for i in range(0, len(instance_values) + 1):
+    for variables_name, value in zip(variable_names, individual):
         # Check if the current item is the perturbation scale
-        if instance_values[i][0].startswith("perturbation_scale"):
-            perturbation_scale = int(instance_values[i][1])
-            break
-        elif instance_values[i][0].startswith("perturbation_function"):
-            perturbation_function_int = int(instance_values[i][1])
-            break
-        elif instance_values[i][0].startswith("angle"):
-            new_angle = int(instance_values[i][1])
+        if variables_name == "perturbation_scale":
+            perturbation_scale = int(value)
+        elif variables_name == "perturbation_function":
+            perturbation_function_int = int(value)
+        elif variables_name.startswith("angle"):
+            new_angle = int(value)
             angles.append(new_angle)
-        elif instance_values[i][0].startswith("seg_length"):
-            seg_length = int(instance_values[i][1])
+        elif variables_name.startswith("seg_length"):
+            seg_length = int(value)
             seg_lengths.append(seg_length)
 
     # generate the road string from the configuration
@@ -45,8 +42,11 @@ def individualToScenario(
     )
     # map the function
     amount_keys = len(list(FUNCTION_MAPPING.keys()))
-    if perturbation_function_int > 0 and perturbation_function_int <= amount_keys:
+    if perturbation_function_int > 0 and perturbation_function_int <= 6:
         perturbation_function = FUNCTION_MAPPING[perturbation_function_int]
+        print(
+            f"IndividualToScenario: Function is {FUNCTION_MAPPING[perturbation_function_int]}/{perturbation_function}"
+        )
     else:
         perturbation_function = FUNCTION_MAPPING[1]
         print(
@@ -54,11 +54,12 @@ def individualToScenario(
         )
 
     # return the scenario
-    return Scenario(
+    scenario = Scenario(
         waypoints=road_str,
         perturbation_function=perturbation_function,
         perturbation_scale=perturbation_scale,
     )
+    return scenario
 
 
 def calculate_velocities(

@@ -16,12 +16,12 @@ class ExampleAgent(ADS):
 
     def __init__(self):
         if not (
-            os.path.exists("./examples/models/generated_dave_60k_v6.h5")
-            and os.path.isfile("./examples/models/generated_dave_60k_v6.h5")
+            os.path.exists("./examples/models/generated_dave_v5.h5")
+            and os.path.isfile("./examples/models/generated_dave_v5.h5")
         ):
             print(f"{5 * '+'} Warning: ADS file does not exists {5 * '+'}")
-        self.model = load_model("./examples/models/generated_dave_60k_v6.h5", compile=False)
-        print(f"Using model: generated_dave_60k_v6")
+        self.model = load_model("./examples/models/generated_dave_v5.h5", compile=False)
+        print(f"Using model: generated_dave_v5")
         self.model.compile(loss="sgd", metrics=["mse"])
 
     def action(self, input: ndarray[Any, dtype[uint8]]) -> List:

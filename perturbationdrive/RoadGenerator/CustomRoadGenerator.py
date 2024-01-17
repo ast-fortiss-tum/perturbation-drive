@@ -87,7 +87,7 @@ class CustomRoadGenerator(RoadGenerator):
                     nodes[-2],
                     nodes[-1],
                     angles[i_valid],
-                    self._get_next_max_angle(i_valid),
+                    self.max_angle,
                     seg_length,
                 )
             )
@@ -161,6 +161,7 @@ class CustomRoadGenerator(RoadGenerator):
     ) -> Tuple[float, float, float, float]:
         v = np.subtract(second_node, first_node)
         start_angle = int(np.degrees(np.arctan2(v[1], v[0])))
+        angle = start_angle + angle
         if angle > start_angle + max_angle or angle < start_angle - max_angle:
             print(
                 f"{5 * '+'} Warning {angle} is not in range of {start_angle - max_angle} and {start_angle + max_angle}. {5 * '+'}"

@@ -129,7 +129,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             "pos_y": data["pos_z"],
             "pos_z": data["pos_y"],
             "speed": data["speed"],
-            "done": False,  # TODO: This needs to be send by the simulator
+            "done": data["done"],
             "image": image,
         }
 

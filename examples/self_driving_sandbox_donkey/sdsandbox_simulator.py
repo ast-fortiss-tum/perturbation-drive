@@ -81,14 +81,14 @@ class SDSandboxSimulator(PerturbationSimulator):
 
             # reset the scene to match the scenario
             self.client.msg_handler.reset_scenario(waypoints)
-            self.logger.info(f"Reset the scenario {scenario}")
+            self.logger.info(f"Reset the scenario")
             time.sleep(2.0)
 
             # run the scenario
             while self._client_connected(self.client):
                 try:
                     # TODO: Play around with this value
-                    time.sleep(0.02)
+                    time.sleep(0.01)
                     # we provide the actions and perturbed image here
                     obs: Dict[str, Any] = self.client.msg_handler.update(
                         actions, perturbed_image, perturbation_function_string
@@ -98,7 +98,7 @@ class SDSandboxSimulator(PerturbationSimulator):
                         isSuccess = True
                         self.logger.info("SDSandBox: Done")
                         break
-                    elif obs["xte"] > self.max_xte:
+                    elif abs(obs["xte"]) > self.max_xte:
                         break
 
                     # perturb the image
@@ -122,7 +122,9 @@ class SDSandboxSimulator(PerturbationSimulator):
                     )
                     self.client.stop()
                     raise KeyboardInterrupt
-
+            print("SDSandBox: Finished scenario")
+            # break
+            self.client.msg_handler.update([[0.0, 0.0]], None)
             # send reset to sim client
             self.client.msg_handler.reset_car()
 
