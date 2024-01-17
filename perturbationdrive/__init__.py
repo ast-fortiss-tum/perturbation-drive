@@ -38,7 +38,6 @@ from perturbationdrive.perturbationfuncs import (
     white_balance_filter,
     sharpen_filter,
     grayscale_filter,
-    invert_filter,
     posterize_filter,
     cutout_filter,
     sample_pairing_filter,

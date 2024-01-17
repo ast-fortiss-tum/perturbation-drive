@@ -25,7 +25,7 @@ def gaussian_noise(scale, img):
 
     Returns: numpy array
     """
-    factor = [0.06, 0.12, 0.22, 0.30, 0.42][scale]
+    factor = [0.03, 0.06, 0.12, 0.18, 0.22][scale]
     # scale to a number between 0 and 1
     x = np.array(img, dtype=np.float32) / 255.0
     # add random between 0 and 1
@@ -47,7 +47,7 @@ def poisson_noise(scale, img):
 
     Returns: numpy array: Image with salt and pepper noise.
     """
-    factor = [80, 30, 10, 5, 2][scale]
+    factor = [120, 105, 87, 55, 30][scale]
     x = np.array(img) / 255.0
     return np.clip(np.random.poisson(x * factor) / float(factor), 0, 1) * 255
 
@@ -62,7 +62,7 @@ def impulse_noise(scale, img):
 
     Returns: numpy array: Image with salt and pepper noise.
     """
-    factor = [0.02, 0.08, 0.10, 0.19, 0.30][scale]
+    factor = [0.01, 0.02, 0.04, 0.065, 0.10][scale]
     # Number of salt noise pixels
     num_salt = np.ceil(factor * img.size * 0.5)
     # Add salt noise
@@ -149,10 +149,10 @@ def zoom_blur(scale, img):
     Returns: numpy array:
     """
     c = [
+        np.arange(1, 1.01, 0.01),
         np.arange(1, 1.11, 0.01),
-        np.arange(1, 1.16, 0.01),
+        np.arange(1, 1.15, 0.02),
         np.arange(1, 1.21, 0.02),
-        np.arange(1, 1.26, 0.02),
         np.arange(1, 1.31, 0.03),
     ][scale]
     img = (np.array(img) / 255.0).astype(np.float32)
@@ -240,7 +240,7 @@ def pixelate(scale, img):
 
     Returns: numpy array:
     """
-    factor = [0.85, 0.75, 0.55, 0.35, 0.2][scale]
+    factor = [0.85, 0.55, 0.35, 0.2, 0.1][scale]
     h, w = img.shape[:2]
     img = cv2.resize(img, (int(w * factor), int(h * factor)), cv2.INTER_AREA)
     return cv2.resize(img, (w, h), cv2.INTER_NEAREST)
@@ -280,7 +280,7 @@ def shear_image(scale, image):
 
     Returns: numpy array:
     """
-    shear_factor = [-0.3, -0.15, 0.01, 0.15, 0.3][scale]
+    shear_factor = [0.12, 0.2, 0.32, 0.45, 0.6][scale]
     # Load the image
     if image is None:
         raise ValueError("Image not found at the given path.")
@@ -305,7 +305,7 @@ def translate_image(scale, image):
 
     Returns: numpy array:
     """
-    tx, ty = [(-50, 50), (-25, 25), (-0.01, 0.01), (25, -25), (50, -50)][scale]
+    tx, ty = [(-0.1, 0.1), (25, -25), (40, -40), (65, -65), (90, -90)][scale]
     # Load the image
     if image is None:
         raise ValueError("Image not found at the given path.")
@@ -329,7 +329,7 @@ def scale_image(scale, image):
 
     Returns: numpy array:
     """
-    scale_factor = [0.5, 0.75, 0.99, 1.25, 2][scale]
+    scale_factor = [0.96, 0.9, 0.8, 0.68, 0.5][scale]
     rows, cols, _ = image.shape
 
     # Resize the image
@@ -372,7 +372,7 @@ def rotate_image(scale, image):
 
     Returns: numpy array:
     """
-    angle = [-45, -20, 0.01, 20, 45][scale]
+    angle = [10, 20, 45, 90, 180][scale]
     rows, cols, _ = image.shape
     center = (cols / 2, rows / 2)
 
@@ -395,13 +395,13 @@ def fog_mapping(scale, image):
 
     Returns: numpy array:
     """
-    severity = [0.1, 0, 2, 0.3, 0.4, 0.5][scale]
+    severity = [0.05, 0.12, 0.22, 0.35, 0.6][scale]
     rows, cols, _ = image.shape
     # Determine size for diamond-square algorithm (closest power of 2 plus 1)
     size = 2 ** int(np.ceil(np.log2(max(rows, cols)))) + 1
 
     # Generate fog pattern
-    fog_pattern = diamond_square(size, severity)
+    fog_pattern = diamond_square(size, 0.6)
     # Resize fog pattern to image size and normalize to [0, 255]
     fog_pattern_resized = cv2.resize(fog_pattern, (cols, rows))
     fog_pattern_resized = (
@@ -497,7 +497,7 @@ def zigzag_mapping(scale, image):
 
     Returns: numpy array:
     """
-    severity = [0.1, 0.2, 0.3, 0.4, 0.5][scale]
+    severity = [0.1, 0.2, 0.3, 0.4, 0.6][scale]
 
     rows, cols, _ = image.shape
 
@@ -537,7 +537,7 @@ def canny_edges_mapping(scale, image):
 
     Returns: numpy array:
     """
-    severity = [0.1, 0.2, 0.3, 0.4, 0.5][scale]
+    severity = [0.01, 0.1, 0.25, 0.4, 0.7][scale]
     edge_color = (255, 0, 0)
 
     # Convert the image to grayscale for edge detection
@@ -568,7 +568,7 @@ def speckle_noise_filter(scale, image):
 
     Returns: numpy array:
     """
-    severity = [0.1, 0.2, 0.3, 0.4, 0.5][scale]
+    severity = [0.02, 0.05, 0.09, 0.14, 0.2][scale]
 
     rows, cols, _ = image.shape
     # Generate noise pattern
@@ -634,26 +634,17 @@ def high_pass_filter(scale, image):
 
     Returns: numpy array:
     """
-    kernel_size = [233, 75, 63, 49, 15][scale]
-    # Convert the image to HSV color space
-    hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    kernel_size = [35, 59, 83, 107, 113][scale]
 
-    # Split the channels
-    H, S, V = cv2.split(hsv_image)
+    image_float32 = np.float32(image)
+    # Blur the image to get the low frequency components
+    low_freq = cv2.GaussianBlur(image_float32, (kernel_size, kernel_size), 0)
 
-    # Apply Gaussian blur to the V channel (value/brightness)
-    blurred_V = cv2.GaussianBlur(V, (int(kernel_size), int(kernel_size)), 0)
+    high_freq = image_float32 - low_freq
+    sharpened = image_float32 + high_freq
 
-    # Subtract the blurred V channel from the original to get the high-pass filtered result
-    high_pass_V = cv2.subtract(V, blurred_V)
-
-    # Merge the high-pass filtered V channel with the original H and S channels
-    merged_hsv = cv2.merge([H, S, high_pass_V])
-
-    # Convert back to RGB color space
-    high_pass_rgb = cv2.cvtColor(merged_hsv, cv2.COLOR_HSV2RGB)
-
-    return high_pass_rgb
+    sharpened = np.clip(sharpened, 0, 255).astype("uint8")
+    return sharpened
 
 
 def low_pass_filter(scale, image):
@@ -667,7 +658,7 @@ def low_pass_filter(scale, image):
     Returns: numpy array:
     """
 
-    kernel_size = [15, 40, 63, 75, 113][scale]
+    kernel_size = [15, 23, 30, 36, 40][scale]
 
     # Convert the image to HSV color space
     hsv_image = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
@@ -809,14 +800,15 @@ def sharpen_filter(scale, image):
 
     Returns: numpy array:
     """
-    severity = [1.15, 1.2, 1.25, 1.5, 2.0][scale]
+    severity = [1, 2, 3, 4, 5][scale]
+    weight = [0.9, 0.8, 0.7, 0.6, 0.5][scale]
 
     # Base sharpening kernel
-    kernel = np.array([[-1, -1, -1], [-1, 8, -1], [-1, -1, -1]])
-    kernel[1, 1] = 8 * severity
+    kernel = np.array([[-1, -1, -1], [-1, 8 + severity, -1], [-1, -1, -1]])
 
     # Convolve the image with the sharpening kernel
-    return cv2.filter2D(image, -1, kernel)
+    sharpened = cv2.filter2D(image, -1, kernel)
+    return cv2.addWeighted(image, weight, sharpened, 1 - weight, 0)
 
 
 def grayscale_filter(scale, image):
@@ -841,29 +833,6 @@ def grayscale_filter(scale, image):
     )
 
     return grayed_img
-
-
-def invert_filter(scale, image):
-    """
-    Applies a invert filter, inverting each color channel seperately
-
-    Parameters:
-        - img (numpy array): The input image.
-        - scale int: The severity of the perturbation on a scale from 0 to 4
-
-    Returns: numpy array:
-    """
-    inverted = cv2.bitwise_not(image)
-    original_weight, inverted_weight = [
-        (0.9, 0.1),
-        (0.7, 0.3),
-        (0.4, 0.6),
-        (0.3, 0.7),
-        (0.0, 1.0),
-    ][scale]
-    blended = cv2.addWeighted(image, original_weight, inverted, inverted_weight, 0)
-
-    return blended
 
 
 def posterize_filter(scale, image):
@@ -965,7 +934,7 @@ def gaussian_blur(scale, image):
     Returns: numpy array:
     """
 
-    kernel_size = [(3, 3), (5, 5), (7, 7), (9, 9), (11, 11)][scale]
+    kernel_size = [(3, 3), (7, 7), (15, 15), (25, 25), (41, 41)][scale]
 
     # Apply Gaussian Blur
     blurred = cv2.GaussianBlur(image, kernel_size, 0)
@@ -1058,7 +1027,7 @@ def frost_filter(scale, image):
 
     Returns: numpy array:
     """
-    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
+    intensity = [0.15, 0.19, 0.25, 0.32, 0.4][scale]
     frost_image_path = "./perturbationdrive/OverlayImages/frostImg.png"
     # Load the frost overlay image
     frost_overlay = cv2.imread(frost_image_path, cv2.IMREAD_UNCHANGED)
@@ -1092,7 +1061,7 @@ def snow_filter(scale, image):
 
     Returns: numpy array:
     """
-    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
+    intensity = [0.15, 0.22, 0.3, 0.45, 0.6][scale]
     frost_image_path = "./perturbationdrive/OverlayImages/snow.png"
     # Load the frost overlay image
     frost_overlay = cv2.imread(frost_image_path, cv2.IMREAD_UNCHANGED)

@@ -55,7 +55,6 @@ Each perturbation needs an input image and the scale of the perturbation as inpu
 | white_balance_filter    | Globally adjusts the intensity of image colors to render white surfaces correctly     |
 | sharpen_filter          | Enhances local regions and removes blurring by using the sharpen kernel      |
 | grayscale_filter        | Converts all colors to gray tones     |
-| invert_filter           | Inverts all color channels of the image separately     |
 | posterize_filter        | Reduces the number of distinct colors while maintaining essential image features by quantization of color channels     |
 | cutout_filter           | Inserts random black rectangular shapes over the image     |
 | sample_pairing_filter   | Randomly samples two regions of the image together. The sampled regions are blended together with a varying alpha value     |
