@@ -56,7 +56,7 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_smoke_filter,
     perturb_high_attention_regions,
 )
-from perturbationdrive.road_generator import RoadGenerator
+from perturbationdrive.RoadGenerator.RoadGenerator import RoadGenerator
 from .utils.data_utils import CircularBuffer
 from .utils.logger import CSVLogHandler
 from .utils.timeout import timeout_func

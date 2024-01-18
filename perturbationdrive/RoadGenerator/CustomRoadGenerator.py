@@ -82,6 +82,7 @@ class CustomRoadGenerator(RoadGenerator):
             seg_length = self.seg_length
             if seg_lengths is not None and i_valid < len(seg_lengths):
                 seg_length = seg_lengths[i_valid]
+                print(f"custom seg length {seg_length}")
             nodes.append(
                 self._get_next_node(
                     nodes[-2],
@@ -100,9 +101,7 @@ class CustomRoadGenerator(RoadGenerator):
         return nodes
 
     def is_valid(self, control_nodes, sample_nodes):
-        return RoadPolygon.from_nodes(
-            sample_nodes
-        ).is_valid()
+        return RoadPolygon.from_nodes(sample_nodes).is_valid()
 
     def generate(self, *args, **kwargs) -> str:
         """
@@ -120,6 +119,7 @@ class CustomRoadGenerator(RoadGenerator):
         seg_lengths = None
         if "seg_lengths" in kwargs:
             seg_lengths = kwargs["seg_lengths"]
+            print("Segment lengths are {}".format(seg_lengths))
 
         control_nodes = self.generate_control_nodes(
             starting_pos=kwargs["starting_pos"],

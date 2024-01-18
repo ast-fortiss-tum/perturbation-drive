@@ -39,7 +39,10 @@ class SDSandBox_OpenSBTWrapper(Simulator):
         )
         ads = ExampleAgent()
         benchmarking_obj = PerturbationDrive(simulator, ads)
-        road_generator = CustomRoadGenerator()
+
+        # extract the amount of angles from the variable names
+        amount_angles = len([x for x in variable_names if x.startswith("angle")])
+        road_generator = CustomRoadGenerator(num_control_nodes=amount_angles)
 
         # we need to set the sim here up to get the starting position
         benchmarking_obj.simulator.connect()

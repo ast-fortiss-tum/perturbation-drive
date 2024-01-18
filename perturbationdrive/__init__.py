@@ -2,7 +2,7 @@ from perturbationdrive.imageperturbations import (
     ImagePerturbation,
 )
 
-from perturbationdrive.road_generator import (
+from perturbationdrive.RoadGenerator import (
     RoadGenerator,
 )
 

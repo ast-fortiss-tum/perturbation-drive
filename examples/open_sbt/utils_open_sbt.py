@@ -2,13 +2,23 @@
 from model_ga.individual import Individual
 
 import numpy as np
-from typing import List, Union, Tuple
+from typing import List, Union, Tuple, Dict, Any
+import json
 
 # related to perturbation drive
 from perturbationdrive import (
     Scenario,
     CustomRoadGenerator,
 )
+
+
+def _load_config() -> Dict[str, Any]:
+    """
+    Load the perturbation_config.json file and return it as a dictionary
+    """
+    with open("./examples/open_sbt/perturbation_config.json") as json_file:
+        data = json.load(json_file)
+    return data
 
 
 def individualToScenario(
@@ -40,17 +50,19 @@ def individualToScenario(
     road_str: str = road_generator.generate(
         starting_pos=starting_pos, angles=angles, seg_lengths=seg_lengths
     )
+    # load function mapping from perturbation_config.json
+    function_mapping = _load_config()
     # map the function
-    amount_keys = len(list(FUNCTION_MAPPING.keys()))
-    if perturbation_function_int > 0 and perturbation_function_int <= 6:
-        perturbation_function = FUNCTION_MAPPING[perturbation_function_int]
+    amount_keys = len(list(function_mapping.keys()))
+    if perturbation_function_int > 0 and perturbation_function_int <= amount_keys:
+        perturbation_function = function_mapping[str(perturbation_function_int)]
         print(
-            f"IndividualToScenario: Function is {FUNCTION_MAPPING[perturbation_function_int]}/{perturbation_function}"
+            f"IndividualToScenario: Function is {function_mapping[str(perturbation_function_int)]}/{perturbation_function}"
         )
     else:
-        perturbation_function = FUNCTION_MAPPING[1]
+        perturbation_function = function_mapping["1"]
         print(
-            f"IndividualToScenario: Perturbation function not found for values {perturbation_function_int}, using default"
+            f"IndividualToScenario: Perturbation function not found for values {perturbation_function_int}, using default: {function_mapping['1']}"
         )
 
     # return the scenario
@@ -83,13 +95,3 @@ def calculate_velocities(
         velocity = direction * speeds[i]
         velocities.append(velocity)
     return velocities
-
-
-FUNCTION_MAPPING = {
-    1: "gaussian_noise",
-    2: "poisson_noise",
-    3: "impulse_noise",
-    4: "defocus_blur",
-    5: "glass_blur",
-    6: "increase_brightness",
-}

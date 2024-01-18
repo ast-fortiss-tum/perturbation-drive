@@ -110,3 +110,7 @@ optimizer = NsgaIIOptimizer(problem=problem, config=config)
 res = optimizer.run()
 
 ```
+
+## Config
+
+The `perturbation_config.json` details the default configuration of perturbation functions used in the experiment. It can be freely altered to suit ones needs when running experiemtns.
