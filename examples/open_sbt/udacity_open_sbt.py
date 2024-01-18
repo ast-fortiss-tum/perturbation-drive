@@ -67,7 +67,7 @@ class Udacity_OpenSBTWrapper(Simulator):
         outcomes: List[ScenarioOutcome] = benchmarking_obj.simulate_scenarios(
             scenarios=scenarios,
             attention_map={},
-            log_dir=None,
+            log_dir="./examples/open_sbt/perturbation_udacity_logs_1.json",
             overwrite_logs=False,
             image_size=(240, 320),
         )

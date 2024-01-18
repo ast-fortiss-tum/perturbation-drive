@@ -268,8 +268,7 @@ class PerturbationDrive:
 
         # tear sim down
         self.simulator.tear_down()
-        if log_dir is None:
-            return outcomes
-        else:
+        if log_dir is not None:
             scenario_writer = ScenarioOutcomeWriter(log_dir, overwrite_logs)
             scenario_writer.write(outcomes)
+        return outcomes
