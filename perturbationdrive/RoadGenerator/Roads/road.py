@@ -89,7 +89,6 @@ class Road(ABC):
         curvature = 1 / min_radius
         return curvature
 
-    # FIXME: a bit dirty, copied from deepjanus_test_generator
     def is_valid(self) -> bool:
         return RoadPolygon.from_nodes(
             self.get_concrete_representation(to_plot=True)
@@ -264,7 +263,6 @@ class Road(ABC):
         if len(group) > 0:
             yield group
 
-    # FIXME: not so clear what it does
     def compute_num_turns(self) -> Tuple[int, float]:
         angle_distance_pairs = self.compute_angle_distance_pairs_for_each_point()
 
@@ -319,3 +317,22 @@ class Road(ABC):
                 weighted_num_turns += 1 / min_radius
 
         return num_turns, weighted_num_turns
+
+    def calculate_smoothness(self) -> float:
+        """
+        Calculates smoothes of the road as average of the angles between points
+        """
+        angle_distance_pairs = self.compute_angle_distance_pairs_for_each_point()
+
+        angle_threshold = 0.005
+
+        # iterate over the nodes to get the turns bigger than the threshold
+        angles = []
+        for i in range(len(angle_distance_pairs)):
+            angle = (angle_distance_pairs[i][0] + 180) % 360 - 180
+            if np.abs(angle) > angle_threshold:
+                angles.append(angle)
+            else:
+                angles.append(0)
+        print(f"Smoothness: {angles}")
+        return np.average(np.abs(angles))

@@ -11,7 +11,9 @@ from perturbationdrive import (
 )
 
 # used libraries
-from udacity_utils.envs.udacity.udacity_gym_env import UdacityGymEnv_RoadGen
+from examples.udacity.udacity_utils.envs.udacity.udacity_gym_env import (
+    UdacityGymEnv_RoadGen,
+)
 from typing import Union
 import cv2
 import gym
@@ -141,3 +143,6 @@ class UdacitySimulator(PerturbationSimulator):
 
     def tear_down(self):
         self.client.close()
+
+    def name(self) -> str:
+        return "UdacitySimualtorAdapter"

@@ -16,3 +16,10 @@ class ADS(ABC):
         This method also contains the preparation for the underlying model
         """
         pass
+
+    @abstractmethod
+    def name(self) -> str:
+        """
+        Returns the name of the ADS
+        """
+        pass

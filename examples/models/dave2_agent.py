@@ -9,21 +9,18 @@ import numpy as np
 import os
 
 
-class ExampleAgent(ADS):
+class Dave2Agent(ADS):
     """
     Example agent using Dave2 architecture trained on SDSandBox Sim Data
     """
 
-    def __init__(self):
-        if not (
-            os.path.exists("./examples/models/generated_dave_v5.h5")
-            and os.path.isfile("./examples/models/generated_dave_v5.h5")
-        ):
+    def __init__(self, model_path: str = "./examples/models/generated_dave_v5.h5"):
+        if not (os.path.exists(model_path) and os.path.isfile(model_path)):
             print(f"{5 * '+'} Warning: ADS file does not exists {5 * '+'}")
-        self.model = load_model("./examples/models/generated_dave_v5.h5", compile=False)
-        print(f"Using model: generated_dave_v5")
+        self.model = load_model(model_path, compile=False)
+        print(f"Using model: {model_path}")
         self.model.compile(loss="sgd", metrics=["mse"])
-        self.name = "generated_dave_v5"
+        self.name = model_path.split("/")[-1]
 
     def action(self, input: ndarray[Any, dtype[uint8]]) -> List:
         """

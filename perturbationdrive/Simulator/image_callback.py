@@ -57,3 +57,10 @@ class ImageCallBack:
         self.screen.fill((0, 0, 0))
         self.screen_print(10, 10, "Simulator disconnected", self.screen)
         pygame.display.flip()
+
+    def destroy(self):
+        """
+        Destroys the monitor
+        """
+        pygame.display.quit()
+        pygame.quit()

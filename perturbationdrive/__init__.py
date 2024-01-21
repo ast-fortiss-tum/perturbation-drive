@@ -55,6 +55,13 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_lightning_filter,
     dynamic_smoke_filter,
     perturb_high_attention_regions,
+    static_lightning_filter,
+    static_smoke_filter,
+    static_sun_filter,
+    static_rain_filter,
+    static_snow_filter,
+    static_smoke_filter,
+    static_object_overlay,
 )
 
 from .utils.data_utils import CircularBuffer

@@ -69,8 +69,7 @@ class CustomRoadGenerator(RoadGenerator):
         assert (
             len(angles) == self.num_control_nodes
         ), f"We need {self.num_control_nodes} angles {angles}"
-        condition = True
-        print("Started Road Generation")
+
         # set the initial node
         self.initial_node = starting_pos
         nodes = [self._get_initial_control_node(), self.initial_node]
@@ -92,12 +91,8 @@ class CustomRoadGenerator(RoadGenerator):
                     seg_length,
                 )
             )
-            print(
-                f"Road Instance {i_valid}, angle: {angles[i_valid]}, {seg_length}: {nodes}"
-            )
             i_valid += 1
 
-        print("finished road generation")
         return nodes
 
     def is_valid(self, control_nodes, sample_nodes):

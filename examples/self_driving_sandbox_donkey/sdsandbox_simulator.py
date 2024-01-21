@@ -155,3 +155,9 @@ class SDSandboxSimulator(PerturbationSimulator):
         Retruns true if the client is still connected
         """
         return client.is_connected()
+
+    def name(self) -> str:
+        """
+        Returns the name of the simulator
+        """
+        return "SDSandBoxSimulatorAdapter"

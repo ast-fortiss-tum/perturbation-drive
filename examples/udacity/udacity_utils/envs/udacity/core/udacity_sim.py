@@ -35,9 +35,9 @@ import socketio
 from PIL import Image
 from flask import Flask
 
-from udacity_utils.envs.udacity.config import INPUT_DIM, MAX_CTE_ERROR
-from udacity_utils.envs.udacity.core.client import start_app
-from udacity_utils.global_log import GlobalLog
+from examples.udacity.udacity_utils.envs.udacity.config import INPUT_DIM, MAX_CTE_ERROR
+from examples.udacity.udacity_utils.envs.udacity.core.client import start_app
+from examples.udacity.udacity_utils.global_log import GlobalLog
 
 sio = socketio.Server()
 flask_app = Flask(__name__)

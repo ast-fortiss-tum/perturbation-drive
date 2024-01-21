@@ -30,6 +30,16 @@ class PerturbationDrive:
         self.simulator = simulator
         self.ads = ads
 
+    def setADS(self, ads: ADS):
+        assert isinstance(ads, ADS), "ADS must be a subclass of ADS"
+        self.ads = ads
+
+    def setSimulator(self, simulator: PerturbationSimulator):
+        assert isinstance(
+            simulator, PerturbationSimulator
+        ), "Simulator must be a subclass of PerturbationSimulator"
+        self.simulator = simulator
+
     def offline_perturbation(
         self,
         dataset_path: str,
@@ -267,7 +277,6 @@ class PerturbationDrive:
             time.sleep(2.0)
 
         # tear sim down
-        self.simulator.tear_down()
         if log_dir is not None:
             scenario_writer = ScenarioOutcomeWriter(log_dir, overwrite_logs)
             scenario_writer.write(outcomes)

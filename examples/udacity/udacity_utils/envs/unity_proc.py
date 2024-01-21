@@ -29,7 +29,7 @@ import os
 import platform
 import time
 
-from udacity_utils.global_log import GlobalLog
+from examples.udacity.udacity_utils.global_log import GlobalLog
 
 
 class UnityProcess(object):

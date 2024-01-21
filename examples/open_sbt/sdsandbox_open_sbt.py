@@ -67,6 +67,8 @@ class SDSandBox_OpenSBTWrapper(Simulator):
             overwrite_logs=False,
             image_size=(240, 320),
         )
+        benchmarking_obj.simulator.tear_down()
+
 
         # convert the outcomes to sbt format
         return [

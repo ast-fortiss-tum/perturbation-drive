@@ -57,3 +57,10 @@ class PerturbationSimulator(ABC):
         Tears the connection to the simulator down
         """
         pass
+
+    @abstractmethod
+    def name(self) -> str:
+        """
+        Returns the name of the simulator
+        """
+        pass

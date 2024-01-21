@@ -55,6 +55,13 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_lightning_filter,
     dynamic_smoke_filter,
     perturb_high_attention_regions,
+    static_lightning_filter,
+    static_smoke_filter,
+    static_sun_filter,
+    static_rain_filter,
+    static_snow_filter,
+    static_smoke_filter,
+    static_object_overlay,
 )
 from perturbationdrive.RoadGenerator.RoadGenerator import RoadGenerator
 from .utils.data_utils import CircularBuffer
@@ -103,10 +110,20 @@ class ImagePerturbation:
         height, width = image_size
         self.height = height
         self.width = width
-        for filter, (path, iterator_name) in FILTER_PATHS.items():
+        for filter, (path, iterator_name, color) in FILTER_PATHS.items():
             if filter in self._fns:
+                print(
+                    f"{5* '-'} Loading Dynamic Masks - This can take a couple of seconds {5* '-'}"
+                )
                 frames = _loadMaskFrames(path, height, width)
                 setattr(self, iterator_name, itertools.cycle(frames))
+        for filter, (path, mask_name, color) in STATIC_PATHS.items():
+            if filter in self._fns:
+                # set image without green screen as mask
+                raw_image = cv2.imread(path)
+                # move to rbg
+                image = cv2.cvtColor(raw_image, cv2.COLOR_BGR2RGB)
+                setattr(self, mask_name, _remove_green_pixels(image, color))
 
         self.neuralStyleModels = NeuralStyleTransfer(getNeuralModelPaths(funcs))
         # check if we use cycle gans
@@ -135,9 +152,13 @@ class ImagePerturbation:
         # continue with the main logic
         func = FUNCTION_MAPPING[perturbation_name]
         iterator_name = ITERATOR_MAPPING.get(func, "")
+        mask_name = MASK_MAPPING.get(func, "")
         if iterator_name != "":
             iterator = getattr(self, ITERATOR_MAPPING.get(func, ""))
             pertub_image = func(intensity, image, iterator)
+        elif mask_name != "":
+            mask = getattr(self, MASK_MAPPING.get(func, ""))
+            pertub_image = func(intensity, image, mask)
         elif "styling" in func.__name__ or "sim2" in func.__name__:
             # apply either style transfer or cycle gan
             pertub_image = func(self, intensity, image)
@@ -222,7 +243,13 @@ class ImagePerturbation:
         return True if ("sim2real" in func_names or "sim2sim" in func_names) else False
 
 
-def _loadMaskFrames(path: str, isGreenScreen=True, height=240, width=320) -> list:
+def _loadMaskFrames(
+    path: str,
+    isGreenScreen=True,
+    height=240,
+    width=320,
+    green_screen_color: List[int] = [66, 193, 5],
+) -> list:
     """
     Loads all frames for a given mp4 video. Appends alpha channel and optionally sets
     the alpha channel of the greenscreen background to 0
@@ -244,17 +271,74 @@ def _loadMaskFrames(path: str, isGreenScreen=True, height=240, width=320) -> lis
         ret, frame = cap.read()
         if not ret or frame is None:
             break
-        frame = cv2.resize(frame, (width, height))
+        # convert to rgba
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2BGRA)
+        # option to remove greenscreen by default
         if frame.shape[2] != 4:
             # append alpha channel
             alpha_channel = np.ones(frame.shape[:2], dtype=frame.dtype) * 255
             frame = cv2.merge((frame, alpha_channel))
-        # option to remove greenscreen by default
         if isGreenScreen:
-            frame = _removeGreenScreen(frame)
+            frame = _remove_green_pixels(frame, green_screen_color)
+        frame = cv2.resize(frame, (width, height))
         frames.append(frame)
     cap.release()
     return frames
+
+
+def _remove_green_pixels(image, target_green_rgb, threshold=40):
+    """
+    Remove green pixels around a target color value.
+
+    """
+    # Convert the target green color to HSV since it's better for color thresholding
+    target_green_hsv = cv2.cvtColor(np.uint8([[target_green_rgb]]), cv2.COLOR_RGB2HSV)[
+        0
+    ][0]
+
+    # Convert the image to HSV
+    hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+
+    # Define the range for the target green color
+    lower_green = np.array(
+        [
+            max(target_green_hsv[0] - threshold, 0),
+            max(target_green_hsv[1] - threshold, 0),
+            max(target_green_hsv[2] - threshold, 0),
+        ]
+    )
+    upper_green = np.array(
+        [
+            min(target_green_hsv[0] + threshold, 255),
+            min(target_green_hsv[1] + threshold, 255),
+            min(target_green_hsv[2] + threshold, 255),
+        ]
+    )
+
+    # Create a mask for the green color
+    mask = cv2.inRange(hsv_image, lower_green, upper_green)
+
+    if image.shape[2] == 4:
+        mask_4channel = cv2.merge([mask, mask, mask, np.zeros_like(mask)])
+        mask_indices = np.where(mask_4channel == 255)
+
+        image[mask_indices[0], mask_indices[1], :] = (
+            255,
+            255,
+            255,
+            0,
+        )  # Replacing with transparent
+    else:
+        mask_3channel = cv2.merge([mask, mask, mask])
+        mask_indices = np.where(mask_3channel == 255)
+        image[mask_indices[0], mask_indices[1], :] = (
+            255,
+            255,
+            255,
+            0,
+        )  # Replacing with transparent
+
+    return image
 
 
 def _removeGreenScreen(image):
@@ -326,6 +410,12 @@ FUNCTION_MAPPING = {
     "dynamic_sun_filter": dynamic_sun_filter,
     "dynamic_lightning_filter": dynamic_lightning_filter,
     "dynamic_smoke_filter": dynamic_smoke_filter,
+    "static_snow_filter": static_snow_filter,
+    "static_rain_filter": static_rain_filter,
+    "static_object_overlay": static_object_overlay,
+    "static_sun_filter": static_sun_filter,
+    "static_lightning_filter": static_lightning_filter,
+    "static_smoke_filter": static_smoke_filter,
     "perturb_high_attention_regions": perturb_high_attention_regions,
     "posterize_filter": posterize_filter,
     "cutout_filter": cutout_filter,
@@ -352,24 +442,66 @@ FILTER_PATHS = {
     dynamic_snow_filter: (
         "./perturbationdrive/OverlayMasks/snow.mp4",
         "_snow_iterator",
+        [8, 255, 18],
     ),
     dynamic_lightning_filter: (
         "./perturbationdrive/OverlayMasks/lightning.mp4",
         "_lightning_iterator",
+        [32, 91, 10],
     ),
     dynamic_rain_filter: (
         "./perturbationdrive/OverlayMasks/rain.mp4",
         "_rain_iterator",
+        [3, 129, 8],
     ),
     dynamic_object_overlay: (
         "./perturbationdrive/OverlayMasks/birds.mp4",
         "_bird_iterator",
+        [66, 193, 5],
     ),
     dynamic_smoke_filter: (
         "./perturbationdrive/OverlayMasks/smoke.mp4",
         "_smoke_iterator",
+        [68, 103, 54],
     ),
-    dynamic_sun_filter: ("./perturbationdrive/OverlayMasks/sun.mp4", "_sun_iterator"),
+    dynamic_sun_filter: (
+        "./perturbationdrive/OverlayMasks/sun.mp4",
+        "_sun_iterator",
+        [41, 178, 59],
+    ),
+}
+
+STATIC_PATHS = {
+    dynamic_snow_filter: (
+        "./perturbationdrive/OverlayMasks/static_snow.png",
+        "_snow_mask",
+        [8, 255, 18],
+    ),
+    dynamic_lightning_filter: (
+        "./perturbationdrive/OverlayMasks/static_light.png",
+        "_lightning_mask",
+        [32, 91, 10],
+    ),
+    dynamic_rain_filter: (
+        "./perturbationdrive/OverlayMasks/static_rain.png",
+        "_rain_mask",
+        [3, 129, 8],
+    ),
+    dynamic_object_overlay: (
+        "./perturbationdrive/OverlayMasks/static_birds.png",
+        "_bird_mask",
+        [66, 193, 5],
+    ),
+    dynamic_smoke_filter: (
+        "./perturbationdrive/OverlayMasks/static_smoke.png",
+        "_smoke_mask",
+        [68, 103, 54],
+    ),
+    dynamic_sun_filter: (
+        "./perturbationdrive/OverlayMasks/static_sun.png",
+        "_sun_mask",
+        [41, 178, 59],
+    ),
 }
 
 # mapping of dynamic perturbation functions to their iterator name
@@ -380,6 +512,15 @@ ITERATOR_MAPPING = {
     dynamic_lightning_filter: "_lightning_iterator",
     dynamic_object_overlay: "_bird_iterator",
     dynamic_smoke_filter: "_smoke_iterator",
+}
+
+MASK_MAPPING = {
+    static_snow_filter: "_snow_mask",
+    static_rain_filter: "_rain_mask",
+    static_sun_filter: "_sun_mask",
+    static_lightning_filter: "_lightning_mask",
+    static_object_overlay: "_bird_mask",
+    static_smoke_filter: "_smoke_mask",
 }
 
 
@@ -435,7 +576,9 @@ def getNeuralModelPaths(style_names: [str]):
         "perturbationdrive/NeuralStyleTransfer/models/eccv16/the_wave.t7",
         "perturbationdrive/NeuralStyleTransfer/models/instance_norm/udnie.t7",
     ]
-    style_names = [style for style in style_names if any(style in s for s in paths)]
+    style_names = [
+        style for style in style_names if any(style in s for s in paths) and style != ""
+    ]
     lookup_dict = {os.path.splitext(os.path.basename(path))[0]: path for path in paths}
     return [lookup_dict[key] for key in style_names]
 
