@@ -148,6 +148,7 @@ def train_test_split(lines, test_perc):
     """
     split a list into two parts, percentage of test used to seperate
     """
+    random.seed(42)
     train = []
     test = []
 

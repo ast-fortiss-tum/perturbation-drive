@@ -21,10 +21,11 @@ def getActivationMap(model, img_array, layer_name="conv2d_5"):
       uint8 numpy array with shape (img_height, img_width)
     """
     out_layer = model.get_layer(layer_name)
-    model = tf.keras.models.Model(
+    activation_model = tf.keras.models.Model(
     			inputs=model.inputs,
     			outputs=out_layer.output)
-    activations = model.predict(img_array)
+    inputs = tf.cast(img_array, tf.float32)
+    activations = activation_model(inputs)
 
     output = np.abs(activations)
     output = np.sum(output, axis = -1).squeeze()

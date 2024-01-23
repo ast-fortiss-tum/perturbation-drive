@@ -196,6 +196,24 @@ class Road(ABC):
             )
         return result
 
+    def compute_angle_distance_pairs_for_each_controlpoint(
+        self,
+    ) -> List[Tuple[float, float, List[Point]]]:
+        """
+        Distance and angles between high level control points
+        """
+        result = []
+        v1 = np.subtract(self.control_points[1], self.control_points[0])
+        for i in range(len(self.control_points) - 1):
+            v0 = v1
+            v1 = np.subtract(self.control_points[i + 1], self.control_points[i])
+            angle = self.compute_angle_distance(v0=v0, v1=v1)
+            distance = np.linalg.norm(v1)
+            result.append(
+                (angle, distance, [self.control_points[i + 1], self.control_points[i]])
+            )
+        return result
+
     @staticmethod
     def grouper(lst: List[str]) -> Iterator[List[str]]:
         prev = None
@@ -336,3 +354,50 @@ class Road(ABC):
                 angles.append(0)
         print(f"Smoothness: {angles}")
         return np.average(np.abs(angles))
+
+    def calculate_smoothness_controll_points(self) -> float:
+        """
+        Calculates smoothes of the road as average of the angles between points
+        """
+        angle_distance_pairs = self.compute_angle_distance_pairs_for_each_controlpoint()
+
+        angle_threshold = 0.005
+
+        # iterate over the nodes to get the turns bigger than the threshold
+        angles = []
+        for i in range(len(angle_distance_pairs)):
+            angle = (angle_distance_pairs[i][0] + 180) % 360 - 180
+            if np.abs(angle) > angle_threshold:
+                angles.append(angle)
+            else:
+                angles.append(0)
+        print(f"Smoothness: {angles}")
+        return np.average(np.abs(angles))
+
+    def calculate_vectors(self, points: List[Point]) -> List[np.ndarray]:
+        vectors = []
+        for i in range(1, len(points)):
+            vector = np.array(points[i]) - np.array(points[i - 1])
+            vectors.append(vector)
+        return vectors
+
+    def angle_between(self, v1: np.ndarray, v2: np.ndarray) -> float:
+        unit_vector_1 = v1 / np.linalg.norm(v1)
+        unit_vector_2 = v2 / np.linalg.norm(v2)
+        dot_product = np.dot(unit_vector_1, unit_vector_2)
+        angle = np.arccos(np.clip(dot_product, -1.0, 1.0))
+        return angle
+
+    def calculate_curvature(self) -> List[float]:
+        """
+        Calculates the curvature for each road point
+        """
+        vectors = self.calculate_vectors(self.road_points)
+        curvatures = []
+        for i in range(1, len(vectors)):
+            angle = self.angle_between(vectors[i - 1], vectors[i])
+            norm_u = np.linalg.norm(vectors[i - 1])
+            norm_v = np.linalg.norm(vectors[i])
+            curvature = 2 * np.sin(angle) / (norm_u + norm_v)
+            curvatures.append(curvature)
+        return curvatures

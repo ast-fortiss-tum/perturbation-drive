@@ -60,7 +60,7 @@ class ImageCallBack:
 
     def destroy(self):
         """
-        Destroys the monitor
+        Quits the monitor and display
         """
         pygame.display.quit()
         pygame.quit()

@@ -123,7 +123,16 @@ class ImagePerturbation:
                 raw_image = cv2.imread(path)
                 # move to rbg
                 image = cv2.cvtColor(raw_image, cv2.COLOR_BGR2RGB)
-                setattr(self, mask_name, _remove_green_pixels(image, color))
+                # add alpha channel
+                if raw_image.shape[2] != 4:
+                    # append alpha channel
+                    alpha_channel = (
+                        np.ones(raw_image.shape[:2], dtype=raw_image.dtype) * 255
+                    )
+                    raw_image = cv2.merge((raw_image, alpha_channel))
+                image = _remove_green_pixels(image, color)
+                image = cv2.resize(image, (width, height))
+                setattr(self, mask_name, image)
 
         self.neuralStyleModels = NeuralStyleTransfer(getNeuralModelPaths(funcs))
         # check if we use cycle gans
@@ -318,6 +327,12 @@ def _remove_green_pixels(image, target_green_rgb, threshold=40):
     # Create a mask for the green color
     mask = cv2.inRange(hsv_image, lower_green, upper_green)
 
+    if image.shape[2] == 3:
+        # Create an alpha channel
+        alpha_channel = np.ones(image.shape[:2], dtype=image.dtype) * 255
+        # Add the alpha channel to make it 4-channel
+        image = cv2.merge([image, alpha_channel])
+
     if image.shape[2] == 4:
         mask_4channel = cv2.merge([mask, mask, mask, np.zeros_like(mask)])
         mask_indices = np.where(mask_4channel == 255)
@@ -472,32 +487,32 @@ FILTER_PATHS = {
 }
 
 STATIC_PATHS = {
-    dynamic_snow_filter: (
+    static_snow_filter: (
         "./perturbationdrive/OverlayMasks/static_snow.png",
         "_snow_mask",
         [8, 255, 18],
     ),
-    dynamic_lightning_filter: (
+    static_lightning_filter: (
         "./perturbationdrive/OverlayMasks/static_light.png",
         "_lightning_mask",
         [32, 91, 10],
     ),
-    dynamic_rain_filter: (
+    static_rain_filter: (
         "./perturbationdrive/OverlayMasks/static_rain.png",
         "_rain_mask",
         [3, 129, 8],
     ),
-    dynamic_object_overlay: (
+    static_object_overlay: (
         "./perturbationdrive/OverlayMasks/static_birds.png",
         "_bird_mask",
         [66, 193, 5],
     ),
-    dynamic_smoke_filter: (
+    static_smoke_filter: (
         "./perturbationdrive/OverlayMasks/static_smoke.png",
         "_smoke_mask",
         [68, 103, 54],
     ),
-    dynamic_sun_filter: (
+    static_sun_filter: (
         "./perturbationdrive/OverlayMasks/static_sun.png",
         "_sun_mask",
         [41, 178, 59],

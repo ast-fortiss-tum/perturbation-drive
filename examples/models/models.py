@@ -14,7 +14,7 @@ from tensorflow.keras.regularizers import L2
 from tensorflow.keras.optimizers.experimental import SGD
 
 try:
-    import examples.self_driving_sandbox_donkey.conf as conf
+    from examples.models.conf import Conf
 except:
     print("trying to resolve conf import through relative path")
     from ..self_driving_sandbox_donkey import conf
@@ -32,14 +32,13 @@ def get_nvidia_model(num_outputs):
     https://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf
     Activation is RELU
     """
+    conf = Conf()
     row, col, ch = conf.row, conf.col, conf.ch
 
     drop = 0.1
 
     img_in = Input(shape=(row, col, ch), name="img_in")
     x = img_in
-    # x = Cropping2D(cropping=((10,0), (0,0)))(x) #trim 10 pixels off top
-    # x = Lambda(lambda x: x/127.5 - 1.)(x) # normalize and re-center
     x = Lambda(lambda x: x / 255.0)(x)
     x = Conv2D(24, (5, 5), strides=(2, 2), activation="relu", name="conv2d_1")(x)
     x = Dropout(drop)(x)
@@ -69,19 +68,21 @@ def get_nvidia_model(num_outputs):
 
 def epoch_model(num_outputs):
     # https://github.com/udacity/self-driving-car/blob/master/steering-models/community-models/cg23/epoch_model.py
+    conf = Conf()
+
     row, col, ch = conf.row, conf.col, conf.ch
 
     img_input = Input(shape=(row, col, ch), name="img_in")
 
-    x = Conv2D(32, 3, 3, activation="relu", border_mode="same")(img_input)
+    x = Conv2D(32, 3, 3, activation="relu", padding="same")(img_input)
     x = MaxPooling2D((2, 2), strides=(2, 2))(x)
     x = Dropout(0.25)(x)
 
-    x = Conv2D(64, 3, 3, activation="relu", border_mode="same")(x)
+    x = Conv2D(64, 3, 3, activation="relu", padding="same")(x)
     x = MaxPooling2D((2, 2), strides=(2, 2))(x)
     x = Dropout(0.25)(x)
 
-    x = Conv2D(128, 3, 3, activation="relu", border_mode="same")(x)
+    x = Conv2D(128, 3, 3, activation="relu", padding="same", name="conv2d_5")(x)
     x = MaxPooling2D((2, 2), strides=(2, 2))(x)
     x = Dropout(0.5)(x)
 
@@ -90,16 +91,18 @@ def epoch_model(num_outputs):
     y = Dropout(0.5)(y)
     y = Dense(num_outputs)(y)
 
-    model = Model(input=img_input, output=y)
-    model.compile(optimizer=Adam(lr=1e-4), loss="mse")
+    model = Model(inputs=img_input, outputs=y)
+    model.compile(optimizer=Adam(lr=1e-4), loss="mse", metrics=["acc"])
 
     return model
 
 
 def chauffeur_model(num_outputs):
+    conf = Conf()
+
     row, col, ch = conf.row, conf.col, conf.ch
     input_shape = (row, col, ch)
-    learning_rate = 0.01
+    learning_rate = 0.0001
     use_adadelta = True
     W_l2 = 0.0001
     scale = 16
@@ -112,31 +115,57 @@ def chauffeur_model(num_outputs):
             5,
             5,
             input_shape=input_shape,
-            init="he_normal",
+            kernel_initializer="he_normal",
             activation="relu",
-            border_mode="same",
+            padding="same",
         )
     )
     model.add(SpatialDropout2D(0.1))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(20, 5, 5, init="he_normal", activation="relu", border_mode="same"))
-    model.add(SpatialDropout2D(0.1))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(40, 3, 3, init="he_normal", activation="relu", border_mode="same"))
-    model.add(SpatialDropout2D(0.1))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(60, 3, 3, init="he_normal", activation="relu", border_mode="same"))
-    model.add(SpatialDropout2D(0.1))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Conv2D(80, 2, 2, init="he_normal", activation="relu", border_mode="same"))
-    model.add(SpatialDropout2D(0.1))
-    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
     model.add(
-        Conv2D(128, 2, 2, init="he_normal", activation="relu", border_mode="same")
+        Conv2D(
+            20, 5, 5, kernel_initializer="he_normal", activation="relu", padding="same"
+        )
+    )
+    model.add(SpatialDropout2D(0.1))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+    model.add(
+        Conv2D(
+            40, 3, 3, kernel_initializer="he_normal", activation="relu", padding="same"
+        )
+    )
+    model.add(SpatialDropout2D(0.1))
+    model.add(MaxPooling2D(pool_size=(1, 1), strides=(1, 1)))
+    model.add(
+        Conv2D(
+            60, 3, 3, kernel_initializer="he_normal", activation="relu", padding="same"
+        )
+    )
+    model.add(SpatialDropout2D(0.1))
+    model.add(MaxPooling2D(pool_size=(1, 1), strides=(1, 1)))
+    model.add(
+        Conv2D(
+            80, 2, 2, kernel_initializer="he_normal", activation="relu", padding="same"
+        )
+    )
+    model.add(SpatialDropout2D(0.1))
+    model.add(MaxPooling2D(pool_size=(1, 1), strides=(1, 1)))
+    model.add(
+        Conv2D(
+            128,
+            2,
+            2,
+            kernel_initializer="he_normal",
+            activation="relu",
+            padding="same",
+            name="conv2d_5",
+        )
     )
     model.add(Flatten())
     model.add(Dropout(0.5))
-    model.add(Dense(output_dim=num_outputs, init="he_normal", W_regularizer=L2(W_l2)))
+    model.add(
+        Dense(num_outputs, kernel_initializer="he_normal", bias_regularizer=L2(W_l2))
+    )
     optimizer = "adadelta" if use_adadelta else SGD(lr=learning_rate, momentum=0.9)
-    model.compile(loss="mean_squared_error", optimizer=optimizer, metrics=["rmse"])
+    model.compile(loss="mse", optimizer=optimizer, metrics=["acc"])
     return model

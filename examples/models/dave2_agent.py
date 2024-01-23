@@ -11,10 +11,10 @@ import os
 
 class Dave2Agent(ADS):
     """
-    Example agent using Dave2 architecture trained on SDSandBox Sim Data
+    Example agent using Dave2 architecture
     """
 
-    def __init__(self, model_path: str = "./examples/models/generated_dave_v5.h5"):
+    def __init__(self, model_path: str = "./examples/models/dave_90k_v1.h5"):
         if not (os.path.exists(model_path) and os.path.isfile(model_path)):
             print(f"{5 * '+'} Warning: ADS file does not exists {5 * '+'}")
         self.model = load_model(model_path, compile=False)
