@@ -39,11 +39,6 @@ gaussian_noise attention_map grad_cam scale 1,0.03236011957999999,0.003060361411
 gaussian_noise attention_map grad_cam scale 2,0.03592107916,0.009929715193159504
 gaussian_noise attention_map grad_cam scale 3,0.031091021669999986,0.001648639498364882
 gaussian_noise attention_map grad_cam scale 4,0.030565889990000004,0.0019095499051268983
-gaussian_noise attention_map vanilla scale 0,0.05480140753999999,0.004583392377399307
-gaussian_noise attention_map vanilla scale 1,0.05559046708,0.005630604318484535
-gaussian_noise attention_map vanilla scale 2,0.05449960962000001,0.0030074233430530755
-gaussian_noise attention_map vanilla scale 3,0.05369696124,0.0019698727474456645
-gaussian_noise attention_map vanilla scale 4,0.05398760334000001,0.0024474086945734104
 gaussian_noise attention_map vanilla scale 0,0.01303665209,0.0018101981626845298
 gaussian_noise attention_map vanilla scale 1,0.012471389979999995,0.00038809212692580145
 gaussian_noise attention_map vanilla scale 2,0.01248754582000001,0.00043343781220315733

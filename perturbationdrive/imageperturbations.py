@@ -110,14 +110,21 @@ class ImagePerturbation:
         height, width = image_size
         self.height = height
         self.width = width
-        for filter, (path, iterator_name, color) in FILTER_PATHS.items():
+        for filter, (path, iterator_name, color, thres) in FILTER_PATHS.items():
             if filter in self._fns:
                 print(
                     f"{5* '-'} Loading Dynamic Masks - This can take a couple of seconds {5* '-'}"
                 )
-                frames = _loadMaskFrames(path, height, width)
+                frames = _loadMaskFrames(
+                    path=path,
+                    isGreenScreen=True,
+                    height=height,
+                    width=width,
+                    green_screen_color=color,
+                    threshold=thres,
+                )
                 setattr(self, iterator_name, itertools.cycle(frames))
-        for filter, (path, mask_name, color) in STATIC_PATHS.items():
+        for filter, (path, mask_name, color, thres) in STATIC_PATHS.items():
             if filter in self._fns:
                 # set image without green screen as mask
                 raw_image = cv2.imread(path)
@@ -130,7 +137,7 @@ class ImagePerturbation:
                         np.ones(raw_image.shape[:2], dtype=raw_image.dtype) * 255
                     )
                     raw_image = cv2.merge((raw_image, alpha_channel))
-                image = _remove_green_pixels(image, color)
+                image = _remove_green_pixels(image, color, thres)
                 image = cv2.resize(image, (width, height))
                 setattr(self, mask_name, image)
 
@@ -258,6 +265,7 @@ def _loadMaskFrames(
     height=240,
     width=320,
     green_screen_color: List[int] = [66, 193, 5],
+    threshold=40,
 ) -> list:
     """
     Loads all frames for a given mp4 video. Appends alpha channel and optionally sets
@@ -288,7 +296,7 @@ def _loadMaskFrames(
             alpha_channel = np.ones(frame.shape[:2], dtype=frame.dtype) * 255
             frame = cv2.merge((frame, alpha_channel))
         if isGreenScreen:
-            frame = _remove_green_pixels(frame, green_screen_color)
+            frame = _remove_green_pixels(frame, green_screen_color, threshold=threshold)
         frame = cv2.resize(frame, (width, height))
         frames.append(frame)
     cap.release()
@@ -458,31 +466,37 @@ FILTER_PATHS = {
         "./perturbationdrive/OverlayMasks/snow.mp4",
         "_snow_iterator",
         [8, 255, 18],
+        45,
     ),
     dynamic_lightning_filter: (
         "./perturbationdrive/OverlayMasks/lightning.mp4",
         "_lightning_iterator",
         [32, 91, 10],
+        45,
     ),
     dynamic_rain_filter: (
         "./perturbationdrive/OverlayMasks/rain.mp4",
         "_rain_iterator",
         [3, 129, 8],
+        40,
     ),
     dynamic_object_overlay: (
         "./perturbationdrive/OverlayMasks/birds.mp4",
         "_bird_iterator",
         [66, 193, 5],
+        40,
     ),
     dynamic_smoke_filter: (
         "./perturbationdrive/OverlayMasks/smoke.mp4",
         "_smoke_iterator",
         [68, 103, 54],
+        75,
     ),
     dynamic_sun_filter: (
         "./perturbationdrive/OverlayMasks/sun.mp4",
         "_sun_iterator",
         [41, 178, 59],
+        100,
     ),
 }
 
@@ -491,31 +505,37 @@ STATIC_PATHS = {
         "./perturbationdrive/OverlayMasks/static_snow.png",
         "_snow_mask",
         [8, 255, 18],
+        45.0,
     ),
     static_lightning_filter: (
         "./perturbationdrive/OverlayMasks/static_light.png",
         "_lightning_mask",
         [32, 91, 10],
+        45,
     ),
     static_rain_filter: (
         "./perturbationdrive/OverlayMasks/static_rain.png",
         "_rain_mask",
         [3, 129, 8],
+        40,
     ),
     static_object_overlay: (
         "./perturbationdrive/OverlayMasks/static_birds.png",
         "_bird_mask",
         [66, 193, 5],
+        40,
     ),
     static_smoke_filter: (
         "./perturbationdrive/OverlayMasks/static_smoke.png",
         "_smoke_mask",
         [68, 103, 54],
+        75,
     ),
     static_sun_filter: (
         "./perturbationdrive/OverlayMasks/static_sun.png",
         "_sun_mask",
         [41, 178, 59],
+        100,
     ),
 }
 

@@ -1098,10 +1098,8 @@ def dynamic_snow_filter(scale, image, iterator):
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
-    snow_overlay = next(iterator)
-    # make all pixels white
-    white_layer = np.full_like(snow_overlay, 255)
-    snow_overlay[:, :, 3] = white_layer[:, :, 3]
+    rain_overlay = _shift_color(rain_overlay, [71, 253, 135], [255, 255, 255])
+
     if (
         snow_overlay.shape[0] != image.shape[0]
         or snow_overlay.shape[1] != image.shape[1]
@@ -1128,10 +1126,8 @@ def static_snow_filter(scale, image, snow_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    # move to white
-    # make all pixels white
-    white_layer = np.full_like(snow_overlay, 255)
-    snow_overlay[:, :, 3] = white_layer[:, :, 3]
+    rain_overlay = _shift_color(rain_overlay, [71, 253, 135], [255, 255, 255])
+
     if (
         snow_overlay.shape[0] != image.shape[0]
         or snow_overlay.shape[1] != image.shape[1]
@@ -1159,11 +1155,8 @@ def dynamic_rain_filter(scale, image, iterator):
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     rain_overlay = next(iterator)
-    white_layer = np.zeros_like(rain_overlay)
-    white_layer[:, :, 0] = 3
-    white_layer[:, :, 1] = 0
-    white_layer[:, :, 2] = 87
-    rain_overlay[:, :, 3] = white_layer[:, :, 3]
+    rain_overlay = _shift_color(rain_overlay, [31, 146, 59], [84, 46, 43])
+
     # Load the next frame from the iterator
     if (
         rain_overlay.shape[0] != image.shape[0]
@@ -1191,11 +1184,8 @@ def static_rain_filter(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    white_layer = np.zeros_like(rain_overlay)
-    white_layer[:, :, 0] = 3
-    white_layer[:, :, 1] = 0
-    white_layer[:, :, 2] = 87
-    rain_overlay[:, :, 3] = white_layer[:, :, 3]
+    rain_overlay = _shift_color(rain_overlay, [31, 146, 59], [84, 46, 43])
+
     if (
         rain_overlay.shape[0] != image.shape[0]
         or rain_overlay.shape[1] != image.shape[1]
@@ -1274,6 +1264,8 @@ def dynamic_object_overlay(scale, image, iterator):
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
+    rain_overlay = _shift_color(rain_overlay, [175, 221, 202], [0, 0, 0])
+
     # Resize the frost overlay to match the input image dimensions
     if (
         rain_overlay.shape[0] != image.shape[0]
@@ -1301,6 +1293,8 @@ def static_object_overlay(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
+    rain_overlay = _shift_color(rain_overlay, [175, 221, 202], [0, 0, 0])
+
     # Resize the frost overlay to match the input image dimensions
     if (
         rain_overlay.shape[0] != image.shape[0]
@@ -1330,11 +1324,8 @@ def dynamic_sun_filter(scale, image, iterator):
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
-    white_layer = np.zeros_like(rain_overlay)
-    white_layer[:, :, 0] = 232
-    white_layer[:, :, 1] = 218
-    white_layer[:, :, 2] = 16
-    rain_overlay[:, :, 3] = white_layer[:, :, 3]
+    rain_overlay = _shift_color(rain_overlay, [223, 234, 212], [28, 202, 255])
+
     # Resize the frost overlay to match the input image dimensions
     if (
         rain_overlay.shape[0] != image.shape[0]
@@ -1363,13 +1354,8 @@ def static_sun_filter(scale, image, rain_overlay):
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
-    white_layer = np.zeros_like(rain_overlay)
-    white_layer[:, :, 0] = 232
-    white_layer[:, :, 1] = 218
-    white_layer[:, :, 2] = 16
-    rain_overlay[:, :, 3] = white_layer[
-        :, :, 3
-    ]  # Resize the frost overlay to match the input image dimensions
+    rain_overlay = _shift_color(rain_overlay, [223, 234, 212], [28, 202, 255])
+
     if (
         rain_overlay.shape[0] != image.shape[0]
         or rain_overlay.shape[1] != image.shape[1]
@@ -1397,12 +1383,8 @@ def dynamic_lightning_filter(scale, image, iterator):
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
-    rain_overlay = next(iterator)
-    white_layer = np.zeros_like(rain_overlay)
-    white_layer[:, :, 0] = 254
-    white_layer[:, :, 1] = 229
-    white_layer[:, :, 2] = 5
-    rain_overlay[:, :, 3] = white_layer[:, :, 3]
+    rain_overlay = _shift_color(rain_overlay, [5, 122, 101], [8, 152, 188])
+
     # Resize the frost overlay to match the input image dimensions
     if (
         rain_overlay.shape[0] != image.shape[0]
@@ -1430,13 +1412,8 @@ def static_lightning_filter(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    white_layer = np.zeros_like(rain_overlay)
-    white_layer[:, :, 0] = 254
-    white_layer[:, :, 1] = 229
-    white_layer[:, :, 2] = 5
-    rain_overlay[:, :, 3] = white_layer[
-        :, :, 3
-    ]  # Resize the frost overlay to match the input image dimensions
+    rain_overlay = _shift_color(rain_overlay, [5, 122, 101], [8, 152, 188])
+
     if (
         rain_overlay.shape[0] != image.shape[0]
         or rain_overlay.shape[1] != image.shape[1]
@@ -1465,11 +1442,8 @@ def dynamic_smoke_filter(scale, image, iterator):
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
-    white_layer = np.zeros_like(rain_overlay)
-    white_layer[:, :, 0] = 130
-    white_layer[:, :, 1] = 135
-    white_layer[:, :, 2] = 148
-    rain_overlay[:, :, 3] = white_layer[:, :, 3]
+    rain_overlay = _shift_color(rain_overlay, [29, 128,  81], [132, 138, 135])
+
     # Resize the frost overlay to match the input image dimensions
     if (
         rain_overlay.shape[0] != image.shape[0]
@@ -1497,13 +1471,7 @@ def static_smoke_filter(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    white_layer = np.zeros_like(rain_overlay)
-    white_layer[:, :, 0] = 130
-    white_layer[:, :, 1] = 135
-    white_layer[:, :, 2] = 148
-    rain_overlay[:, :, 3] = white_layer[
-        :, :, 3
-    ]  # Resize the frost overlay to match the input image dimensions
+    rain_overlay = _shift_color(rain_overlay, [29, 128,  81], [132, 138, 135])
     if (
         rain_overlay.shape[0] != image.shape[0]
         or rain_overlay.shape[1] != image.shape[1]
@@ -1545,47 +1513,30 @@ def perturb_high_attention_regions(
     return image
 
 
-def _shift_to_target_color(image, target_rgb):
-    """
-    Shift the colors of the image towards a target color.
+def _shift_color(image, source_color, target_color):
+    # Check if the image has an alpha channel
+    has_alpha = image.shape[2] == 4
 
-    Parameters:
-    image: Source image in BGR format.
-    target_rgb: Target color in RGB format.
+    if has_alpha:
+        # Split the image into BGR and alpha channels
+        bgr, alpha = image[:, :, :3], image[:, :, 3]
+    else:
+        bgr = image
 
-    Returns:
-    Image with colors shifted towards the target color.
-    """
+    # Convert source and target colors to numpy arrays
+    source_color = np.array(source_color, dtype=np.int16)
+    target_color = np.array(target_color, dtype=np.int16)
 
-    # Convert target color to BGR
-    target_bgr = target_rgb[::-1]
+    # Calculate the difference
+    color_diff = target_color - source_color
 
-    # Convert the image to a float type
-    image = image.astype(np.float32)
+    # Apply the difference to each pixel in the BGR channels
+    shifted_bgr = np.clip(bgr.astype(np.int16) + color_diff, 0, 255).astype(np.uint8)
 
-    # Split the image into color channels
-    b, g, r, a = cv2.split(image)
-
-    # Calculate the mean of each channel of the image
-    mean_bgr = cv2.mean(image)[:3]
-
-    # Calculate the difference between the target color and the mean color
-    diff_bgr = np.subtract(target_bgr, mean_bgr)
-
-    # Shift the color channels towards the target color in the BGR space
-    b += diff_bgr[0]
-    g += diff_bgr[1]
-    r += diff_bgr[2]
-
-    # Clip values to keep them within [0, 255]
-    b = np.clip(b, 0, 255)
-    g = np.clip(g, 0, 255)
-    r = np.clip(r, 0, 255)
-
-    # Merge the color channels back into the image
-    shifted_image = cv2.merge((b, g, r, a))
-
-    # Convert the image back to uint8
-    shifted_image = shifted_image.astype(np.uint8)
+    if has_alpha:
+        # Recombine the shifted BGR channels with the untouched alpha channel
+        shifted_image = cv2.merge((shifted_bgr, alpha))
+    else:
+        shifted_image = shifted_bgr
 
     return shifted_image
