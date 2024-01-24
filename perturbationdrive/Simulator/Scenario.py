@@ -29,6 +29,7 @@ class ScenarioOutcome:
     actions: List[List[float]]
     scenario: Union[Scenario, None]
     isSuccess: bool
+    timeout: bool
 
 
 @dataclass

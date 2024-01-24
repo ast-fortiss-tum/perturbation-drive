@@ -199,11 +199,11 @@ pyrightconfig.json
 examples/donkeyGym/src/gym-donkeycar
 
 ### Tests ###
-benchmark*.csv
+# benchmark*.csv
 benchmark*.json
 
 ### logs ###
-logs*.csv
+# logs*.csv
 
 
 ### Neural Style Transfer Models ###
@@ -236,9 +236,9 @@ temp.txt
 
 # all unnecessary logs 
 *log*.json
-*log*.csv
+log*.csv
 *logs*.json
-*logs*.csv
+logs*.csv
 
 # all simulator logs
 *simulator*.json

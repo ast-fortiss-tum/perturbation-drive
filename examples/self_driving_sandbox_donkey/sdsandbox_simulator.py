@@ -78,11 +78,13 @@ class SDSandboxSimulator(PerturbationSimulator):
             actions_list = []
             speed_list = []
             isSuccess = False
+            timeout = False
 
             # reset the scene to match the scenario
             self.client.msg_handler.reset_scenario(waypoints)
             self.logger.info(f"Reset the scenario")
             time.sleep(2.0)
+            start_time = time.time()
 
             # run the scenario
             while self._client_connected(self.client):
@@ -99,6 +101,10 @@ class SDSandboxSimulator(PerturbationSimulator):
                         self.logger.info("SDSandBox: Done")
                         break
                     elif abs(obs["xte"]) > self.max_xte:
+                        break
+                    elif time.time() - start_time > 62:
+                        self.logger.info("SDSandBox: Timeout after 60s")
+                        timeout = True
                         break
 
                     # perturb the image
@@ -139,6 +145,7 @@ class SDSandboxSimulator(PerturbationSimulator):
                 ],
                 scenario=scenario,
                 isSuccess=isSuccess,
+                timeout=timeout,
             )
         except Exception as e:
             # close the simulator

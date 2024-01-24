@@ -18,6 +18,7 @@ from typing import Union
 import cv2
 import gym
 import numpy as np
+import time
 
 
 class UdacitySimulator(PerturbationSimulator):
@@ -74,15 +75,22 @@ class UdacitySimulator(PerturbationSimulator):
             speed_list = []
             isSuccess = False
             done = False
+            timeout = False
 
             # reset the scene to match the scenario
             # Road generatior ir none because we currently do not build random roads
             obs: ndarray[uint8] = self.client.reset(
                 skip_generation=False, track_string=waypoints
             )
+            start_time = time.time()
 
             # action loop
             while not done:
+                if time.time() - start_time > 62:
+                    self.logger.info("SDSandBox: Timeout after 60s")
+                    timeout = True
+                    break
+
                 obs = cv2.resize(obs, (320, 240), cv2.INTER_NEAREST)
 
                 # perturb the image
@@ -134,6 +142,7 @@ class UdacitySimulator(PerturbationSimulator):
                 actions=actions_list,
                 scenario=scenario,
                 isSuccess=isSuccess,
+                timeout=timeout,
             )
         except Exception as e:
             # close the simulator
