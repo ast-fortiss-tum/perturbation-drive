@@ -20,7 +20,7 @@ class Dave2Agent(ADS):
         self.model = load_model(model_path, compile=False)
         print(f"Using model: {model_path}")
         self.model.compile(loss="sgd", metrics=["mse"])
-        self.name = model_path.split("/")[-1]
+        self.name = model_path.split("/")[-1].split(".")[0]
 
     def action(self, input: ndarray[Any, dtype[uint8]]) -> List:
         """

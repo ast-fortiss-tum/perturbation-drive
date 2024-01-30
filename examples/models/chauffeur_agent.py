@@ -23,7 +23,7 @@ class ChauffeurAgent(ADS):
         use_adadelta = True
         optimizer = "adadelta" if use_adadelta else SGD(lr=0.0001, momentum=0.9)
         self.model.compile(loss="mse", optimizer=optimizer, metrics=["acc"])
-        self.name = model_path.split("/")[-1]
+        self.name = model_path.split("/")[-1].split(".")[0]
 
     def action(self, input: ndarray[Any, dtype[uint8]]) -> List:
         """
