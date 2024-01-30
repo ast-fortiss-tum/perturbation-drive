@@ -18,7 +18,7 @@ def _load_config() -> Dict[str, Any]:
     """
     Load the perturbation_config.json file and return it as a dictionary
     """
-    with open("./examples/open_sbt/perturbation_config.json") as json_file:
+    with open("./examples/open_sbt/perturbation_dave2_config.json") as json_file:
         data = json.load(json_file)
     return data
 

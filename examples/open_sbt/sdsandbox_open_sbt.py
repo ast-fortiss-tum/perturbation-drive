@@ -46,35 +46,41 @@ class SDSandBox_OpenSBTWrapper(Simulator):
 
         # extract the amount of angles from the variable names
         road_generator = InformedRoadGenerator(num_control_nodes=8, max_angle=35)
+        try:
+            # we need to set the sim here up to get the starting position
+            benchmarking_obj.simulator.connect()
+            starting_pos = benchmarking_obj.simulator.initial_pos
 
-        # we need to set the sim here up to get the starting position
-        benchmarking_obj.simulator.connect()
-        starting_pos = benchmarking_obj.simulator.initial_pos
+            # create all scenarios
+            scenarios: List[Scenario] = [
+                shortIndividualToScenario(
+                    individual=ind,
+                    variable_names=variable_names,
+                    road_generator=road_generator,
+                    starting_pos=starting_pos,
+                )
+                for ind in list_individuals
+            ]
 
-        # create all scenarios
-        scenarios: List[Scenario] = [
-            shortIndividualToScenario(
-                individual=ind,
+            hased_name = individualsToName(
+                individuals=list_individuals,
                 variable_names=variable_names,
-                road_generator=road_generator,
-                starting_pos=starting_pos,
+                sim_folder="sdsandbox",
+                prefix="dave2",
             )
-            for ind in list_individuals
-        ]
 
-        hased_name = individualsToName(
-            individuals=list_individuals, variable_names=variable_names, sim_folder="sdsandbox", prefix="dave2"
-        )
-
-        # run the individuals
-        outcomes: List[ScenarioOutcome] = benchmarking_obj.simulate_scenarios(
-            scenarios=scenarios,
-            attention_map={},
-            log_dir=f"./examples/open_sbt/sdsandbox/dave2_res_{hased_name}.json",
-            overwrite_logs=True,
-            image_size=(240, 320),
-        )
-        benchmarking_obj.simulator.tear_down()
+            # run the individuals
+            outcomes: List[ScenarioOutcome] = benchmarking_obj.simulate_scenarios(
+                scenarios=scenarios,
+                attention_map={},
+                log_dir=f"./examples/open_sbt/sdsandbox/dave2_res_{hased_name}.json",
+                overwrite_logs=True,
+                image_size=(240, 320),
+            )
+        except Exception as e:
+            print(f"Exceotion {e} in OpenSBT Sandbox Wrapper")
+        finally:
+            benchmarking_obj.simulator.tear_down()
 
         # convert the outcomes to sbt format
         return [
