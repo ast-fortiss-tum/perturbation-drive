@@ -1,6 +1,5 @@
 import pygame
 
-
 class ImageCallBack:
     def __init__(self, channels: int = 3, rows: int = 240, cols: int = 320):
         """
@@ -63,4 +62,4 @@ class ImageCallBack:
         Quits the monitor and display
         """
         pygame.display.quit()
-        pygame.quit()
+        pygame.quit()        

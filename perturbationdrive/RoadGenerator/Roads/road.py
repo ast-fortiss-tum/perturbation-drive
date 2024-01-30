@@ -2,6 +2,7 @@ import copy
 import random
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Dict, Iterator
+from scipy.interpolate import UnivariateSpline
 
 import numpy as np
 from shapely.geometry import Point
@@ -185,15 +186,14 @@ class Road(ABC):
         self,
     ) -> List[Tuple[float, float, List[Point]]]:
         result = []
-        v1 = np.subtract(self.road_points[1], self.road_points[0])
-        for i in range(len(self.road_points) - 1):
+        points_array = np.array([list(p.coords[0]) for p in self.road_points])
+        v1 = np.subtract(points_array[1], points_array[0])
+        for i in range(len(points_array) - 1):
             v0 = v1
-            v1 = np.subtract(self.road_points[i + 1], self.road_points[i])
+            v1 = np.subtract(points_array[i + 1], points_array[i])
             angle = self.compute_angle_distance(v0=v0, v1=v1)
             distance = np.linalg.norm(v1)
-            result.append(
-                (angle, distance, [self.road_points[i + 1], self.road_points[i]])
-            )
+            result.append((angle, distance, [points_array[i + 1], points_array[i]]))
         return result
 
     def compute_angle_distance_pairs_for_each_controlpoint(
@@ -203,15 +203,16 @@ class Road(ABC):
         Distance and angles between high level control points
         """
         result = []
-        v1 = np.subtract(self.control_points[1], self.control_points[0])
-        for i in range(len(self.control_points) - 1):
+        points_array = np.array([list(p.coords[0]) for p in self.control_points])
+        v1 = np.subtract(points_array[1], points_array[0])
+        for i in range(len(points_array) - 1):
             v0 = v1
-            v1 = np.subtract(self.control_points[i + 1], self.control_points[i])
+            v1 = np.subtract(points_array[i + 1], points_array[i])
             angle = self.compute_angle_distance(v0=v0, v1=v1)
+
             distance = np.linalg.norm(v1)
-            result.append(
-                (angle, distance, [self.control_points[i + 1], self.control_points[i]])
-            )
+            result.append((angle, distance, [points_array[i + 1], points_array[i]]))
+        print(f"Result is {result}")
         return result
 
     @staticmethod
@@ -286,7 +287,7 @@ class Road(ABC):
 
         first_segment_threshold = 15
         second_segment_threshold = 10
-        angle_threshold = 0.005
+        angle_threshold = 0.018
 
         # iterate over the nodes to get the turns bigger than the threshold
         # a turn category is assigned to each node
@@ -401,3 +402,38 @@ class Road(ABC):
             curvature = 2 * np.sin(angle) / (norm_u + norm_v)
             curvatures.append(curvature)
         return curvatures
+
+    def num_turns(self) -> int:
+        """
+        Calculates the number of turns in the road
+        """
+        turns, _ = self.compute_num_turns()
+        return turns
+
+    def curvature(self) -> float:
+        """
+        Calculates the curvature of the road
+        """
+        points = self.control_points
+        # Convert the Shapely Points to a numpy array for processing
+        points_array = np.array([[p.x, p.y, p.z] for p in points])
+
+        # Extract the x and y coordinates
+        x = points_array[:, 0]
+        y = points_array[:, 1]
+
+        # Fit splines to the x and y coordinates
+        # We use a cubic spline for a smooth curve
+        spl_x = UnivariateSpline(np.arange(len(x)), x, k=3, s=0)
+        spl_y = UnivariateSpline(np.arange(len(y)), y, k=3, s=0)
+
+        # Derivatives of the spline
+        dx = spl_x.derivative(1)(np.arange(len(x)))
+        dy = spl_y.derivative(1)(np.arange(len(y)))
+        ddx = spl_x.derivative(2)(np.arange(len(x)))
+        ddy = spl_y.derivative(2)(np.arange(len(y)))
+
+        # Calculate curvature at each point
+        curvature = np.abs(dx * ddy - dy * ddx) / (dx**2 + dy**2) ** 1.5
+
+        return round(np.average(curvature), 4)

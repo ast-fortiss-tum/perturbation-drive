@@ -15,7 +15,6 @@ import numpy as np
 from .RoadGenerator import RoadGenerator
 from .Roads.road import Road
 from .Roads.road_polygon import RoadPolygon
-from .Roads.bbox import RoadBoundingBox
 from .Roads.catmull_rom import catmull_rom
 
 
