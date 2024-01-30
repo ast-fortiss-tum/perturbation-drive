@@ -8,19 +8,21 @@ from model_ga.individual import Individual
 from typing import List
 
 # other example modules
-from examples.models.example_agent import ExampleAgent
+from examples.models.dave2_agent import Dave2Agent
 
 # Related to example
 from examples.udacity.udacity_simulator import UdacitySimulator
-
-from examples.open_sbt.utils_open_sbt import individualToScenario, calculate_velocities
-
+from examples.open_sbt.utils_open_sbt import (
+    calculate_velocities,
+    shortIndividualToScenario,
+    individualsToName,
+)
 # related to perturbation drive
 from perturbationdrive import (
     PerturbationDrive,
     ScenarioOutcome,
     Scenario,
-    CustomRoadGenerator,
+    InformedRoadGenerator,
 )
 
 
@@ -43,18 +45,17 @@ class Udacity_OpenSBTWrapper(Simulator):
             host="127.0.0.1",
             port=9091,
         )
-        ads = ExampleAgent()
+        ads = Dave2Agent()
         benchmarking_obj = PerturbationDrive(simulator, ads)
         # extract the amount of angles from the variable names
-        amount_angles = len([x for x in variable_names if x.startswith("angle")])
-        road_generator = CustomRoadGenerator(num_control_nodes=amount_angles)
+        road_generator = InformedRoadGenerator(num_control_nodes=8, max_angle=35)
         # we need to set the sim here up to get the starting position
         benchmarking_obj.simulator.connect()
         starting_pos = benchmarking_obj.simulator.initial_pos
 
         # create all scenarios
         scenarios: List[Scenario] = [
-            individualToScenario(
+            shortIndividualToScenario(
                 individual=ind,
                 variable_names=variable_names,
                 road_generator=road_generator,
@@ -62,12 +63,17 @@ class Udacity_OpenSBTWrapper(Simulator):
             )
             for ind in list_individuals
         ]
-
+        hased_name = individualsToName(
+            individuals=list_individuals,
+            variable_names=variable_names,
+            sim_folder="udacity",
+            prefix="dave2",
+        )
         # run the individualts
         outcomes: List[ScenarioOutcome] = benchmarking_obj.simulate_scenarios(
             scenarios=scenarios,
             attention_map={},
-            log_dir="./examples/open_sbt/perturbation_udacity_logs_1.json",
+            log_dir=f"./examples/open_sbt/udacity/dave2_res_{hased_name}.json",
             overwrite_logs=False,
             image_size=(240, 320),
         )

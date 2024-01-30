@@ -79,6 +79,7 @@ def individualToScenario(
 def individualsToName(
     individuals: List[Individual],
     variable_names: List[str],
+    sim_folder: str = "sdsandbox",
     prefix: str = "",
 ) -> str:
     """
@@ -96,7 +97,7 @@ def individualsToName(
     hased_name = _hash_string_to_20_chars(name)
     # write res as json to hash_name.json
     with open(
-        f"./logs/open_sbt/sdsandbox/{prefix}individual_{hased_name}.json", "w"
+        f"./logs/open_sbt/{sim_folder}/{prefix}individual_{hased_name}.json", "w"
     ) as outfile:
         json.dump(res, outfile)
     return hased_name

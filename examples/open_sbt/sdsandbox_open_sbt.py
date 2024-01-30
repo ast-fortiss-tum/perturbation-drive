@@ -4,9 +4,13 @@ from model_ga.individual import Individual
 
 from typing import List, Dict, Any, Union
 
-from examples.models.example_agent import ExampleAgent
+from examples.models.dave2_agent import Dave2Agent
 
-from examples.open_sbt.utils_open_sbt import individualToScenario, calculate_velocities
+from examples.open_sbt.utils_open_sbt import (
+    calculate_velocities,
+    shortIndividualToScenario,
+    individualsToName,
+)
 from examples.self_driving_sandbox_donkey.sdsandbox_simulator import SDSandboxSimulator
 
 # related to perturbation drive
@@ -14,7 +18,7 @@ from perturbationdrive import (
     PerturbationDrive,
     ScenarioOutcome,
     Scenario,
-    CustomRoadGenerator,
+    InformedRoadGenerator,
 )
 
 
@@ -37,12 +41,11 @@ class SDSandBox_OpenSBTWrapper(Simulator):
             host="127.0.0.1",
             port=9091,
         )
-        ads = ExampleAgent()
+        ads = Dave2Agent()
         benchmarking_obj = PerturbationDrive(simulator, ads)
 
         # extract the amount of angles from the variable names
-        amount_angles = len([x for x in variable_names if x.startswith("angle")])
-        road_generator = CustomRoadGenerator(num_control_nodes=amount_angles)
+        road_generator = InformedRoadGenerator(num_control_nodes=8, max_angle=35)
 
         # we need to set the sim here up to get the starting position
         benchmarking_obj.simulator.connect()
@@ -50,7 +53,7 @@ class SDSandBox_OpenSBTWrapper(Simulator):
 
         # create all scenarios
         scenarios: List[Scenario] = [
-            individualToScenario(
+            shortIndividualToScenario(
                 individual=ind,
                 variable_names=variable_names,
                 road_generator=road_generator,
@@ -59,16 +62,19 @@ class SDSandBox_OpenSBTWrapper(Simulator):
             for ind in list_individuals
         ]
 
-        # run the individualts
+        hased_name = individualsToName(
+            individuals=list_individuals, variable_names=variable_names, sim_folder="sdsandbox", prefix="dave2"
+        )
+
+        # run the individuals
         outcomes: List[ScenarioOutcome] = benchmarking_obj.simulate_scenarios(
             scenarios=scenarios,
             attention_map={},
-            log_dir="./examples/open_sbt/perturbation_sdsandbox_logs_1.json",
-            overwrite_logs=False,
+            log_dir=f"./examples/open_sbt/sdsandbox/dave2_res_{hased_name}.json",
+            overwrite_logs=True,
             image_size=(240, 320),
         )
         benchmarking_obj.simulator.tear_down()
-
 
         # convert the outcomes to sbt format
         return [
