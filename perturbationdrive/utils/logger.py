@@ -5,6 +5,7 @@ import json
 import os
 from typing import List
 import sys
+import numpy as np
 
 from ..Simulator.Scenario import ScenarioOutcome, OfflineScenarioOutcome
 from .custom_types import LOGGING_LEVEL
@@ -85,7 +86,7 @@ class ScenarioOutcomeWriter:
 
             # Write updated data back to file
             with open(self.file_path, "w") as file:
-                json.dump(data, file, indent=4)
+                json.dump(data, file, cls=NumpyEncoder, indent=4)
 
 
 class OfflineScenarioOutcomeWriter:
@@ -179,3 +180,10 @@ class GlobalLog:
     def critical(self, message):
         """Log critical message"""
         self.logger.critical(message)
+
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)

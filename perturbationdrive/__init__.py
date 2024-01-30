@@ -97,6 +97,7 @@ from .AutomatedDrivingSystem.ADS import ADS
 from .RoadGenerator.RoadGenerator import RoadGenerator
 from .RoadGenerator.RandomRoadGenerator import RandomRoadGenerator
 from .RoadGenerator.CustomRoadGenerator import CustomRoadGenerator
+from .RoadGenerator.informed_road_generator import InformedRoadGenerator
 from .Simulator.Simulator import PerturbationSimulator
 from .Simulator.Scenario import Scenario, ScenarioOutcome, OfflineScenarioOutcome
 from .Simulator.image_callback import ImageCallBack

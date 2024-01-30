@@ -58,6 +58,7 @@ track_sent = False
 pos_x = 0.0
 pos_y = 0.0
 pos_z = 0.0
+udacity_unreactiv = False
 
 
 @sio.on("connect")
@@ -65,18 +66,27 @@ def connect(sid, environ) -> None:
     global is_connect
     is_connect = True
     print("Connect to Udacity simulator: {}".format(sid))
-    send_control(steering_angle=0, throttle=0)
+    send_control(steering_angle=0, throttle_command=0)
 
 
-def send_control(steering_angle: float, throttle: float) -> None:
+def send_control(steering_angle: float, throttle_command: float) -> None:
     sio.emit(
         "steer",
         data={
             "steering_angle": steering_angle.__str__(),
-            "throttle": throttle.__str__(),
+            "throttle": throttle_command.__str__(),
         },
         skip_sid=True,
     )
+    global udacity_unreactiv
+    global speed
+
+    if throttle_command >= 0.01 and round(speed, 1) == 0.0:
+        print(f"Warning: Throttle is {throttle_command} but speed is {speed}\n")
+        udacity_unreactiv = True
+    if speed > 0.0 and udacity_unreactiv:
+        print("Warning: Udacity is reactivated\n")
+        udacity_unreactiv = False
 
 
 def send_track(track_string: str) -> None:
@@ -84,10 +94,14 @@ def send_track(track_string: str) -> None:
     if not track_sent:
         sio.emit("track", data={"track_string": track_string}, skip_sid=True)
         track_sent = True
+        print("SendTrack", end="\n", flush=True)
+    else:
+        print("Track already sent", end="\n", flush=True)
 
 
 def send_reset() -> None:
     sio.emit("reset", data={}, skip_sid=True)
+    print("Reset", end="\n", flush=True)
 
 
 @sio.on("telemetry")
@@ -105,6 +119,7 @@ def telemetry(sid, data) -> None:
     global pos_x
     global pos_y
     global pos_z
+    global udacity_unreactiv
 
     if data:
         speed = float(data["speed"]) * 3.6  # conversion m/s to km/h
@@ -125,7 +140,11 @@ def telemetry(sid, data) -> None:
             send_track(track_string=generated_track_string)
             time.sleep(0.5)
         else:
-            send_control(steering_angle=steering, throttle=throttle)
+            send_control(steering_angle=steering, throttle_command=throttle)
+    else:
+        print("Wawrning: Udacity data is None")
+    if udacity_unreactiv:
+        print(f"Warning: Udacity Non Reactive, received {data} from sid {sid}\n")
 
 
 class UdacitySimController:
@@ -221,8 +240,9 @@ class UdacitySimController:
         global pos_z
         global cte
 
-        while last_obs is image_array:
-            time.sleep(1.0 / 120.0)
+        # while last_obs is image_array:
+        #    time.sleep(1.0 / 120.0)
+        #    print("Waiting for new image")
 
         last_obs = image_array
         self.image_array = image_array

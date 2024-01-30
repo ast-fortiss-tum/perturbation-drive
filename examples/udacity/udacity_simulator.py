@@ -9,6 +9,7 @@ from perturbationdrive import (
     ImagePerturbation,
     GlobalLog as Gl,
 )
+import traceback
 
 # used libraries
 from examples.udacity.udacity_utils.envs.udacity.udacity_gym_env import (
@@ -45,11 +46,15 @@ class UdacitySimulator(PerturbationSimulator):
             seed=1,
             exe_path=self.simulator_exe_path,
         )
+        self.client.reset()
+        time.sleep(2)
         self.logger.info("Connected to Udacity Simulator")
         # set initial pos
         obs, done, info = self.client.observe()
         x, y, z = info["pos"]
-        self.initial_pos = (x, y, z, 2 * self.max_xte)
+        if self.initial_pos is None:
+            self.initial_pos = (x, y, z, 2 * self.max_xte)
+        self.logger.info(f"Initial pos: {self.initial_pos}")
 
     def simulate_scanario(
         self, agent: ADS, scenario: Scenario, perturbation_controller: ImagePerturbation
@@ -60,8 +65,8 @@ class UdacitySimulator(PerturbationSimulator):
             perturbation_scale = scenario.perturbation_scale
 
             # set up image monitor
-            monitor = ImageCallBack()
-            monitor.display_waiting_screen()
+            # monitor = ImageCallBack()
+            # monitor.display_waiting_screen()
             self.logger.info(f"{5 * '-'} Starting udacity scenario {5 * '_'}")
 
             # set all params for init loop
@@ -87,7 +92,7 @@ class UdacitySimulator(PerturbationSimulator):
             # action loop
             while not done:
                 if time.time() - start_time > 62:
-                    self.logger.info("SDSandBox: Timeout after 60s")
+                    self.logger.info("SDSandBox: Timeout after 120s")
                     timeout = True
                     break
 
@@ -109,12 +114,12 @@ class UdacitySimulator(PerturbationSimulator):
                         self.client.action_space.high,
                     )
 
-                monitor.display_img(
-                    perturbed_image,
-                    f"{actions[0][0]}",
-                    f"{actions[0][1]}",
-                    perturbation_function_string,
-                )
+                # monitor.display_img(
+                #    perturbed_image,
+                #    f"{actions[0][0]}",
+                #    f"{actions[0][1]}",
+                #    perturbation_function_string,
+                # )
                 # obs is the image, info contains the road and the position of the car
                 obs, done, info = self.client.step(actions)
 
@@ -129,7 +134,8 @@ class UdacitySimulator(PerturbationSimulator):
             self.logger.info(
                 f"{5 * '-'} Finished udacity scenario: {isSuccess} {5 * '_'}"
             )
-            monitor.display_disconnect_screen()
+            # monitor.display_disconnect_screen()
+            # monitor.destroy()
 
             # reset for the new track
             _ = self.client.reset(skip_generation=False, track_string=waypoints)
@@ -147,6 +153,7 @@ class UdacitySimulator(PerturbationSimulator):
         except Exception as e:
             # close the simulator
             self.tear_down()
+            traceback.print_stack()
             # throw the exception
             raise e
 

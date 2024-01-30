@@ -144,7 +144,7 @@ class SDSandboxSimulator(PerturbationSimulator):
                     (f"{action[0][0]}", f"{action[0][0]}") for action in actions_list
                 ],
                 scenario=scenario,
-                isSuccess=isSuccess,
+                isSuccess=isSuccess and max([abs(xte) for xte in xte_list]) <= self.max_xte,
                 timeout=timeout,
             )
         except Exception as e:

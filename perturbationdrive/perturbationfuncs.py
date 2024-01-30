@@ -1098,7 +1098,8 @@ def dynamic_snow_filter(scale, image, iterator):
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
-    rain_overlay = _shift_color(rain_overlay, [71, 253, 135], [255, 255, 255])
+    snow_overlay = next(iterator)
+    snow_overlay = _shift_color(snow_overlay, [71, 253, 135], [255, 255, 255])
 
     if (
         snow_overlay.shape[0] != image.shape[0]
@@ -1126,7 +1127,7 @@ def static_snow_filter(scale, image, snow_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    rain_overlay = _shift_color(rain_overlay, [71, 253, 135], [255, 255, 255])
+    snow_overlay = _shift_color(snow_overlay, [71, 253, 135], [255, 255, 255])
 
     if (
         snow_overlay.shape[0] != image.shape[0]
@@ -1383,6 +1384,7 @@ def dynamic_lightning_filter(scale, image, iterator):
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
+    rain_overlay = next(iterator)
     rain_overlay = _shift_color(rain_overlay, [5, 122, 101], [8, 152, 188])
 
     # Resize the frost overlay to match the input image dimensions
