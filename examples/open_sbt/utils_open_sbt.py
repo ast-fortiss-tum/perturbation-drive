@@ -1,16 +1,19 @@
 # related to open_sbt
 from model_ga.individual import Individual
+from simulation.simulator import SimulationOutput
 
 import numpy as np
 from typing import List, Union, Tuple, Dict, Any
 import json
 import hashlib
+import math
 
 # related to perturbation drive
 from perturbationdrive import (
     Scenario,
     CustomRoadGenerator,
     InformedRoadGenerator,
+    ScenarioOutcome,
 )
 
 
@@ -86,15 +89,15 @@ def individualsToName(
     Generates a name for the individual based on the values of the genes
     """
     res = {}
-    name = ""
+    fileName = ""
     for i, individual in enumerate(individuals):
         temp = {}
         for name, value in zip(variable_names, individual):
-            name += f"{str(value)}:"
+            fileName += f"{str(value)}:"
             temp[name] = value
         res[i] = temp
         name += "_"
-    hased_name = _hash_string_to_20_chars(name)
+    hased_name = _hash_string_to_20_chars(fileName)
     # write res as json to hash_name.json
     with open(
         f"./logs/open_sbt/{sim_folder}/{prefix}individual_{hased_name}.json", "w"
@@ -183,3 +186,83 @@ def calculate_velocities(
         velocity = direction * speeds[i]
         velocities.append(velocity)
     return velocities
+
+
+def findClosestPoint(
+    point: Tuple[float, float, float], pointsStr: str
+) -> Tuple[int, int]:
+    # point is a tuple of (x, y, z)
+    # pointsStr is a string of a list of points seperated by @
+    stringPoints = pointsStr.split("@")
+    point = [float(value) for value in point]
+    if math.floor(point[2] * 10) / 10 == 0.5:
+        point[1], point[2] = point[2], point[1]
+    # cast each strring from 0.1,0.2,0.3 to [0.1, 0.2, 0.3]
+    points = [list(map(float, point.split(","))) for point in stringPoints]
+    # find closest match of point in points
+    closest = min(points, key=lambda p: sum((a - b) ** 2 for a, b in zip(p, point)))
+    # return index of closest point and total length of points
+    return (points.index(closest), len(points))
+
+
+def distanceToLastRoadPoint(point: Tuple[float, float, float], pointsStr: str) -> float:
+    point = [float(value) for value in point]
+    stringPoints = pointsStr.split("@")
+    waypoints = [list(map(float, point.split(","))) for point in stringPoints]
+    x = [point_[0] for point_ in waypoints]
+    y = [point_[2] for point_ in waypoints]
+    z = [point_[1] for point_ in waypoints]
+    lastPoint = (x[-1], y[-1], z[-1])
+    if math.floor(lastPoint[1] * 10) / 10 == 0.5:
+        lastPoint[1], lastPoint[2] = lastPoint[2], lastPoint[1]
+    if math.floor(point[1] * 10) / 10 == 0.5:
+        point[1], point[2] = point[2], point[1]
+    return sum((a - b) ** 2 for a, b in zip(lastPoint, point))
+
+
+def mapOutComeToSimout(outcome: ScenarioOutcome) -> SimulationOutput:
+    """
+    Maps the outcome of a scenario to a SimulationOutput object. Other parameters are
+    xte, timeout, isSuccess, and ttf.
+
+    Args:
+        outcome (ScenarioOutcome): The outcome of a scenario.
+
+    Returns:
+        SimulationOutput: The mapped simulation output.
+
+    """
+    posLast = outcome.pos[-1]
+    # swap the y and z values
+    posLast[1], posLast[2] = posLast[2], posLast[1]
+
+    # find the closest point to the last value in pos
+    closestPoint, totalPoints = findClosestPoint(posLast, outcome.scenario.waypoints)
+    quickness = 1 - (closestPoint / totalPoints)
+
+    # get distance to last road point
+    distance = distanceToLastRoadPoint(posLast, outcome.scenario.waypoints)
+    abs_xte = [abs(xte) for xte in outcome.xte]
+    isSuccess = max(abs_xte) < 2.0 and distance <= 6.0
+
+    return SimulationOutput(
+        simTime=float(len(outcome.frames)),
+        times=outcome.frames,
+        location={"ego": [(x[0], x[1]) for x in outcome.pos]},
+        velocity={"ego": calculate_velocities(outcome.pos, outcome.speeds)},
+        speed={"ego": outcome.speeds},
+        acceleration={"ego": []},
+        yaw={
+            "ego": [],
+        },
+        collisions=[],
+        actors={
+            1: "ego",
+        },
+        otherParams={
+            "xte": outcome.xte,
+            "timeout": outcome.timeout,
+            "isSuccess": isSuccess,
+            "ttf": quickness,
+        },
+    )

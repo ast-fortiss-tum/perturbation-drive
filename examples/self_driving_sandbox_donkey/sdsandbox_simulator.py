@@ -26,6 +26,7 @@ class SDSandboxSimulator(PerturbationSimulator):
         simulator_exe_path: str = "./sim/donkey-sim.app",
         host: str = "127.0.0.1",
         port: int = 9091,
+        show_image_cb=True,
     ):
         super().__init__(
             max_xte=2.0,
@@ -38,6 +39,7 @@ class SDSandboxSimulator(PerturbationSimulator):
         self.client: Union[DonkeySimMsgHandler, None] = None
         self.process: DonkeyProcess = DonkeyProcess()
         self.logger = GlobalLog("SDSandBoxSimulator")
+        self.show_image_cb = show_image_cb
 
     def connect(self):
         # launch the sim binary here
@@ -45,7 +47,7 @@ class SDSandboxSimulator(PerturbationSimulator):
 
         super().connect()
         address = (self.host, self.port)
-        handler = DonkeySimMsgHandler()
+        handler = DonkeySimMsgHandler(show_image_cb=self.show_image_cb)
         self.client = SimClient(address, handler)
 
         # wait for the first observation here
@@ -144,7 +146,8 @@ class SDSandboxSimulator(PerturbationSimulator):
                     (f"{action[0][0]}", f"{action[0][0]}") for action in actions_list
                 ],
                 scenario=scenario,
-                isSuccess=isSuccess and max([abs(xte) for xte in xte_list]) <= self.max_xte,
+                isSuccess=isSuccess
+                and max([abs(xte) for xte in xte_list]) <= self.max_xte,
                 timeout=timeout,
             )
         except Exception as e:

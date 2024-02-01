@@ -1,13 +1,16 @@
 # related to open_sbt
 from simulation.simulator import Simulator, SimulationOutput
 from model_ga.individual import Individual
+import traceback
+import gc
+import math
 
-from typing import List, Dict, Any, Union
+from typing import List, Tuple
 
 from examples.models.dave2_agent import Dave2Agent
 
 from examples.open_sbt.utils_open_sbt import (
-    calculate_velocities,
+    mapOutComeToSimout,
     shortIndividualToScenario,
     individualsToName,
 )
@@ -40,6 +43,7 @@ class SDSandBox_OpenSBTWrapper(Simulator):
             simulator_exe_path="./examples/self_driving_sandbox_donkey/sim/donkey-sim.app",
             host="127.0.0.1",
             port=9091,
+            show_image_cb=False,
         )
         ads = Dave2Agent()
         benchmarking_obj = PerturbationDrive(simulator, ads)
@@ -73,32 +77,21 @@ class SDSandBox_OpenSBTWrapper(Simulator):
             outcomes: List[ScenarioOutcome] = benchmarking_obj.simulate_scenarios(
                 scenarios=scenarios,
                 attention_map={},
-                log_dir=f"./examples/open_sbt/sdsandbox/dave2_res_{hased_name}.json",
+                log_dir=f"./logs/open_sbt/sdsandbox/dave2_res_{hased_name}.json",
                 overwrite_logs=True,
                 image_size=(240, 320),
             )
         except Exception as e:
-            print(f"Exceotion {e} in OpenSBT Sandbox Wrapper")
+            print(f"Exception {e} in OpenSBT Sandbox Wrapper")
+            traceback.print_exc()
         finally:
             benchmarking_obj.simulator.tear_down()
+            # delete unncesessary objects from memory
+            del benchmarking_obj
+            del simulator
+            del ads
+            # free up memory
+            gc.collect()
 
         # convert the outcomes to sbt format
-        return [
-            SimulationOutput(
-                simTime=float(len(outcome.frames)),
-                times=outcome.frames,
-                location={"ego": [(x[0], x[1]) for x in outcome.pos]},
-                velocity={"ego": calculate_velocities(outcome.pos, outcome.speeds)},
-                speed={"ego": outcome.speeds},
-                acceleration={"ego": []},
-                yaw={
-                    "ego": [],
-                },
-                collisions=[],
-                actors={
-                    1: "ego",
-                },
-                otherParams={"xte": outcome.xte},
-            )
-            for outcome in outcomes
-        ]
+        return [mapOutComeToSimout(outcome) for outcome in outcomes]

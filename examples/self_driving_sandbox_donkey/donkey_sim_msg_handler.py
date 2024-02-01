@@ -26,6 +26,7 @@ class DonkeySimMsgHandler(IMesgHandler):
     def __init__(
         self,
         rand_seed=0,
+        show_image_cb=True,
     ):
         """
         :param rand_seed:  The random seed used for the simulator
@@ -36,9 +37,12 @@ class DonkeySimMsgHandler(IMesgHandler):
         # we need this if we want to measure the diff in steering angles
         self.unchanged_img_arr = None
         # set the image call back to monitor the data
-        self.image_cb = ImageCallBack()
-        # display waiting screen
-        self.image_cb.display_waiting_screen()
+        if show_image_cb:
+            self.image_cb = ImageCallBack()
+            # display waiting screen
+            self.image_cb.display_waiting_screen()
+        else:
+            self.image_cb = None
         self.steering_angle = 0.0
         self.throttle = 0.0
         self.rand_seed = rand_seed
@@ -66,14 +70,16 @@ class DonkeySimMsgHandler(IMesgHandler):
         self.logger.critical(
             f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Aborted {5 * '+'}"
         )
-        self.image_cb.display_disconnect_screen()
+        if self.image_cb is not None:
+            self.image_cb.display_disconnect_screen()
         self.stop()
 
     def on_disconnect(self):
         """
         Called when the simulator disconnects
         """
-        self.image_cb.display_disconnect_screen()
+        if self.image_cb is not None:
+            self.image_cb.display_disconnect_screen()
         msg = {
             "msg_type": "disconnect",
         }
@@ -161,7 +167,7 @@ class DonkeySimMsgHandler(IMesgHandler):
 
         self.client.queue_message(msg)
         # run the image call back to inspect the image
-        if perturbed_image is not None:
+        if perturbed_image is not None and self.image_cb is not None:
             self.image_cb.display_img(
                 perturbed_image,
                 f"{self.steering_angle}",
@@ -183,7 +189,8 @@ class DonkeySimMsgHandler(IMesgHandler):
 
         self.client.queue_message(msg)
         # display waiting screen
-        self.image_cb.display_waiting_screen()
+        if self.image_cb is not None:
+            self.image_cb.display_waiting_screen()
 
     def reset_car(self):
         """
@@ -192,13 +199,15 @@ class DonkeySimMsgHandler(IMesgHandler):
         msg = {"msg_type": "reset_car"}
         self.client.queue_message(msg)
         # display waiting screen
-        self.image_cb.display_waiting_screen()
+        if self.image_cb is not None:
+            self.image_cb.display_waiting_screen()
 
     def on_close(self):
         """
         Called when the simulator closes
         """
-        self.image_cb.display_disconnect_screen()
+        if self.image_cb is not None:
+            self.image_cb.display_disconnect_screen()
         self.logger.info(
             f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Message Closed by SimClient {5 * '+'}"
         )
@@ -207,7 +216,8 @@ class DonkeySimMsgHandler(IMesgHandler):
         """
         Called when the simulator stops
         """
-        self.image_cb.display_disconnect_screen()
+        if self.image_cb is not None:
+            self.image_cb.display_disconnect_screen()
         self.logger.info(
             f"DonkeySimMsgHandler: {5 * '+'} Warning: Donkey Sim Message Stoped {5 * '+'}"
         )

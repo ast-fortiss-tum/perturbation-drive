@@ -20,19 +20,26 @@ class FitnessFunction(Fitness):
 
     @property
     def min_or_max(self):
-        return "max", "max"
+        return "max", "max", "max"
 
     @property
     def name(self):
-        return "Average xte", "Max xte"
+        return "Average xte", "TTF", "Criticality"
 
     def eval(self, simout: SimulationOutput) -> Tuple[float]:
         try:
             traceXTE = [abs(x) for x in simout.otherParams["xte"]]
-            return (np.average(traceXTE), max(traceXTE))
+            criticality = int(simout.otherParams["timeout"]) + int(
+                simout.otherParams["isSuccess"]
+            )
+            return (
+                np.average(traceXTE),
+                simout.otherParams["ttf"],
+                criticality,
+            )
         except Exception as e:
             print(f"Fitness Function: Exception is {e}")
-            return (0.0, 0.0)
+            return (0.0, 0.0, 0.0)
 
 
 class Criticality(Critical):
@@ -40,5 +47,9 @@ class Criticality(Critical):
         self.max_xte = max_xte
 
     def eval(self, vector_fitness, simout: SimulationOutput = None):
-        # we fail the scenario, if max xte > 3
-        return vector_fitness[1] > self.max_xte
+        # we fail the scenario, if we had either a timeout or a out of bounds
+        if vector_fitness[3] >= 1:
+            print("Found critical scenario")
+        else:
+            print("Found non-critical scenario")
+        return vector_fitness[3] >= 1

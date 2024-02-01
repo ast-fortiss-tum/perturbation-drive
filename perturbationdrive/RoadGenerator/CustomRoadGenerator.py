@@ -113,7 +113,6 @@ class CustomRoadGenerator(RoadGenerator):
         seg_lengths = None
         if "seg_lengths" in kwargs:
             seg_lengths = kwargs["seg_lengths"]
-            print("Segment lengths are {}".format(seg_lengths))
 
         control_nodes = self.generate_control_nodes(
             starting_pos=kwargs["starting_pos"],

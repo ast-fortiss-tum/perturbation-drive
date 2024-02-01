@@ -144,6 +144,11 @@ class PerturbationDrive:
         print(f"{5 * '-'} Finished offline benchmarking {5 * '-'}")
 
         # TODO: Show command line summary here
+        del iamge_perturbation
+        del image
+        del image_files
+        del files
+        del perturbations
 
         if log_dir is None:
             return results
@@ -235,6 +240,9 @@ class PerturbationDrive:
                 perturbations.remove(perturbation)
 
         # TODO: print command line summary of benchmarking process
+        del image_perturbation
+        del scenario
+        del road_generator
 
         # tear down the simulator
         self.simulator.tear_down()
@@ -276,6 +284,7 @@ class PerturbationDrive:
             outcomes.append(outcome)
             time.sleep(2.0)
 
+        del iamge_perturbation
         # tear sim down
         if log_dir is not None:
             scenario_writer = ScenarioOutcomeWriter(log_dir, overwrite_logs)
