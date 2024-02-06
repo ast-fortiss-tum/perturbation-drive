@@ -1156,7 +1156,7 @@ def dynamic_rain_filter(scale, image, iterator):
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     rain_overlay = next(iterator)
-    rain_overlay = _shift_color(rain_overlay, [31, 146, 59], [84, 46, 43])
+    rain_overlay = _shift_color(rain_overlay, [31, 146, 59], [191, 35, 0])
 
     # Load the next frame from the iterator
     if (
@@ -1185,7 +1185,7 @@ def static_rain_filter(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    rain_overlay = _shift_color(rain_overlay, [31, 146, 59], [84, 46, 43])
+    rain_overlay = _shift_color(rain_overlay, [31, 146, 59], [191, 35, 0])
 
     if (
         rain_overlay.shape[0] != image.shape[0]
@@ -1444,7 +1444,7 @@ def dynamic_smoke_filter(scale, image, iterator):
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
-    rain_overlay = _shift_color(rain_overlay, [29, 128,  81], [132, 138, 135])
+    rain_overlay = _shift_color(rain_overlay, [29, 128, 81], [132, 138, 135])
 
     # Resize the frost overlay to match the input image dimensions
     if (
@@ -1473,7 +1473,7 @@ def static_smoke_filter(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    rain_overlay = _shift_color(rain_overlay, [29, 128,  81], [132, 138, 135])
+    rain_overlay = _shift_color(rain_overlay, [29, 128, 81], [132, 138, 135])
     if (
         rain_overlay.shape[0] != image.shape[0]
         or rain_overlay.shape[1] != image.shape[1]
@@ -1508,6 +1508,57 @@ def perturb_high_attention_regions(
         raise ValueError("The boundary value needs to be in the range of [0, 1]")
     # Create a binary mask from the array
     mask = saliency_map > boundary
+    # Apply the gaussian noise to the whole image
+    noise_img = perturbation(scale, image)
+    # Now apply the mask: replace the original image pixels with noisy pixels where mask is True
+    image[mask] = noise_img[mask]
+    return image
+
+
+def perturb_highest_n_attention_regions(
+    saliency_map, image, perturbation, n=30, scale=0
+):
+    """
+    Perturbs the highest n% of the regions of an image where the saliency map has an value greater than threshold
+    """
+    if n < 0 or n > 100:
+        raise ValueError("The threshold value needs to be in the range of [0, 100]")
+    # Create a binary mask from the array
+    mask = saliency_map > np.percentile(saliency_map, n)
+    # Apply the gaussian noise to the whole image
+    noise_img = perturbation(scale, image)
+    # Now apply the mask: replace the original image pixels with noisy pixels where mask is True
+    image[mask] = noise_img[mask]
+    return image
+
+
+def perturb_lowest_n_attention_regions(
+    saliency_map, image, perturbation, n=30, scale=0
+):
+    """
+    Perturbs the lowest n% of the regions of an image where the saliency map has an value greater than threshold
+    """
+    if n < 0 or n > 100:
+        raise ValueError("The threshold value needs to be in the range of [0, 100]")
+    # Create a binary mask from the array
+    mask = saliency_map < np.percentile(saliency_map, n)
+    # Apply the gaussian noise to the whole image
+    noise_img = perturbation(scale, image)
+    # Now apply the mask: replace the original image pixels with noisy pixels where mask is True
+    image[mask] = noise_img[mask]
+    return image
+
+
+def perturb_random_n_attention_regions(
+    saliency_map, image, perturbation, n=30, scale=0
+):
+    """
+    Perturbs n% of the regions of an image where the saliency map has an value greater than threshold
+    """
+    if n < 0 or n > 100:
+        raise ValueError("The n value needs to be in the range of [0, 100]")
+    # Create a binary mask from the array
+    mask = np.random.choice([True, False], size=saliency_map.shape, p=[n / 100, 1 - n / 100])
     # Apply the gaussian noise to the whole image
     noise_img = perturbation(scale, image)
     # Now apply the mask: replace the original image pixels with noisy pixels where mask is True

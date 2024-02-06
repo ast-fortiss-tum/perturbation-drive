@@ -94,7 +94,7 @@ def individualsToName(
         temp = {}
         for name, value in zip(variable_names, individual):
             fileName += f"{str(value)}:"
-            temp[name] = value
+            temp[name] = int(value)
         res[i] = temp
         name += "_"
     hased_name = _hash_string_to_20_chars(fileName)
@@ -136,7 +136,7 @@ def shortIndividualToScenario(
         elif variables_name == "num_turns":
             num_turns = int(value)
         elif variables_name == "avg_smoothness":
-            avg_smoothness = float(value)
+            avg_smoothness = float(value) / 1000
 
     # generate the road string from the configuration
     road_str: str = road_generator.generate(
@@ -148,7 +148,7 @@ def shortIndividualToScenario(
 
     # map the function
     amount_keys = len(list(function_mapping.keys()))
-    if perturbation_function_int > 0 and perturbation_function_int <= amount_keys:
+    if perturbation_function_int >= 0 and perturbation_function_int <= amount_keys:
         perturbation_function = function_mapping[str(perturbation_function_int)]
         print(
             f"IndividualToScenario: Function is {function_mapping[str(perturbation_function_int)]}/{perturbation_function}"
