@@ -285,8 +285,10 @@ class PerturbationDrive:
             time.sleep(2.0)
 
         del iamge_perturbation
+        del perturbations
         # tear sim down
         if log_dir is not None:
             scenario_writer = ScenarioOutcomeWriter(log_dir, overwrite_logs)
             scenario_writer.write(outcomes)
+            del scenario_writer
         return outcomes

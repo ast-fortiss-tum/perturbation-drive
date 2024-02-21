@@ -1444,7 +1444,7 @@ def dynamic_smoke_filter(scale, image, iterator):
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
-    rain_overlay = _shift_color(rain_overlay, [29, 128, 81], [132, 138, 135])
+    rain_overlay = _shift_color(rain_overlay, [30, 112, 65], [132, 132, 132])
 
     # Resize the frost overlay to match the input image dimensions
     if (
@@ -1473,7 +1473,7 @@ def static_smoke_filter(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    rain_overlay = _shift_color(rain_overlay, [29, 128, 81], [132, 138, 135])
+    rain_overlay = _shift_color(rain_overlay, [30, 112, 65], [132, 132, 132])
     if (
         rain_overlay.shape[0] != image.shape[0]
         or rain_overlay.shape[1] != image.shape[1]
@@ -1541,7 +1541,11 @@ def perturb_lowest_n_attention_regions(
     if n < 0 or n > 100:
         raise ValueError("The threshold value needs to be in the range of [0, 100]")
     # Create a binary mask from the array
-    mask = saliency_map < np.percentile(saliency_map, n)
+    thres = np.percentile(saliency_map, n)
+    if thres == 0:
+        mask = saliency_map <= thres
+    else:
+        mask = saliency_map < thres
     # Apply the gaussian noise to the whole image
     noise_img = perturbation(scale, image)
     # Now apply the mask: replace the original image pixels with noisy pixels where mask is True

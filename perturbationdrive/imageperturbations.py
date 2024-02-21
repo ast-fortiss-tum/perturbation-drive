@@ -2,10 +2,7 @@ import numpy as np
 import cv2
 import os
 import itertools
-import random
 import skimage.exposure
-import logging
-import datetime
 from perturbationdrive.perturbationfuncs import (
     gaussian_noise,
     poisson_noise,
@@ -55,6 +52,9 @@ from perturbationdrive.perturbationfuncs import (
     dynamic_lightning_filter,
     dynamic_smoke_filter,
     perturb_high_attention_regions,
+    perturb_highest_n_attention_regions,
+    perturb_lowest_n_attention_regions,
+    perturb_random_n_attention_regions,
     static_lightning_filter,
     static_smoke_filter,
     static_sun_filter,
@@ -89,7 +89,9 @@ class ImagePerturbation:
         `grad_cam` or `vanilla`.
         If you want to perturb based on the attention map you will need to speciy the model, attention threshold as well as the map type here.
         You can use either the vanilla saliency map or the Grad Cam attention map. If this dict is empty we do not perturb based on the saliency regions
-    :type attention_map: dict(map: str, model: tf.model, threshold: float, layer: str).
+        The image can either be perturbed on the absolut value or the highest / lowest n-percent of the attention map by specifying the attention_perturbation argument..
+        Default attention_perturbation is `perturb_high_attention_regions`, other possible values are `perturb_highest_n_attention_regions`, `perturb_lowest_n_attention_regions` and `perturb_random_n_attention_regions`.
+    :type attention_map: dict(map: str, model: tf.model, threshold: float, layer: str, attention_perturbation: str).
     :default attention_map={}: The treshold can be empty and is 0.5 per default. The default layer for the GradCam Map is `conv2d_5`
     """
 
@@ -150,6 +152,9 @@ class ImagePerturbation:
         self.model = attention_map.get("model", None)
         self.saliency_threshold = attention_map.get("threshold", 0.5)
         self.grad_cam_layer = attention_map.get("layer", "conv2d_5")
+        self.attention_perturbation = attention_map.get(
+            "attention_perturbation", "perturb_high_attention_regions"
+        )
 
         print(f"{5* '-'} Finished Perturbation-Controller set up {5* '-'}")
 
@@ -182,10 +187,23 @@ class ImagePerturbation:
             # preprocess image and get map
             img_array = preprocess_image_saliency(image)
             map = self.attention_func(self.model, img_array, self.grad_cam_layer)
-            # perturb regions of image which have high values
-            pertub_image = perturb_high_attention_regions(
-                map, image, func, self.saliency_threshold, intensity
-            )
+            if self.attention_perturbation == "perturb_highest_n_attention_regions":
+                pertub_image = perturb_highest_n_attention_regions(
+                    map, image, func, (self.saliency_threshold * 100), intensity
+                )
+            elif self.attention_perturbation == "perturb_lowest_n_attention_regions":
+                pertub_image = perturb_lowest_n_attention_regions(
+                    map, image, func, (self.saliency_threshold * 100), intensity
+                )
+            elif self.attention_perturbation == "perturb_random_n_attention_regions":
+                pertub_image = perturb_random_n_attention_regions(
+                    map, image, func, (self.saliency_threshold * 100), intensity
+                )
+            else:
+                # perturb regions of image which have high values
+                pertub_image = perturb_high_attention_regions(
+                    map, image, func, self.saliency_threshold, intensity
+                )
         else:
             pertub_image = func(intensity, image)
         return cv2.resize(pertub_image, (self.width, self.height))
@@ -489,14 +507,14 @@ FILTER_PATHS = {
     dynamic_smoke_filter: (
         "./perturbationdrive/OverlayMasks/smoke.mp4",
         "_smoke_iterator",
-        [68, 103, 54],
-        75,
+        [37, 149, 59],
+        75
     ),
     dynamic_sun_filter: (
         "./perturbationdrive/OverlayMasks/sun.mp4",
         "_sun_iterator",
-        [41, 178, 59],
-        100,
+        [9, 166,  56],
+        60
     ),
 }
 
@@ -528,14 +546,14 @@ STATIC_PATHS = {
     static_smoke_filter: (
         "./perturbationdrive/OverlayMasks/static_smoke.png",
         "_smoke_mask",
-        [68, 103, 54],
-        75,
+        [37, 149, 59],
+        75
     ),
     static_sun_filter: (
         "./perturbationdrive/OverlayMasks/static_sun.png",
         "_sun_mask",
-        [41, 178, 59],
-        100,
+        [9, 166,  56],
+        60
     ),
 }
 
@@ -599,7 +617,7 @@ def get_functions_from_module(module_name):
     return functions_list
 
 
-def getNeuralModelPaths(style_names: [str]):
+def getNeuralModelPaths(style_names: List[str]):
     paths = [
         "perturbationdrive/NeuralStyleTransfer/models/instance_norm/candy.t7",
         "perturbationdrive/NeuralStyleTransfer/models/eccv16/composition_vii.t7",
