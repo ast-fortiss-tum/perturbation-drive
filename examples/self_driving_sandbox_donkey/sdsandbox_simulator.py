@@ -137,7 +137,7 @@ class SDSandboxSimulator(PerturbationSimulator):
             self.client.msg_handler.reset_car()
 
             # return the resul of this simulation
-            return ScenarioOutcome(
+            res = ScenarioOutcome(
                 frames=[x for x in range(len(pos_list))],
                 pos=pos_list,
                 xte=xte_list,
@@ -150,9 +150,28 @@ class SDSandboxSimulator(PerturbationSimulator):
                 and max([abs(xte) for xte in xte_list]) <= self.max_xte,
                 timeout=timeout,
             )
+            del (
+                pos_list,
+                xte_list,
+                speed_list,
+                actions_list,
+                obs,
+                perturbed_image,
+                actions,
+            )
+            return res
         except Exception as e:
             # close the simulator
             self.tear_down()
+            del (
+                pos_list,
+                xte_list,
+                speed_list,
+                actions_list,
+                obs,
+                perturbed_image,
+                actions,
+            )
             # throw the exception
             raise e
 
