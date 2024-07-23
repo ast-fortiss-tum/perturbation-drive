@@ -15,6 +15,9 @@ from .utils.utilFuncs import (
 )
 
 
+def empty(scale, img):
+    return img
+
 def gaussian_noise(scale, img):
     """
     Adds unfirom distributed gausian noise to an image
@@ -33,7 +36,7 @@ def gaussian_noise(scale, img):
         np.clip(x + np.random.normal(size=x.shape, scale=factor), 0, 1).astype(
             np.float32
         )
-        * 255
+        
     )
 
 
@@ -49,7 +52,7 @@ def poisson_noise(scale, img):
     """
     factor = [120, 105, 87, 55, 30][scale]
     x = np.array(img) / 255.0
-    return np.clip(np.random.poisson(x * factor) / float(factor), 0, 1) * 255
+    return np.clip(np.random.poisson(x * factor) / float(factor), 0, 1)
 
 
 def impulse_noise(scale, img):
@@ -160,7 +163,7 @@ def zoom_blur(scale, img):
     for zoom_factor in c:
         out += clipped_zoom(img, zoom_factor)
     img = (img + out) / (len(c) + 1)
-    return np.clip(img, 0, 1) * 255
+    return np.clip(img, 0, 1)
 
 
 def increase_brightness(scale, image):
@@ -195,7 +198,7 @@ def contrast(scale, img):
     """
     factor = [1.1, 1.2, 1.3, 1.5, 1.7][scale]
     pivot = 127.5
-    return np.clip(pivot + (img - pivot) * factor, 0, 255)
+    return np.clip(pivot + (img - pivot) * factor, 0, 255)/255
 
 
 def elastic(scale, img):

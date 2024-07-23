@@ -43,9 +43,9 @@ class UdacityGymEnv_RoadGen(gym.Env):
 
             # remove if it works
             current_path = os.getcwd()
-            print(f"Current Directory: {current_path}")
-            files = [f for f in os.listdir("./examples/udacity/udacity_utils/sim")]
-            print(f"Files in the directory: {files}")
+            # print(f"Current Directory: {current_path}")
+            # files = [f for f in os.listdir("./examples/udacity/udacity_utils/sim")]
+            # print(f"Files in the directory: {files}")
 
             assert os.path.exists(self.exe_path), "Path {} does not exist".format(
                 self.exe_path

@@ -4,6 +4,7 @@ import os
 import itertools
 import skimage.exposure
 from perturbationdrive.perturbationfuncs import (
+    empty,
     gaussian_noise,
     poisson_noise,
     impulse_noise,
@@ -410,6 +411,7 @@ def _removeGreenScreen(image):
 
 # Mapping of function names to function objects
 FUNCTION_MAPPING = {
+    "empty": empty,
     "gaussian_noise": gaussian_noise,
     "poisson_noise": poisson_noise,
     "impulse_noise": impulse_noise,

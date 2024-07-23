@@ -201,22 +201,8 @@ class PerturbationDrive:
 
         # grid search loop
         while True:
+            print(perturbations)
             # check if we leave the loop, increment the index and scale
-            index += 1
-            if len(perturbations) == 1:
-                # all perturbations resulted in failures
-                # we will still have one perturbation here because we never
-                # drop the empty perturbation
-                break
-            if index == len(perturbations):
-                # we increment the scale, so start with the first perturbation again
-                index = 0
-                scale += 1
-
-            if scale > 4:
-                # we went through all scales
-                break
-
             # get the perturbation function for the scenario
             perturbation = perturbations[index]
             print(
@@ -238,6 +224,25 @@ class PerturbationDrive:
             # for comparison reasons
             if not outcome.isSuccess and not perturbation == "":
                 perturbations.remove(perturbation)
+            elif perturbation == "":
+                perturbations.remove(perturbation)
+            else:
+                index += 1
+
+            
+            if len(perturbations) == 0:
+                # all perturbations resulted in failures
+                # we will still have one perturbation here because we never
+                # drop the empty perturbation
+                break
+            if index == len(perturbations):
+                # we increment the scale, so start with the first perturbation again
+                index = 0
+                scale += 1
+
+            if scale > 4:
+                # we went through all scales
+                break
 
         # TODO: print command line summary of benchmarking process
         del image_perturbation
