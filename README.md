@@ -1,6 +1,6 @@
 # Perturbation Drive
 
-A library to test the robstuness of Self-Driving-Cars via image perturbations.
+A library to test the robustness and ability to generalize to unseen roads of Self-Driving-Cars via image perturbations and road generators.
 
 This library is split up into three sections:
 
@@ -12,13 +12,9 @@ This library is split up into three sections:
 
 ## Installation
 
-You can install the library using pip
+You can install the library via the instructions detailed in section [Installing locally](#installing-locally).
 
-```Shell
-pip install perturbationdrive
-```
-
-After installing this library via `pip` you can use all perturbationdrive classes and functions via top level imports. See this examples for the usage.
+After installing this library you can use all perturbationdrive classes and functions via top level imports. See this examples for the usage.
 
 ```Python
 from perturbationdrive import (
@@ -32,6 +28,12 @@ from perturbationdrive import (
     ImagePerturbation,
     GlobalLog as Gl,
 )
+```
+
+Please note, that all imports from the `examples` directory need to be resolved via their full path.
+
+```Python
+from examples.udacity.udacity_simulator import UdacitySimulator
 ```
 
 ## Project Structure
@@ -77,6 +79,7 @@ perturbationdrive/
 │   └── perturbationsfuncs.py           # Collection of image perturbations
 │
 ├── examples /                          # Provides examples on simualtor integrations
+│   ├── test_dir/                       # Empty folder. Use this folder for own scripts and experimenting with this project. All files within this folder will be untracked.
 │   ├── models/                         # Example implenetation of the ADS class
 │   │   ├── README.md                   # Documentation and Explanation on the example
 │   │   └── example_agent.py            # Example subclass of the ADS
@@ -94,7 +97,6 @@ perturbationdrive/
 │       ├── udacity_simulator.py        # Simulator class implementation for the Udacity Simulator
 │       └── main.py                     # Entry point to run the example
 │
-├── work.pdf                            # TODO: Insert final thesis pdf here 
 ├── README.md                           # The top level ReadME of the project (this file)
 └── requirements.txt                    # Requirements for running this project
 ```
@@ -105,12 +107,12 @@ Apply common image perturbations and corruptions to images. Note, that each meth
 Each perturbation needs an input image and the scale of the perturbation as input. The scale is in the range from 0 to 4.
 
 ```Python
-from perturbationdrive import poisson_noise, gaussian_noise
+from perturbationdrive import poisson_noise
+import numpy as np
 
 height, width = 300, 300
 random_image = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
-perturbed_image = poisson_noise(image, 0)
-
+perturbed_image = poisson_noise(0, random_image)
 ```
 
 Read the README in the `perturbationdrive/` directory for more details on performing standalone image perturbations.
@@ -119,11 +121,9 @@ Read the README in the `perturbationdrive/` directory for more details on perfor
 
 The benchmarking is performed by the `PerturbationDrive` class. This class can perform either offline evaluation of a dataset, perform gird search over the entire search space or simulate a list of specific scenarions.
 
-A benchmarking object can be created by instanciating a new `PerturbationDrive` object. Each object needs to be constructed with the simulator under test and the system under test. The system under test is an `Autonomous Driving System (ADS)`.
+A benchmarking object can be created by instanciating a new `PerturbationDrive` object. Each object needs to be constructed with the simulator under test and the system under test. The system under test is an `Autonomous Driving System (ADS)`. Note that this example snippet is minimal and does not provide a full example. For full examples refer to the [Simulator Integration Section](#simulator-integration).
 
 ```Python
-from perturbationdrive import PerturbationDrive
-
 # setup demo objects
 simulator = ExampleSimulator()
 ads = ExampleADS()
@@ -145,7 +145,7 @@ Read the README in the `perturbationdrive/` directory for more documentation on 
 
 ## Simulator Integration
 
-The simulator provides an easy to use interface for running simulations with this library, with or without image perturbations (TODO: Make perturbation optional). A simulator integration can be achieved by creating a subclass from the simulator and implementing all class methods. All class methods are depicted in the following class signature.
+The simulator provides an easy to use interface for running simulations with this library, with or without image perturbations. A simulator integration can be achieved by creating a subclass from the simulator and implementing all class methods. All class methods are depicted in the following class signature.
 
 ```Python
 class PerturbationSimulator(ABC):
@@ -176,7 +176,15 @@ class PerturbationSimulator(ABC):
 
 Read the README in the `perturbationdrive/simulator/` directory for more documentaion on simulator integration. Also view the example integrations in `examples/self_driving_sandbox_donkey/` and `examples/udacity/`.
 
-### Installing locally
+### Minimal SDSandbox Example
+
+Refer to the [Interface with PerturbationDrive](https://github.com/HannesLeonhard/PerturbationDrive/tree/main/examples/self_driving_sandbox_donkey#interface-with-perturbationdrive) section within the `examples/self_driving_sandbox_donkey` directory for a minimal example of running this framework with the Self Driving Sandbox Donkey Simulator.
+
+### Minimal Udacity Example
+
+Refer to the [Interface with PerturbationDrive](https://github.com/HannesLeonhard/PerturbationDrive/blob/main/examples/udacity/README.md#interface-with-perturbationdrive) section within the `examples/udacity` directory for a minimal example of running this framework with the Udacity Simulator.
+
+## Installing locally
 
 Clone this library from [GitHub](https://github.com/HannesLeonhard/PerturbationDrive/tree/main).
 
@@ -219,15 +227,23 @@ Create a new virtual environment using Python >= 3.6. This can be done for examp
     pip install -r requirements.txt
     ```
 
-5. (Optionally) Install this library locally
+5. (Optionally) Install this library locally.
 
     ```Shell
     cd PerturbationDrive
     pip install .
     ```
 
+    After local installation, the library can imported via `import perturbationdrive` within any Python script.
+
 6. Deactivate environment after use
 
     ```Shell
     micromamba deactivate myenv
     ```
+
+## Results
+
+This sections provides references to the empirical evaluations resulting from this framework.
+
+* [Benchmarking Robustness In Self Driving Cars: A system-level framework](https://drive.google.com/file/d/1J5TalKyyUU8AtOZKAFU79JmZI5T_KrWO/view)

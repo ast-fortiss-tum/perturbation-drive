@@ -36,8 +36,8 @@ class ChauffeurAgent(ADS):
         img_arr = img_arr.reshape((1,) + img_arr.shape)
         actions = self.model(img_arr, training=False)
         # deep copy action
-        # actions = actions.numpy().tolist()
-        # actions[0][0] = 0.1
+        actions = actions.numpy().tolist()
+        actions[0][0] = actions[0][0] * 2.2
         return actions
 
     def name(self) -> str:

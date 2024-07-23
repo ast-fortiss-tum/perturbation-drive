@@ -150,9 +150,15 @@ It utilizes `socketio` and `flask` to create a client for communication with the
 
 ## Interface with PerturbationDrive
 
-The `SDSandboxSimulator` can easily be integrated into the `PerturbationDrive` library.
+The `SDSandboxSimulator` can easily be integrated into the `PerturbationDrive` library. Note, that this example needs to be run from a file in the root directory in order to resolve all imports properly.
+Also note, that the example agent behaves randomly.
 
 ```Python
+from examples.udacity.udacity_simulator import UdacitySimulator
+from perturbationdrive import PerturbationDrive, RandomRoadGenerator
+import traceback
+from examples.models.example_agent import ExampleAgent
+
 try:
     simulator = UdacitySimulator(
         simulator_exe_path="./examples/udacity/udacity_utils/sim/udacity_sim.app",

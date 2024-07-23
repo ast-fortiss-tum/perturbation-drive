@@ -168,9 +168,15 @@ Kills the process running the SDSandbox Simualtor.
 
 ## Interface with PerturbationDrive
 
-The `SDSandboxSimulator` can easily be integrated into the `PerturbationDrive` library.
+The `SDSandboxSimulator` can easily be integrated into the `PerturbationDrive` library. Note, that this example needs to be run from a file in the root directory in order to resolve all imports properly.
+Also note, that the example agent behaves randomly.
 
 ```Python
+from examples.self_driving_sandbox_donkey.sdsandbox_simulator import SDSandboxSimulator
+from perturbationdrive import PerturbationDrive, RandomRoadGenerator
+import traceback
+from examples.models.example_agent import ExampleAgent
+
 try:
     simulator = SDSandboxSimulator(
         simulator_exe_path="./examples/self_driving_sandbox_donkey/sim/donkey-sim.app",
