@@ -104,8 +104,8 @@ class SDSandboxSimulator(PerturbationSimulator):
                         break
                     elif abs(obs["xte"]) > self.max_xte:
                         break
-                    elif time.time() - start_time > 62:
-                        self.logger.info("SDSandBox: Timeout after 60s")
+                    elif time.time() - start_time > 300:
+                        self.logger.info("SDSandBox: Timeout after 300s")
                         timeout = True
                         break
 

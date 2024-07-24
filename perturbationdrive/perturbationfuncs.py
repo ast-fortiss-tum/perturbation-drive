@@ -1573,6 +1573,23 @@ def perturb_random_n_attention_regions(
     return image
 
 
+def raindrop_highest_n_attention_regions(
+    saliency_map, image, n=30, scale=0
+):
+    """
+    Perturbs the highest n% of the regions of an image where the saliency map has an value greater than threshold
+    """
+    if n < 0 or n > 100:
+        raise ValueError("The threshold value needs to be in the range of [0, 100]")
+    # Create a binary mask from the array
+    mask = saliency_map > np.percentile(saliency_map, n)
+    
+    # Apply the gaussian noise to the whole image
+    
+    
+    return image
+
+
 def _shift_color(image, source_color, target_color):
     # Check if the image has an alpha channel
     has_alpha = image.shape[2] == 4

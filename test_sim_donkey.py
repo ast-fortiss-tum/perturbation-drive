@@ -1,23 +1,35 @@
-from perturbationdrive import PerturbationDrive,RandomRoadGenerator
+from perturbationdrive import PerturbationDrive,CustomRoadGenerator
 from examples.self_driving_sandbox_donkey.sdsandbox_simulator import SDSandboxSimulator
 from examples.models.dave2_agent import Dave2Agent
 import traceback
+from datetime import datetime
+
+
+
 
 try:
     simulator = SDSandboxSimulator(
         simulator_exe_path="./examples/self_driving_sandbox_donkey/sim/donkey-sim.app",
         host="127.0.0.1", 
-        port=9091
+        port=9091,
+        show_image_cb=True
     )
     ads = Dave2Agent(model_path="./examples/models/checkpoints/dave_90k_v1.h5")
-    road_generator = RandomRoadGenerator(num_control_nodes=8)
+    road_angles=[10,10,10,10,0,-10,-10,-10]
+    road_segments=[10,10,10,10,10,10,10,10]
+    road_generator = CustomRoadGenerator(num_control_nodes=len(road_angles))
+
     benchmarking_obj = PerturbationDrive(simulator, ads)
     # start the benchmarking
+    time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
     benchmarking_obj.grid_seach(
-        perturbation_functions=["gaussian_noise"],
+        perturbation_functions=["object_overlay"],
         attention_map={},
         road_generator=road_generator,
-        log_dir="./examples/self_driving_sandbox_donkey/logs.json",
+        road_angles=road_angles,
+        road_segments=road_segments,
+        log_dir=f"./logs/donkey_logs_{time}.json",
         overwrite_logs=True,
         image_size=(240, 320),  # images are resized to these values
     )

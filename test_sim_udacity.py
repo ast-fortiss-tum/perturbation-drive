@@ -1,4 +1,4 @@
-from perturbationdrive import PerturbationDrive,RandomRoadGenerator
+from perturbationdrive import PerturbationDrive,CustomRoadGenerator
 from examples.udacity.udacity_simulator import UdacitySimulator
 from examples.models.dave2_agent import Dave2Agent
 import traceback
@@ -10,13 +10,22 @@ try:
         port=9091,
     )    
     ads = Dave2Agent(model_path="./examples/models/checkpoints/dave_90k_v1.h5")
-    road_generator = RandomRoadGenerator(num_control_nodes=8)
+    
+    road_angles=[10,10,10,10,0,-10,-10,-10]
+    road_segments=[10,10,10,10,10,10,10,10]
+    road_generator = CustomRoadGenerator(num_control_nodes=len(road_angles))
+
+
+
     benchmarking_obj = PerturbationDrive(simulator, ads)
+    
     # start the benchmarking
     benchmarking_obj.grid_seach(
         perturbation_functions=["gaussian_noise"],
         attention_map={},
         road_generator=road_generator,
+        road_angles=road_angles,
+        road_segments=road_segments,
         log_dir="./examples/udacity/logs.json",
         overwrite_logs=True,
         image_size=(240, 320),  # images are resized to these values

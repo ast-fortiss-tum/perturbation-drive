@@ -161,6 +161,8 @@ class PerturbationDrive:
         perturbation_functions: List[str],
         attention_map: Dict = {},
         road_generator: Union[RoadGenerator, None] = None,
+        road_angles: List[int] = None,
+        road_segments: List[int] = None,
         log_dir: Union[str, None] = "logs.json",
         overwrite_logs: bool = True,
         image_size: Tuple[float, float] = (240, 320),
@@ -197,7 +199,7 @@ class PerturbationDrive:
         waypoints = None
         if not road_generator is None:
             # TODO: Insert here all kwargs needed for specific generator
-            waypoints = road_generator.generate(starting_pos=self.simulator.initial_pos)
+            waypoints = road_generator.generate(starting_pos=self.simulator.initial_pos,angles=road_angles,seg_lengths=road_segments)
 
         # grid search loop
         while True:

@@ -1,65 +1,66 @@
-import pygame
+import tkinter as tk
+from PIL import Image, ImageTk
+import numpy as np
 
 class ImageCallBack:
     def __init__(self, channels: int = 3, rows: int = 240, cols: int = 320):
         """
-        Used to display a image on a second screen
+        Used to display an image on a second screen
 
         :param channels: number of channels
         :param rows: number of rows
         :param cols: number of cols
         """
-        pygame.init()
-        ch, row, col = channels, rows, cols
+        self.channels = channels
+        self.rows = rows
+        self.cols = cols
+        self.window = tk.Tk()
+        self.window.title("sdsandbox image monitor")
+        self.canvas = tk.Canvas(self.window, width=cols*2, height=rows*2)
+        self.canvas.pack()
+        self.label_text = tk.StringVar()
+        self.label = tk.Label(self.window, textvariable=self.label_text, font=("Monospace", 15), fg="yellow", bg="black")
+        self.label.pack()
 
-        size = (col * 2, row * 2)
-        pygame.display.set_caption("sdsandbox image monitor")
-        self.screen: pygame.Surface = pygame.display.set_mode(size, pygame.DOUBLEBUF)
-        self.camera_surface = pygame.surface.Surface((col, row), 0, 24).convert()
-        self.myfont = pygame.font.SysFont("monospace", 15)
-
-    def screen_print(self, x, y, msg, screen):
+    def screen_print(self, msg):
         """
         prints a message on the screen
         """
-        label = self.myfont.render(msg, 1, (255, 255, 0))
-        screen.blit(label, (x, y))
+        self.label_text.set(msg)
 
     def display_img(self, img, steering, throttle, perturbation):
         """
         Displays the image and the steering and throttle value
         """
+        # Ensure the image is in uint8 format
+        img = img.astype(np.uint8)
         # swap image axis
-        img = img.swapaxes(0, 1)
-        # draw frame
-        pygame.surfarray.blit_array(self.camera_surface, img)
-        camera_surface_2x = pygame.transform.scale2x(self.camera_surface)
-        self.screen.blit(camera_surface_2x, (0, 0))
-        # steering and throttle value
-        self.screen_print(10, 10, "NN(steering): " + steering, self.screen)
-        self.screen_print(10, 25, "NN(throttle): " + throttle, self.screen)
-        self.screen_print(10, 40, "Perturbation: " + perturbation, self.screen)
-        pygame.display.flip()
+        img = Image.fromarray(img)
+        img = img.resize((self.cols*2, self.rows*2))
+        self.photo = ImageTk.PhotoImage(image=img)
+        self.canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
+        self.screen_print(f"NN(steering): {steering}\nNN(throttle): {throttle}\nPerturbation: {perturbation}")
+        self.window.update()
+
 
     def display_waiting_screen(self):
         """
         Displays a waiting screen
         """
-        self.screen.fill((0, 0, 0))
-        self.screen_print(10, 10, "Waiting for the simulator to start", self.screen)
-        pygame.display.flip()
+        self.canvas.create_rectangle(0, 0, self.cols*2, self.rows*2, fill="red")
+        self.screen_print("Waiting for the simulator to start")
+        self.window.update()
 
     def display_disconnect_screen(self):
         """
         Displays a disconnect screen
         """
-        self.screen.fill((0, 0, 0))
-        self.screen_print(10, 10, "Simulator disconnected", self.screen)
-        pygame.display.flip()
+        self.canvas.create_rectangle(0, 0, self.cols*2, self.rows*2, fill="black")
+        self.screen_print("Simulator disconnected")
+        self.window.update()
 
     def destroy(self):
         """
         Quits the monitor and display
         """
-        pygame.display.quit()
-        pygame.quit()        
+        self.window.destroy()
