@@ -272,12 +272,14 @@ class PerturbationDrive:
 
         If log_dir is none, we return the scenario outcomes
         """
+        print(attention_map)
+
         # get all perturbations to set up this object
         perturbations: List[str] = []
-        for sccenario in scenarios:
-            perturbations.append(sccenario.perturbation_function)
+        for scenario in scenarios:
+            perturbations.append(scenario.perturbation_function)
 
-        iamge_perturbation = ImagePerturbation(
+        image_perturbation = ImagePerturbation(
             funcs=perturbations, attention_map=attention_map, image_size=image_size
         )
         # sim is setup in main to get starting pos
@@ -286,12 +288,12 @@ class PerturbationDrive:
         # iterate over all scenarios
         for scenario in scenarios:
             outcome = self.simulator.simulate_scanario(
-                self.ads, scenario=scenario, perturbation_controller=iamge_perturbation
+                self.ads, scenario=scenario, perturbation_controller=image_perturbation
             )
             outcomes.append(outcome)
             time.sleep(2.0)
 
-        del iamge_perturbation
+        del image_perturbation
         del perturbations
         # tear sim down
         if log_dir is not None:

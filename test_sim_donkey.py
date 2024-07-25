@@ -22,10 +22,17 @@ try:
     benchmarking_obj = PerturbationDrive(simulator, ads)
     # start the benchmarking
     time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
+    model = ads.model
+    attention_map = {
+                "map": "grad_cam",
+                "model": model,
+                "threshold": 0.1,
+                "layer": "conv2d_5",
+            }
+    
     benchmarking_obj.grid_seach(
-        perturbation_functions=["object_overlay"],
-        attention_map={},
+        perturbation_functions=["gaussian_noise","effects_attention_rain","effects_rain_dynamic","effects_attention_rain_dynamic"],
+        attention_map = attention_map,
         road_generator=road_generator,
         road_angles=road_angles,
         road_segments=road_segments,

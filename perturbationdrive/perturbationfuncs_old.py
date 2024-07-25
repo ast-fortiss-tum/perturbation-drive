@@ -1,8 +1,6 @@
 import numpy as np
 import cv2
 from io import BytesIO
-from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.dropgenerator import generateDrops, generate_label
-from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.config import cfg
 from .kernels.kernels import (
     diamond_square,
     create_disk_kernel,
@@ -16,9 +14,6 @@ from .utils.utilFuncs import (
     simple_white_balance,
 )
 
-
-def empty(scale, img):
-    return img
 
 def gaussian_noise(scale, img):
     """
@@ -1573,39 +1568,6 @@ def perturb_random_n_attention_regions(
     # Now apply the mask: replace the original image pixels with noisy pixels where mask is True
     image[mask] = noise_img[mask]
     return image
-
-def clamp_values(tuples_list, min1, max1, min2, max2):
-    """
-    Adjusts the values in each tuple to be within the specified range.
-    
-    :param tuples_list: List of tuples to adjust
-    :param min1: Minimum limit for the first element of the tuple
-    :param max1: Maximum limit for the first element of the tuple
-    :param min2: Minimum limit for the second element of the tuple
-    :param max2: Maximum limit for the second element of the tuple
-    :return: List of tuples with values adjusted to be within the specified range
-    """
-    clamped_list = []
-    for t in tuples_list:
-        # Clamp the first value
-        val1 = max(min(t[0], max1), min1)
-        # Clamp the second value
-        val2 = max(min(t[1], max2), min2)
-        # Add the clamped tuple to the new list
-        clamped_list.append((val1, val2))
-    return clamped_list
-
-def effects_attention_regions(
-    saliency_map,scale, image,type
-):
-    mask = saliency_map > np.percentile(saliency_map, 90)
-    coordinates = np.argwhere(mask)
-    selected_coords = coordinates[np.random.choice(coordinates.shape[0], scale+1, replace=False)]
-    selected_coords_tuples = [tuple(row) for row in selected_coords]
-    selected_coords_tuples=clamp_values(selected_coords_tuples, 5, image.shape[1]-5, 5, image.shape[0]-5)
-    List_of_Drops, _,_  = generate_label(image.shape[1], image.shape[0], selected_coords_tuples,cfg)
-    output_image = generateDrops(image, cfg, List_of_Drops)
-    return output_image
 
 
 def _shift_color(image, source_color, target_color):
