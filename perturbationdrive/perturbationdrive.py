@@ -220,6 +220,7 @@ class PerturbationDrive:
             outcome = self.simulator.simulate_scanario(
                 self.ads, scenario=scenario, perturbation_controller=image_perturbation
             )
+            # print(outcome)
             outcomes.append(outcome)
 
             # check if we drop the scenario, we never remove the empty perturbation

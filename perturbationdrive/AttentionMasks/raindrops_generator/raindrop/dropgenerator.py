@@ -8,6 +8,7 @@ from PIL import ImageEnhance
 from PIL import ImageDraw
 from skimage.measure import label as skimage_label
 from .raindrop import Raindrop, make_bezier
+from .snowflake import SnowFlake
 
 """
 This module contain two functions:
@@ -69,7 +70,7 @@ def CheckCollision(DropList):
 
 
 
-def generate_label(h, w, chosen_pos, cfg, prev_shape=None, prev_size=None):
+def generate_label(h, w, chosen_pos, cfg, prev_shape=None, prev_size=None,type_drop=None):
     """
     This function generates a list of raindrop class objects and a label map of these drops in the image.
     :param h: image height
@@ -110,7 +111,10 @@ def generate_label(h, w, chosen_pos, cfg, prev_shape=None, prev_size=None):
         lisShapes.append(shape)
         lisSizes.append(radius)
         key = key + 1
-        drop = Raindrop(key, pos, radius, shape)
+        if type_drop=="snowflake":
+            drop = SnowFlake(key, pos, radius, shape)
+        else:
+            drop = Raindrop(key, pos, radius, shape)
         listRainDrops.append(drop)
 
     # Initialize label map and collision checks

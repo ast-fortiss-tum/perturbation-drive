@@ -51,6 +51,7 @@ from perturbationdrive.perturbationfuncs import (
     snow_filter,
     dynamic_snow_filter,
     dynamic_rain_filter,
+    dynamic_raindrop_filter,
     object_overlay,
     dynamic_object_overlay,
     dynamic_sun_filter,
@@ -121,7 +122,7 @@ class ImagePerturbation:
         for filter, (path, iterator_name, color, thres) in FILTER_PATHS.items():
             if filter in self._fns:
                 print(
-                    f"{5* '-'} Loading Dynamic Masks - This can take a couple of seconds {5* '-'}"
+                    f"{5* '-'} Loading Dynamic Masks - This can take some time {5* '-'}"
                 )
                 frames = _loadMaskFrames(
                     path=path,
@@ -409,9 +410,15 @@ class ImagePerturbation:
         coords_tuples=[]
         shapes = None
         sizes = None
-        
-        sizes = [2,3,4,3,4,5,2,3,1]
-        coords_tuples=[(0,200),(10,130),(30,80),(70,40),(140,180),(200,30),(250,190),(300,40),(150,80)]
+        if "snowflake" in name:
+            sizes=[]
+            coords_tuples=[]
+            for i in range(100*(scale+1)):
+                sizes.append(1)
+                coords_tuples.append((random.randint(20,300),random.randint(20,220)))
+        else:
+            sizes = [2,3,4,3,4,5,2,3,1]
+            coords_tuples=[(0,200),(10,130),(30,80),(70,40),(140,180),(200,30),(250,190),(300,40),(150,80)]
         # coords_tuples=[(300,1)]
         
         if len(self.previous_points)!=0 and len(self.previous_points)==len(coords_tuples):
@@ -423,15 +430,30 @@ class ImagePerturbation:
                 coords_tuples=[]
                 direction_x=random.randint(-1,1)
                 for i,value in enumerate(self.previous_points):
-                    x,y=value
-                    x=x+direction_x
-                    direction_y=random.randint(0,1)
-                    if sizes[i]<6:
-                        y=y+direction_y*3
-                    elif sizes[i]<12:
-                        y=y+direction_y
+                    if "snowflake" not in name:
+                        x,y=value
+                        x=x+direction_x
+                        direction_y=random.randint(0,1)
+                        if sizes[i]<6:
+                            y=y+direction_y*3
+                        elif sizes[i]<12:
+                            y=y+direction_y
+                        else:
+                            y=y+direction_y*2
                     else:
-                        y=y+direction_y*2
+                        x,y=value
+                        if x<160:
+                            x=x-5
+                        elif x>160:
+                            x=x+5
+                        elif x==160:
+                            x=x+random.randint(-1,1)
+                        if y<120:
+                            y=y-4
+                        elif y>120:
+                            y=y+4
+                        else:
+                            y=y+random.randint(-5,5)
                     coords_tuples.append((x,y))
             else:
                 coords_tuples=self.previous_points
@@ -439,25 +461,34 @@ class ImagePerturbation:
             for i,value in enumerate(coords_tuples):
                 x,y=value
                 size=sizes[i]
-                if x>310 or x<2:
-                    x=random.randint(30,290)
-                if y>235:
-                    print("here!")
-                    y=random.randint(0,40)
-                    size=random.randint(1,(scale+1)*5)
-                elif y>200:
-                    if random.randint(0,5)==4:
-                        size=max(1,min(size+random.randint(-2,0),30))
-                elif y>180:
-                    if random.randint(0,5)==4:
-                        size=max(1,min(size+random.randint(-1,0),30))
+                if "snowflake" not in name:
+                    if x>310 or x<2:
+                        x=random.randint(30,290)
+                    if y>235:
+                        print("here!")
+                        y=random.randint(0,40)
+                        size=random.randint(1,(scale+1)*5)
+                    elif y>200:
+                        if random.randint(0,5)==4:
+                            size=max(1,min(size+random.randint(-2,0),30))
+                    elif y>180:
+                        if random.randint(0,5)==4:
+                            size=max(1,min(size+random.randint(-1,0),30))
+                else:
+                    if (x>310 or x<2) and (y>239 or y<2):
+                        x,y = (random.randint(20,300),random.randint(20,220))
+                        
                 coords_tuples[i]=(x,y)
                 sizes[i]=size
 
             if self.iteration%30==0:
                     sizes = []
                     for i,value in enumerate(self.previous_sizes):
-                        sizes.append(max(1,min(value+random.randint(-1,1),30)))
+                        if "snowflake" not in name:
+                            sizes.append(max(1,min(value+random.randint(-1,1),30)))
+                        else:
+                            sizes.append(max(1,min(value+random.randint(-1,1),3)))
+        
         List_of_Drops, self.previous_shapes, self.previous_sizes  = generate_label(image.shape[0], image.shape[1], coords_tuples,cfg,shapes,sizes)
         output_image = generateDrops(image, cfg, List_of_Drops)
         self.previous_points=coords_tuples
@@ -682,6 +713,7 @@ FUNCTION_MAPPING = {
     "snow_filter": snow_filter,
     "dynamic_snow_filter": dynamic_snow_filter,
     "dynamic_rain_filter": dynamic_rain_filter,
+    "dynamic_raindrop_filter": dynamic_raindrop_filter,
     "object_overlay": object_overlay,
     "dynamic_object_overlay": dynamic_object_overlay,
     "dynamic_sun_filter": dynamic_sun_filter,
@@ -714,7 +746,8 @@ FUNCTION_MAPPING = {
     "sim2sim": ImagePerturbation.sim2sim,
     "effects_attention_rain": effects_attention_regions,
     "effects_attention_rain_dynamic": ImagePerturbation.effects_attention_regions_dynamic,
-    "effects_rain_dynamic": ImagePerturbation.effects_regions_dynamic
+    "effects_rain_dynamic": ImagePerturbation.effects_regions_dynamic,
+    "effects_snowflake_dynamic": ImagePerturbation.effects_regions_dynamic
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name
@@ -736,6 +769,12 @@ FILTER_PATHS = {
         "_rain_iterator",
         [3, 129, 8],
         40,
+    ),
+    dynamic_raindrop_filter: (
+        "./perturbationdrive/OverlayMasks/test.mp4",
+        "_raindrop_iterator",
+        [8, 255, 18],
+        45,
     ),
     dynamic_object_overlay: (
         "./perturbationdrive/OverlayMasks/birds.mp4",
@@ -800,6 +839,7 @@ STATIC_PATHS = {
 ITERATOR_MAPPING = {
     dynamic_snow_filter: "_snow_iterator",
     dynamic_rain_filter: "_rain_iterator",
+    dynamic_raindrop_filter: "_raindrop_iterator",
     dynamic_sun_filter: "_sun_iterator",
     dynamic_lightning_filter: "_lightning_iterator",
     dynamic_object_overlay: "_bird_iterator",

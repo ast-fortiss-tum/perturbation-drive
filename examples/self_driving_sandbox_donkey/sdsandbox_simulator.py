@@ -79,6 +79,8 @@ class SDSandboxSimulator(PerturbationSimulator):
             xte_list = []
             actions_list = []
             speed_list = []
+            original_image_list = []
+            perturbed_image_list = []
             isSuccess = False
             timeout = False
 
@@ -122,6 +124,8 @@ class SDSandboxSimulator(PerturbationSimulator):
                     pos_list.append([obs["pos_x"], obs["pos_y"], obs["pos_z"]])
                     xte_list.append(obs["xte"])
                     speed_list.append(obs["speed"])
+                    original_image_list.append(obs["image"])
+                    perturbed_image_list.append(perturbed_image)
                     actions_list.append(actions)
 
                 except KeyboardInterrupt:
@@ -143,8 +147,10 @@ class SDSandboxSimulator(PerturbationSimulator):
                 xte=xte_list,
                 speeds=speed_list,
                 actions=[
-                    (f"{action[0][0]}", f"{action[0][0]}") for action in actions_list
+                    (f"{action[0][0]}", f"{action[0][1]}") for action in actions_list
                 ],
+                original_images=original_image_list,
+                perturbed_images=perturbed_image_list,
                 scenario=scenario,
                 isSuccess=isSuccess
                 and max([abs(xte) for xte in xte_list]) <= self.max_xte,
@@ -157,6 +163,8 @@ class SDSandboxSimulator(PerturbationSimulator):
                 actions_list,
                 obs,
                 perturbed_image,
+                perturbed_image_list,
+                original_image_list,
                 actions,
             )
             return res
@@ -170,6 +178,8 @@ class SDSandboxSimulator(PerturbationSimulator):
                 actions_list,
                 obs,
                 perturbed_image,
+                perturbed_image_list,
+                original_image_list,
                 actions,
             )
             # throw the exception
