@@ -2,7 +2,6 @@ import numpy as np
 import cv2
 import os
 import itertools
-import skimage.exposure
 from perturbationdrive.perturbationfuncs import (
     gaussian_noise,
     poisson_noise,
@@ -63,10 +62,6 @@ from perturbationdrive.perturbationfuncs import (
     static_smoke_filter,
     static_object_overlay,
 )
-from perturbationdrive.RoadGenerator.RoadGenerator import RoadGenerator
-from .utils.data_utils import CircularBuffer
-from .utils.logger import CSVLogHandler
-from .utils.timeout import timeout_func
 import types
 import importlib
 from .NeuralStyleTransfer.NeuralStyleTransfer import NeuralStyleTransfer
@@ -101,6 +96,7 @@ class ImagePerturbation:
         attention_map={},
         image_size: Tuple[float, float] = (240, 320),
     ):
+        self._funcNames = funcs
         # Build list of all perturbation functions
         if len(funcs) == 0:
             self._fns = get_functions_from_module("perturbationdrive.perturbationfuncs")
@@ -160,16 +156,34 @@ class ImagePerturbation:
 
     def perturbation(
         self,
-        image,
+        image: np.ndarray,
         perturbation_name: str,
         intensity: int,
     ) -> np.ndarray[Any, np.dtype[np.uint8]]:
         """
-        Perturbs the image based on the function name given
-        """
-        if perturbation_name == "":
-            return cv2.resize(image, (self.width, self.height))
+        Perturbs the image based on the function name given with the following edge cases:
+        - If the function name is empty we return the image as is.
+        - If the function name is not in the list of functions we return the image as is.
+        - If the intensity is not in the range of 0-4 we raise a ValueError.
 
+        :param image: The image we want to perturb
+        :type image: np.ndarray
+        :param perturbation_name: The name of the perturbation function we want to use
+        :type perturbation_name: str
+        :param intensity: The intensity of the perturbation
+        :type intensity: int
+        :return: The perturbed image
+        :rtype: np.ndarray
+        :raises ValueError: If the intensity is not in the range of 0-4
+        """
+        if intensity < 0 or intensity > 4:
+            raise ValueError("The intensity must be in the range of 0-4")
+        if (
+            perturbation_name == ""
+            or perturbation_name not in self._funcNames
+            or perturbation_name not in FUNCTION_MAPPING
+        ):
+            return cv2.resize(image, (self.width, self.height))
         # continue with the main logic
         func = FUNCTION_MAPPING[perturbation_name]
         iterator_name = ITERATOR_MAPPING.get(func, "")
@@ -209,21 +223,33 @@ class ImagePerturbation:
         return cv2.resize(pertub_image, (self.width, self.height))
 
     def candy_styling(self, scale, image):
+        """
+        Apply the candy style transfer to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "candy").astype(np.uint8)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def la_muse_styling(self, scale, image):
+        """
+        Apply the la_muse style transfer to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "la_muse").astype(np.uint8)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def mosaic_styling(self, scale, image):
+        """
+        Apply the mosaic style transfer to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "mosaic").astype(np.uint8)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def feathers_styling(self, scale, image):
+        """
+        Apply the feathers style transfer to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "feathers").astype(
             np.uint8
@@ -231,6 +257,9 @@ class ImagePerturbation:
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def the_scream_styling(self, scale, image):
+        """
+        Apply the the_scream style transfer to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "the_scream").astype(
             np.uint8
@@ -238,11 +267,17 @@ class ImagePerturbation:
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def udnie_styling(self, scale, image):
+        """
+        Apply the udnie style transfer to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "udnie").astype(np.uint8)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def the_wave_styling(self, scale, image):
+        """
+        Apply the the_wave style transfer to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "the_wave").astype(
             np.uint8
@@ -250,6 +285,9 @@ class ImagePerturbation:
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def starry_night_styling(self, scale, image):
+        """
+        Apply the starry_night style transfer to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "starry_night").astype(
             np.uint8
@@ -257,6 +295,9 @@ class ImagePerturbation:
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def composition_vii_styling(self, scale, image):
+        """
+        Apply the composition_vii style transfer to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.neuralStyleModels.transferStyle(image, "composition_vii").astype(
             np.uint8
@@ -264,16 +305,30 @@ class ImagePerturbation:
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def sim2real(self, scale, image):
+        """
+        Apply the sim2real cycle gan to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.cycleGenerativeModels.toReal(image)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def sim2sim(self, scale, image):
+        """
+        Apply the sim2sim cycle gan to the image
+        """
         alpha = [0.2, 0.4, 0.6, 0.8, 1.0][scale]
         styled = self.cycleGenerativeModels.sim2sim(image)
         return cv2.addWeighted(styled, alpha, image, (1 - alpha), 0)
 
     def useGenerativeModels(self, func_names):
+        """
+        Checks if we use generative models (sim2real or real2sim) in the perturbation functions
+
+        :param func_names: List of function names
+        :type func_names: list string
+        :return: True if we use generative models, False otherwise
+        :rtype: bool
+        """
         return True if ("sim2real" in func_names or "sim2sim" in func_names) else False
 
 
@@ -382,32 +437,6 @@ def _remove_green_pixels(image, target_green_rgb, threshold=40):
     return image
 
 
-def _removeGreenScreen(image):
-    """
-    Removes green screen background by setting transparency to 0 using LAB channels
-
-    Returns: Mathlike
-    """
-    # convert to LAB
-    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
-    # extract A channel
-    A = lab[:, :, 1]
-    # threshold A channel
-    thresh = cv2.threshold(A, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
-    # blur threshold image
-    blur = cv2.GaussianBlur(
-        thresh, (0, 0), sigmaX=5, sigmaY=5, borderType=cv2.BORDER_DEFAULT
-    )
-    # stretch so that 255 -> 255 and 127.5 -> 0
-    mask = skimage.exposure.rescale_intensity(
-        blur, in_range=(127.5, 255), out_range=(0, 255)
-    ).astype(np.uint8)
-    # add mask to image as alpha channel
-    image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
-    image[:, :, 3] = mask
-    return image
-
-
 # Mapping of function names to function objects
 FUNCTION_MAPPING = {
     "gaussian_noise": gaussian_noise,
@@ -508,13 +537,13 @@ FILTER_PATHS = {
         "./perturbationdrive/OverlayMasks/smoke.mp4",
         "_smoke_iterator",
         [37, 149, 59],
-        75
+        75,
     ),
     dynamic_sun_filter: (
         "./perturbationdrive/OverlayMasks/sun.mp4",
         "_sun_iterator",
-        [9, 166,  56],
-        60
+        [9, 166, 56],
+        60,
     ),
 }
 
@@ -547,13 +576,13 @@ STATIC_PATHS = {
         "./perturbationdrive/OverlayMasks/static_smoke.png",
         "_smoke_mask",
         [37, 149, 59],
-        75
+        75,
     ),
     static_sun_filter: (
         "./perturbationdrive/OverlayMasks/static_sun.png",
         "_sun_mask",
-        [9, 166,  56],
-        60
+        [9, 166, 56],
+        60,
     ),
 }
 
@@ -618,6 +647,9 @@ def get_functions_from_module(module_name):
 
 
 def getNeuralModelPaths(style_names: List[str]):
+    """
+    Get the paths to the neural style transfer models based on the style names.
+    """
     paths = [
         "perturbationdrive/NeuralStyleTransfer/models/instance_norm/candy.t7",
         "perturbationdrive/NeuralStyleTransfer/models/eccv16/composition_vii.t7",
@@ -637,6 +669,9 @@ def getNeuralModelPaths(style_names: List[str]):
 
 
 def mapSaliencyNameToFunc(name: Union[str, None]):
+    """
+    Maps the name of the saliency map to the function
+    """
     if name == None:
         return None
     elif name == "grad_cam":
@@ -648,5 +683,8 @@ def mapSaliencyNameToFunc(name: Union[str, None]):
 
 
 def preprocess_image_saliency(img):
+    """
+    Preprocess the image for saliency mapping by casting it to a float32 array and adding a batch dimension.
+    """
     img_arr = np.asarray(img, dtype=np.float32)
     return img_arr.reshape((1,) + img_arr.shape)

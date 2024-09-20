@@ -69,9 +69,9 @@ All of these functions share same parameters and return value:
 
 - Parameters
   - scale: int. Perturbation intensity on a range from 0 to 4.
-  - image: ndarray[Any, dtype[dtype=uint8]]. Image which should be perturbed.
+  - image: ndarray[Any, dtype[dtype=uint8]]. Image which should be perturbed wth pixel values in the range from 0 to 255.
 - Returns
-  - image: ndarray[Any, dtype[dtype=uint8]]. Perturbed image.
+  - image: ndarray[Any, dtype[dtype=uint8]]. Perturbed image with pixel values in the range from 0 to 255.
 
 ### ImagePerturbation Controller
 
@@ -124,35 +124,83 @@ from perturbationdrive import poisson_noise, gaussian_noise, ImagePerturbation
 import cv2
 import numpy as np
 
-height, width = 300, 300
+height, width = 240, 320
 random_image = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
 
 # perform perturbations
-poisson_img = poisson_noise(image, 0)
-cv2.imshow(poisson_img)
+poisson_img = poisson_noise(0, random_image)
+cv2.imshow("Poisson Noise", poisson_img)
 
-gaussian_img = gaussian_noise(image, 4)
-cv2.imshow(gaussian_img)
+gaussian_img = gaussian_noise(4, random_image)
+cv2.imshow("Gaussian Noise", gaussian_img)
 
 # this example will fail because the intensity is out of bounds
-gaussian_img = gaussian_noise(image, -1)
+gaussian_img = gaussian_noise(-1, random_image)
 
 # used the controller for perturbation
 
-controller1 = ImagePerturbation(funcs=[candy, poisson_noise])
-candy_img = controller1.perturbation("candy", 2)
+controller1 = ImagePerturbation(funcs=["candy", "poisson_noise"])
+candy_img = controller1.perturbation(random_image, "candy", 2)
 
 # perturb the image based on the attention map
 import tensorflow as tf
 
+# Note: This is a dummy model and does not work
 demo_model = tf.keras.Model(inputs=inputs, outputs=outputs)
-controller2 = ImagePerturbation(funcs=[candy, poisson_noise], attention_map={"map": "grad_cam", "model": demo_model, "threshold": 0.4})
-poisson_img = controller1.perturbation("poisson_noise", 2)
+controller2 = ImagePerturbation(funcs=["candy", "poisson_noise"], attention_map={"map": "grad_cam", "model": demo_model, "threshold": 0.4})
+poisson_img = controller1.perturbation(random_image, "poisson_noise", 2)
 
-# this example will result in an exception because the controller does not know this perturbation
-_ = controller1.perturbation("gaussian_noise", 2)
 # this example will fail, because the intensity is out of bounds
-__ = controller1.perturbation("poisson_noise", 5)
+__ = controller1.perturbation(random_image, "poisson_noise", 5)
+```
+
+### ImagePerturbation Controller Extension
+
+To extend the perturbations used in this library, one can create a subclass of the `ImagePerturbation` class. By overriding the `perturbation` method, one can intercept perturbation calls and add custom functionality.
+The following example shows how to create a subclass for a new perturbation called `blackout` (changes all pixel values to black).
+
+```Python
+from perturbationdrive import ImagePerturbation
+import numpy as np
+from typing import List, Tuple, Any
+
+class BlackoutPerturbation(ImagePerturbation):
+    def __init__(
+        self, 
+        funcs: List[str] = [], 
+        attention_map: dict = {}, 
+        image_size: Tuple[float, float] = (240, 320)
+    ):
+        # Perform any custom initialization here needed for your perturbation
+        print("Custom initialization")
+        super().__init__(funcs, attention_map, image_size)
+
+    def perturbation(
+        self, 
+        image: np.ndarray,
+        perturbation_name: str,
+        intensity: int
+    ) -> np.ndarray[Any, np.dtype[np.uint8]]:
+        if perturbation_name != "blackout":
+            return super().perturbation(image, perturbation_name, intensity)
+        return np.zeros_like(image)
+
+random_image = np.random.randint(0, 256, (240, 320, 3), dtype=np.uint8)
+# use the custom perturbation
+controller = BlackoutPerturbation(["gaussian_noise"])
+# call the blackout perturbation
+blackout_img = controller.perturbation(
+    random_image, 
+    "blackout", 
+    2
+)
+# call the gaussian noise perturbation
+# the call will be forwarded to the parent class
+gaussian_img = controller.perturbation(
+    random_image, 
+    "gaussian_noise", 
+    2
+)
 ```
 
 ## Simulator
@@ -231,6 +279,8 @@ The `ScenarioOutcome` data class defines the result of running a scenario in a s
     The scenario which has been simulated.
 - `isSuccess: bool`
     Binary indicator stating if the scenario resulted in a success or failure.
+- `timeout: bool`
+    Binary indicator stating if the scenario resulted in a timeout.
 
 Note, that all lists must be of the same length.
 
@@ -251,8 +301,9 @@ res = ScenarioOutcome(
     xte=[0.1, 0.2, 0.3],
     speeds=[0.0, 0.1, 0.1],
     actions=[[0.1, 0.1], [0.01, 0.1], [0.15, 0.1]],
-    scenario=,
+    scenario=scenario,
     isSuccess=True,
+    timeout=False,
 )
 ```
 
@@ -322,10 +373,10 @@ callback = ImageCallBack(3, 220, 220)
 callback.display_waiting_screen()
 
 # generate random image
-random_image = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
+random_image = np.random.randint(0, 256, (220, 220, 3), dtype=np.uint8)
 # display random image for 10 seconds
 for _ in range(10):
-    callback.display(img, "2", "1", "None")
+    callback.display_img(random_image, "2", "1", "None")
     time.sleep(1)
 
 callback.display_disconnect_screen()
@@ -417,7 +468,7 @@ generator = RandomRoadGenerator(
     initial_node=(1.0, 0.0, 0.0, 0.0)
 )
 
-generator.generate(starting_pos=(1.0, 2.0, 0.0))
+generator.generate(starting_pos=(1.0, 2.0, 0.0, 0.0))
 ```
 
 ### CustomRoadGenerator
@@ -468,15 +519,17 @@ generator = CustomRoadGenerator(
 )
 
 generator.generate(
-    starting_pos=(1.0, 2.0, 0.0)
-    angles=[10, 10, 0, 0, -10, -10, -15, 0, 15, 0]
-    seg_lengths=[10, 10, 4, 3, 10, 10, 10, 15, 20, 10]
+    starting_pos=(1.0, 2.0, 0.0, 0.0),
+    angles=[10, 10, 0, 0, -10, -10, -15, 0, 15, 0],
+    seg_lengths=[10, 10, 4, 3, 10, 10, 10, 15, 20, 10],
 )
 ```
 
 ## PerturbationDrive Controller
 
 Performs the robustness benchmarking of an ADS by either simulating scenarios in a simulator to perform end to end tests or by iterating over a given dataset to perform model based testing. The ADS is an end to end system, performing actions on the camera image of a single front facing camera. The robustness of the ADS is tested by applying common image perturbations on the input of the ADS.
+
+Note that most of the examples in this section cannot be run due to the usage of `ExampleSimulator` and `ExampleADS`. These classes are placeholders for the actual simulator and ADS used in the examples. For plug and play examples refer to the [Self Driving Sandbox Example](https://github.com/HannesLeonhard/PerturbationDrive/tree/main/examples/self_driving_sandbox_donkey#interface-with-perturbationdrive) or [Udacity Example](https://github.com/HannesLeonhard/PerturbationDrive/blob/main/examples/udacity/README.md#interface-with-perturbationdrive).
 
 ### PerturbationDrive.class
 
@@ -519,6 +572,15 @@ from perturbationdrive import PerturbationDrive, RandomRoadGenerator
 # setup demo objects
 simulator = ExampleSimulator()
 ads = ExampleADS()
+
+benchmarking_object = PerturbationDrive(
+    simulator=simulator,
+    ads=ads,
+    perturbation_functions=["gaussian_noise", "impulse_noise"],
+    attention_map={},
+    road_generator=RandomRoadGenerator(),
+    image_size=(240,240)
+)
 
 # perform grid search as end to end test
 benchmarking_object.grid_seach(
@@ -574,6 +636,15 @@ ads = ExampleADS()
 
 # demo scenarios
 scenarios: List[Scenario] = getDemoScenario()
+
+benchmarking_object = PerturbationDrive(
+    simulator=simulator,
+    ads=ads,
+    perturbation_functions=["gaussian_noise", "impulse_noise"],
+    attention_map={},
+    road_generator=RandomRoadGenerator(),
+    image_size=(240,240)
+)
 
 # perform grid search as end to end test
 res: List[ScenarioOutcome] = benchmarking_object.simulate_scenarios(
@@ -689,6 +760,18 @@ The logger is configured to output log messages to the standard output (stdout) 
 - `critical(self, message)`
     Logs a critical message. A serious error, indicating that the program itself may be unable to continue running.
 
+#### GlobalLog Example
+
+```Python
+from perturbationdrive import GlobalLog
+
+# create a new logger
+logger = GlobalLog("ExampleLogger")
+logger.info("This is an informational message")
+logger.warn("This is a warning message")
+logger.error("This is an error message")
+```
+
 ### TrainCycleGAN
 
 You can train your own cycle gan given a dataset of two image domains
@@ -696,7 +779,7 @@ You can train your own cycle gan given a dataset of two image domains
 ```Python
 from perturbationdrive import train_cycle_gan
 
-train(
+train_cycle_gan(
     input_dir="./relative/path/to/folder",
     output_dir="./relative/path/to/folder",
     image_extension_input="jpg",

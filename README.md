@@ -1,6 +1,8 @@
 # Perturbation Drive
 
-A library to test the robustness and ability to generalize to unseen roads of Self-Driving-Cars via image perturbations and road generators.
+An testing library to test the robustness and ability to generalize to unseen data of end-to-end perception-based Self-Driving-Cars. Based on the results gathered during testing, the ADS can be retrained to improve performance.
+
+The ability to generalize to unseen data is challenged via the generation of unseen roads which are generated based on the test result. The robustness is challenged via the perturbation of the input image of the ADS.
 
 This library is split up into three sections:
 
@@ -43,7 +45,7 @@ The projct has the following structure. Please note that this only provides a hi
 ```bash
 perturbationdrive/
 │
-├── perturbationdrive/                  # All scripts related to running perturbations
+├── perturbationdrive/                  # All scripts related to running perturbations and the perturbation controller
 │   ├── AutomatedDrivingSystem/         # Contains all script regarding the ADS interface
 │   │   └── ADS.py                      # Abstract Class of the driving system
 │   │
@@ -115,7 +117,39 @@ random_image = np.random.randint(0, 256, (height, width, 3), dtype=np.uint8)
 perturbed_image = poisson_noise(0, random_image)
 ```
 
-Read the README in the `perturbationdrive/` directory for more details on performing standalone image perturbations.
+Read the [README](./perturbationdrive/README.md) in the `perturbationdrive/` directory for more details on performing standalone image perturbations.
+
+### ImagePerturbation Class
+
+The `ImagePerturbation` class is used to wrap a list of perturbation functions into a wrapper class. Once the object is instanciated with a list of perturbation functions, the `perturb` method can be called to apply the given perturbations to an image.
+
+```Python
+from perturbationdrive import ImagePerturbation
+
+perturbation_controller = ImagePerturbation(
+    funcs=["poisson_noise", "gaussian_noise"],
+    image_size=(240, 320)
+)
+random_image = np.random.randint(0, 256, (240, 320, 3), dtype=np.uint8)
+# Apply a poisson noise perturbation to the image and returns the perturbed image resized to the image_size given at the initialization
+perturbed_image = perturbation_controller.perturbation(
+    random_image, # image to be perturbed
+    "poisson_noise", # name of perturbation function to be called
+    1 # scale of perturbation
+)
+# Warning: This will return the image as is as the perturbation function is not in the list of perturbations
+perturbed_image = perturbation_controller.perturbation(
+    random_image,
+    "jpeg_filter",
+    1
+)
+# Warning: This will throw an ValueError as the perturbation intensity is not in the range from 0 to 4
+perturbed_image = perturbation_controller.perturbation(
+    random_image,
+    "poisson_noise",
+    5
+)
+```
 
 ## Benchmarking Self-Driving Cars
 
@@ -145,7 +179,7 @@ Read the README in the `perturbationdrive/` directory for more documentation on 
 
 ## Simulator Integration
 
-The simulator provides an easy to use interface for running simulations with this library, with or without image perturbations. A simulator integration can be achieved by creating a subclass from the simulator and implementing all class methods. All class methods are depicted in the following class signature.
+The simulator provides an easy to use interface for running simulations with this library, with or without image perturbations. A simulator integration can be achieved by creating a subclass from the simulator and implementing all class methods. All class methods are depicted in the following class signature. Also note that this example snippet is minimal and does not provide a full example. For full examples refer to the examples in the following sections ([SDSandbox](#minimal-sdsandbox-example) and [Udacity](#minimal-udacity-example)).
 
 ```Python
 class PerturbationSimulator(ABC):

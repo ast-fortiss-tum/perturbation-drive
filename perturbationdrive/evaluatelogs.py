@@ -4,12 +4,29 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 
-# This function will check if the string is a float starting with one digit, followed by a period, and more digits
 def _is_misplaced_float(s):
+    """
+    Check if a string is a misplaced float with the pattern `^\d\.\d+$`.
+
+    Returns:
+        bool: True if the string is a misplaced float, False
+    """
     return bool(re.match(r"^\d\.\d+$", s))
 
 
 def fix_csv_logs(file_path):
+    """
+    Perform the following operations on the log file:
+    1. Read the CSV file.
+    2. Iterate over the rows and find misplaced floats.
+    3. Append the misplaced float to the end of the previous row.
+    4. Shift the row to the left.
+    5. Drop the last column if it is all NaN.
+    6. Save the fixed dataframe to a new csv file with the suffix "_fixed".
+
+    Parameters:
+        - file_path (str): The path to the log file.
+    """
     # Read the csv file
     df = pd.read_csv(file_path, header=None, dtype=str)
 
@@ -34,6 +51,12 @@ def fix_csv_logs(file_path):
 
 
 def plot_driven_distance(file_path):
+    """
+    Plot the driven distance for each perturbation in the log file.
+
+    Parameters:
+        - file_path (str): The path to the log file.
+    """
     # Read the CSV file into a DataFrame
     df = pd.read_csv(file_path)
 
