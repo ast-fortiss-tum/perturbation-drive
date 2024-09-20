@@ -82,18 +82,24 @@ class ScenarioOutcomeWriter:
                 data = []
             # Append new data
             for scenario_outcome in scenario_outcomes:
-                image_folder_name=self.file_path.split(".json")[0]+"_"+str(scenario_outcome.scenario.perturbation_function)+"_"+str(scenario_outcome.scenario.perturbation_scale)
-                scenario_data=asdict(scenario_outcome)
-                perturbed_images = scenario_data.pop('perturbed_images', None)
-                original_images = scenario_data.pop('original_images', None)
-                image_frames=scenario_outcome.frames
-                if not os.path.exists(image_folder_name+"_original"):
-                    os.makedirs(image_folder_name+"_original")
+                image_folder_name = (
+                    self.file_path.split(".json")[0]
+                    + "_"
+                    + str(scenario_outcome.scenario.perturbation_function)
+                    + "_"
+                    + str(scenario_outcome.scenario.perturbation_scale)
+                )
+                scenario_data = asdict(scenario_outcome)
+                perturbed_images = scenario_data.pop("perturbed_images", None)
+                original_images = scenario_data.pop("original_images", None)
+                image_frames = scenario_outcome.frames
+                if not os.path.exists(image_folder_name + "_original"):
+                    os.makedirs(image_folder_name + "_original")
                 # Save each image in the folder with an increasing number
                 for i, img_array in enumerate(original_images):
                     img = Image.fromarray(img_array)
-                    frame=image_frames[i]
-                    img.save(os.path.join(image_folder_name+f"_original/{frame}.jpg"))
+                    frame = image_frames[i]
+                    img.save(os.path.join(image_folder_name + f"_original/{frame}.jpg"))
                 # print(perturbed_images)
                 data.append(scenario_data)
 

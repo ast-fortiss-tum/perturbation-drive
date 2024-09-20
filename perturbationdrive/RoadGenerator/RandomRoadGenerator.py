@@ -15,7 +15,6 @@ import numpy as np
 from .RoadGenerator import RoadGenerator
 from .Roads.road import Road
 from .Roads.road_polygon import RoadPolygon
-from .Roads.bbox import RoadBoundingBox
 from .Roads.catmull_rom import catmull_rom
 
 
@@ -81,9 +80,7 @@ class RandomRoadGenerator(RoadGenerator):
         return nodes
 
     def is_valid(self, control_nodes, sample_nodes):
-        return RoadPolygon.from_nodes(
-            sample_nodes
-        ).is_valid()
+        return RoadPolygon.from_nodes(sample_nodes).is_valid()
 
     def generate(self, *args, **kwargs) -> str:
         if self.road_to_generate is not None:

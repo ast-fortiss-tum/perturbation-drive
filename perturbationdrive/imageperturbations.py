@@ -3,7 +3,10 @@ import cv2
 import os
 import itertools
 import skimage.exposure
-from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.dropgenerator import generateDrops, generate_label
+from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.dropgenerator import (
+    generateDrops,
+    generate_label,
+)
 import random
 
 from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.config import cfg
@@ -159,9 +162,9 @@ class ImagePerturbation:
         self.attention_perturbation = attention_map.get(
             "attention_perturbation", "no_usage"
         )
-        self.iteration=0
-        self.previous_points=[]
-        self.previous_sizes=[]
+        self.iteration = 0
+        self.previous_points = []
+        self.previous_sizes = []
         print(f"{5* '-'} Finished Perturbation-Controller set up {5* '-'}")
 
     def perturbation(
@@ -207,19 +210,23 @@ class ImagePerturbation:
         elif "styling" in func.__name__ or "sim2" in func.__name__:
             # apply either style transfer or cycle gan
             pertub_image = func(self, intensity, image)
-        elif "attention" in func.__name__ and self.attention_func != None and "dynamic" in func.__name__:
+        elif (
+            "attention" in func.__name__
+            and self.attention_func != None
+            and "dynamic" in func.__name__
+        ):
             img_array = preprocess_image_saliency(image)
             map = self.attention_func(self.model, img_array, self.grad_cam_layer)
             pertub_image = func(self, map, intensity, image, perturbation_name)
         elif "attention" in func.__name__ and self.attention_func != None:
             img_array = preprocess_image_saliency(image)
             map = self.attention_func(self.model, img_array, self.grad_cam_layer)
-            pertub_image = func(map, intensity, image,perturbation_name)
+            pertub_image = func(map, intensity, image, perturbation_name)
         elif "attention" in func.__name__:
             print("ERROR NO ATTENTION ON ATTENTION BASED PERTURBATION")
             return cv2.resize(image, (self.width, self.height))
-        elif "effects"  in func.__name__ and "dynamic" in func.__name__:
-            pertub_image = func(self, intensity, image,perturbation_name)
+        elif "effects" in func.__name__ and "dynamic" in func.__name__:
+            pertub_image = func(self, intensity, image, perturbation_name)
         elif self.attention_perturbation != "no_usage":
             # preprocess image and get map
             img_array = preprocess_image_saliency(image)
@@ -354,213 +361,231 @@ class ImagePerturbation:
         """
         return True if ("sim2real" in func_names or "sim2sim" in func_names) else False
 
-
-
-    def effects_attention_regions_dynamic(
-        self,saliency_map,scale, image,name
-    ):
+    def effects_attention_regions_dynamic(self, saliency_map, scale, image, name):
         cfg = {
-            'maxR': 30,
-            'minR': 1,
-            'maxDrops': 100,
-            'minDrops': 1,
-            'edge_darkratio': 0.4,
-            'return_label': False,
-            'label_thres': 128,
-            'A': (1, 4.5),
-            'B': (3, 1),
-            'C': (1, 3),
-            'D': (3, 3)
+            "maxR": 30,
+            "minR": 1,
+            "maxDrops": 100,
+            "minDrops": 1,
+            "edge_darkratio": 0.4,
+            "return_label": False,
+            "label_thres": 128,
+            "A": (1, 4.5),
+            "B": (3, 1),
+            "C": (1, 3),
+            "D": (3, 3),
         }
-        coords_tuples=[]
+        coords_tuples = []
         shapes = None
         sizes = None
-        
-        sizes_static = [2,3,4,3,4,5,2,3,1]
-        coords_tuples_static=[(0,200),(10,130),(30,80),(70,40),(140,180),(200,30),(250,190),(300,40),(150,80)]
 
-        coords_tuples=[]
-        sizes=[]
-        for i in range((1+scale)*2):
-            coords_tuples.append((random.randint(1,300),random.randint(0,200)))
-            sizes.append(random.randint(1,(1+scale)*5))
-        coords_tuples=coords_tuples+coords_tuples_static
-        sizes=sizes+sizes_static
-        
-        
-        if len(self.previous_points)!=0 and len(self.previous_points)==len(coords_tuples):
-            
-            shapes=self.previous_shapes
+        sizes_static = [2, 3, 4, 3, 4, 5, 2, 3, 1]
+        coords_tuples_static = [
+            (0, 200),
+            (10, 130),
+            (30, 80),
+            (70, 40),
+            (140, 180),
+            (200, 30),
+            (250, 190),
+            (300, 40),
+            (150, 80),
+        ]
+
+        coords_tuples = []
+        sizes = []
+        for i in range((1 + scale) * 2):
+            coords_tuples.append((random.randint(1, 300), random.randint(0, 200)))
+            sizes.append(random.randint(1, (1 + scale) * 5))
+        coords_tuples = coords_tuples + coords_tuples_static
+        sizes = sizes + sizes_static
+
+        if len(self.previous_points) != 0 and len(self.previous_points) == len(
+            coords_tuples
+        ):
+
+            shapes = self.previous_shapes
             sizes = self.previous_sizes
-            
-            if self.iteration%2==0:
-                coords_tuples=[]
-                direction_x=random.randint(-1,1)
-                for i,value in enumerate(self.previous_points):
-                    x,y=value
-                    x=x+direction_x
-                    direction_y=random.randint(0,1)
-                    if sizes[i]<6:
-                        y=y+direction_y*3
-                    elif sizes[i]<12:
-                        y=y+direction_y
+
+            if self.iteration % 2 == 0:
+                coords_tuples = []
+                direction_x = random.randint(-1, 1)
+                for i, value in enumerate(self.previous_points):
+                    x, y = value
+                    x = x + direction_x
+                    direction_y = random.randint(0, 1)
+                    if sizes[i] < 6:
+                        y = y + direction_y * 3
+                    elif sizes[i] < 12:
+                        y = y + direction_y
                     else:
-                        y=y+direction_y*2
-                    coords_tuples.append((x,y))
+                        y = y + direction_y * 2
+                    coords_tuples.append((x, y))
             else:
-                coords_tuples=self.previous_points
+                coords_tuples = self.previous_points
 
-            for i,value in enumerate(coords_tuples):
-                x,y=value
-                size=sizes[i]
-                if x>310 or x<2:
-                    x=random.randint(30,290)
-                if y>235:
-                    if i<(1+scale)*2:
-                        max_coords = np.unravel_index(np.argmax(saliency_map), saliency_map.shape)
-                        x=max_coords[0]
-                        y=max_coords[1]
-                        size=random.randint((1+scale)+10,30)
+            for i, value in enumerate(coords_tuples):
+                x, y = value
+                size = sizes[i]
+                if x > 310 or x < 2:
+                    x = random.randint(30, 290)
+                if y > 235:
+                    if i < (1 + scale) * 2:
+                        max_coords = np.unravel_index(
+                            np.argmax(saliency_map), saliency_map.shape
+                        )
+                        x = max_coords[0]
+                        y = max_coords[1]
+                        size = random.randint((1 + scale) + 10, 30)
                     else:
-                        y=random.randint(0,40)
-                        size=random.randint(1,5)
-                elif y>200:
-                    if random.randint(0,5)==4:
-                        size=max(1,min(size+random.randint(-2,0),30))
-                elif y>180:
-                    if random.randint(0,5)==4:
-                        size=max(1,min(size+random.randint(-1,0),30))
-                coords_tuples[i]=(x,y)
-                sizes[i]=size
+                        y = random.randint(0, 40)
+                        size = random.randint(1, 5)
+                elif y > 200:
+                    if random.randint(0, 5) == 4:
+                        size = max(1, min(size + random.randint(-2, 0), 30))
+                elif y > 180:
+                    if random.randint(0, 5) == 4:
+                        size = max(1, min(size + random.randint(-1, 0), 30))
+                coords_tuples[i] = (x, y)
+                sizes[i] = size
 
-            if self.iteration%30==0:
-                    sizes = []
-                    for i,value in enumerate(self.previous_sizes):
-                        sizes.append(max(1,min(value+random.randint(-1,1),30)))
-        List_of_Drops, self.previous_shapes, self.previous_sizes  = generate_label(image.shape[0], image.shape[1], coords_tuples,cfg,shapes,sizes)
+            if self.iteration % 30 == 0:
+                sizes = []
+                for i, value in enumerate(self.previous_sizes):
+                    sizes.append(max(1, min(value + random.randint(-1, 1), 30)))
+        List_of_Drops, self.previous_shapes, self.previous_sizes = generate_label(
+            image.shape[0], image.shape[1], coords_tuples, cfg, shapes, sizes
+        )
         output_image = generateDrops(image, cfg, List_of_Drops)
-        self.previous_points=coords_tuples
-        self.iteration+=1
+        self.previous_points = coords_tuples
+        self.iteration += 1
         return output_image
-    
 
-        
-
-
-    
-    def effects_regions_dynamic(
-        self,scale, image,name
-    ):
+    def effects_regions_dynamic(self, scale, image, name):
         cfg = {
-            'maxR': 30,
-            'minR': 1,
-            'maxDrops': 100,
-            'minDrops': 1,
-            'edge_darkratio': 0.4,
-            'return_label': False,
-            'label_thres': 128,
-            'A': (1, 4.5),
-            'B': (3, 1),
-            'C': (1, 3),
-            'D': (3, 3)
+            "maxR": 30,
+            "minR": 1,
+            "maxDrops": 100,
+            "minDrops": 1,
+            "edge_darkratio": 0.4,
+            "return_label": False,
+            "label_thres": 128,
+            "A": (1, 4.5),
+            "B": (3, 1),
+            "C": (1, 3),
+            "D": (3, 3),
         }
-        coords_tuples=[]
+        coords_tuples = []
         shapes = None
         sizes = None
         if "snowflake" in name:
-            sizes=[]
-            coords_tuples=[]
-            for i in range(100*(scale+1)):
+            sizes = []
+            coords_tuples = []
+            for i in range(100 * (scale + 1)):
                 sizes.append(1)
-                coords_tuples.append((random.randint(20,300),random.randint(20,220)))
+                coords_tuples.append((random.randint(20, 300), random.randint(20, 220)))
         else:
-            sizes = [2,3,4,3,4,5,2,3,1]
-            coords_tuples=[(0,200),(10,130),(30,80),(70,40),(140,180),(200,30),(250,190),(300,40),(150,80)]
+            sizes = [2, 3, 4, 3, 4, 5, 2, 3, 1]
+            coords_tuples = [
+                (0, 200),
+                (10, 130),
+                (30, 80),
+                (70, 40),
+                (140, 180),
+                (200, 30),
+                (250, 190),
+                (300, 40),
+                (150, 80),
+            ]
         # coords_tuples=[(300,1)]
-        
-        if len(self.previous_points)!=0 and len(self.previous_points)==len(coords_tuples):
-            
-            shapes=self.previous_shapes
+
+        if len(self.previous_points) != 0 and len(self.previous_points) == len(
+            coords_tuples
+        ):
+
+            shapes = self.previous_shapes
             sizes = self.previous_sizes
-            
-            if self.iteration%1==0:
-                coords_tuples=[]
-                direction_x=random.randint(-1,1)
-                for i,value in enumerate(self.previous_points):
+
+            if self.iteration % 1 == 0:
+                coords_tuples = []
+                direction_x = random.randint(-1, 1)
+                for i, value in enumerate(self.previous_points):
                     if "snowflake" not in name:
-                        x,y=value
-                        x=x+direction_x
-                        direction_y=random.randint(0,1)
-                        if sizes[i]<6:
-                            y=y+direction_y*3
-                        elif sizes[i]<12:
-                            y=y+direction_y
+                        x, y = value
+                        x = x + direction_x
+                        direction_y = random.randint(0, 1)
+                        if sizes[i] < 6:
+                            y = y + direction_y * 3
+                        elif sizes[i] < 12:
+                            y = y + direction_y
                         else:
-                            y=y+direction_y*2
+                            y = y + direction_y * 2
                     else:
-                        x,y=value
-                        if x<160:
-                            x=x-5
-                        elif x>160:
-                            x=x+5
-                        elif x==160:
-                            x=x+random.randint(-1,1)
-                        if y<120:
-                            y=y-4
-                        elif y>120:
-                            y=y+4
+                        x, y = value
+                        if x < 160:
+                            x = x - 5
+                        elif x > 160:
+                            x = x + 5
+                        elif x == 160:
+                            x = x + random.randint(-1, 1)
+                        if y < 120:
+                            y = y - 4
+                        elif y > 120:
+                            y = y + 4
                         else:
-                            y=y+random.randint(-5,5)
-                    coords_tuples.append((x,y))
+                            y = y + random.randint(-5, 5)
+                    coords_tuples.append((x, y))
             else:
-                coords_tuples=self.previous_points
+                coords_tuples = self.previous_points
 
-            for i,value in enumerate(coords_tuples):
-                x,y=value
-                size=sizes[i]
+            for i, value in enumerate(coords_tuples):
+                x, y = value
+                size = sizes[i]
                 if "snowflake" not in name:
-                    if x>310 or x<2:
-                        x=random.randint(30,290)
-                    if y>235:
+                    if x > 310 or x < 2:
+                        x = random.randint(30, 290)
+                    if y > 235:
                         print("here!")
-                        y=random.randint(0,40)
-                        size=random.randint(1,(scale+1)*5)
-                    elif y>200:
-                        if random.randint(0,5)==4:
-                            size=max(1,min(size+random.randint(-2,0),30))
-                    elif y>180:
-                        if random.randint(0,5)==4:
-                            size=max(1,min(size+random.randint(-1,0),30))
+                        y = random.randint(0, 40)
+                        size = random.randint(1, (scale + 1) * 5)
+                    elif y > 200:
+                        if random.randint(0, 5) == 4:
+                            size = max(1, min(size + random.randint(-2, 0), 30))
+                    elif y > 180:
+                        if random.randint(0, 5) == 4:
+                            size = max(1, min(size + random.randint(-1, 0), 30))
                 else:
-                    if (x>310 or x<2) and (y>239 or y<2):
-                        x,y = (random.randint(20,300),random.randint(20,220))
-                        
-                coords_tuples[i]=(x,y)
-                sizes[i]=size
+                    if (x > 310 or x < 2) and (y > 239 or y < 2):
+                        x, y = (random.randint(20, 300), random.randint(20, 220))
 
-            if self.iteration%30==0:
-                    sizes = []
-                    for i,value in enumerate(self.previous_sizes):
-                        if "snowflake" not in name:
-                            sizes.append(max(1,min(value+random.randint(-1,1),30)))
-                        else:
-                            sizes.append(max(1,min(value+random.randint(-1,1),3)))
-        
-        List_of_Drops, self.previous_shapes, self.previous_sizes  = generate_label(image.shape[0], image.shape[1], coords_tuples,cfg,shapes,sizes)
+                coords_tuples[i] = (x, y)
+                sizes[i] = size
+
+            if self.iteration % 30 == 0:
+                sizes = []
+                for i, value in enumerate(self.previous_sizes):
+                    if "snowflake" not in name:
+                        sizes.append(max(1, min(value + random.randint(-1, 1), 30)))
+                    else:
+                        sizes.append(max(1, min(value + random.randint(-1, 1), 3)))
+
+        List_of_Drops, self.previous_shapes, self.previous_sizes = generate_label(
+            image.shape[0], image.shape[1], coords_tuples, cfg, shapes, sizes
+        )
         output_image = generateDrops(image, cfg, List_of_Drops)
-        self.previous_points=coords_tuples
-        self.iteration+=1
+        self.previous_points = coords_tuples
+        self.iteration += 1
         return output_image
 
 
 def find_third_point(p1, p2, n):
-    
+
     # Convert points to NumPy arrays for easier calculations
     p1 = np.array(p1)
     p2 = np.array(p2)
 
-    p2[0]=p2[0]+random.randint(-10,10)
-    p2[1]=p2[1]+random.randint(-10,10)
+    p2[0] = p2[0] + random.randint(-10, 10)
+    p2[1] = p2[1] + random.randint(-10, 10)
 
     # Calculate the direction vector from p1 to p2
     direction = p2 - p1
@@ -576,8 +601,9 @@ def find_third_point(p1, p2, n):
 
     # Calculate the third point by adding the scaled vector to p1
     p3 = p1 + scaled_vector
-    p3=[int(p3[0]),int(p3[1])]
+    p3 = [int(p3[0]), int(p3[1])]
     return tuple(p3)
+
 
 def _loadMaskFrames(
     path: str,
@@ -683,10 +709,11 @@ def _remove_green_pixels(image, target_green_rgb, threshold=40):
 
     return image
 
+
 def clamp_values(tuples_list, min1, max1, min2, max2):
     """
     Adjusts the values in each tuple to be within the specified range.
-    
+
     :param tuples_list: List of tuples to adjust
     :param min1: Minimum limit for the first element of the tuple
     :param max1: Maximum limit for the first element of the tuple
@@ -804,7 +831,7 @@ FUNCTION_MAPPING = {
     "effects_attention_rain": effects_attention_regions,
     "effects_attention_rain_dynamic": ImagePerturbation.effects_attention_regions_dynamic,
     "effects_rain_dynamic": ImagePerturbation.effects_regions_dynamic,
-    "effects_snowflake_dynamic": ImagePerturbation.effects_regions_dynamic
+    "effects_snowflake_dynamic": ImagePerturbation.effects_regions_dynamic,
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name

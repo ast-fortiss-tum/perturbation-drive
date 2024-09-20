@@ -1,13 +1,8 @@
 import random
-from random import randint
-import cv2
 import math
 import numpy as np
 from PIL import Image
 from PIL import ImageEnhance
-from PIL import ImageDraw
-from skimage.measure import label as skimage_label
-from .raindrop import Raindrop, make_bezier
 from .snowflake import SnowFlake
 
 """
@@ -21,56 +16,65 @@ Edited by Vera, Soboleva
 
 
 def CheckCollision(DropList):
-	"""
-	This function handle the collision of the drops
-	:param DropList: list of raindrop class objects 
-	"""
-	listFinalDrops = []
-	Checked_list = []
-	list_len = len(DropList)
-	# because latter raindrops in raindrop list should has more colision information
-	# so reverse list	
-	DropList.reverse()
-	drop_key = 1
-	for drop in DropList:
-		# if the drop has not been handle	
-		if drop.getKey() not in Checked_list:			
-			# if drop has collision with other drops
-			if drop.getIfColli():
-				# get collision list
-				collision_list = drop.getCollisionList()
-				# first get radius and center to decide how  will the collision do
-				final_x = drop.getCenters()[0] * drop.getRadius()
-				final_y = drop.getCenters()[1]  * drop.getRadius()
-				tmp_devide = drop.getRadius()
-				final_R = drop.getRadius()  * drop.getRadius()
-				for col_id in collision_list:
-					col_id = int(col_id)
-					Checked_list.append(col_id)
-					# list start from 0
-					final_x += DropList[list_len - col_id].getRadius() * DropList[list_len - col_id].getCenters()[0]
-					final_y += DropList[list_len - col_id].getRadius() * DropList[list_len - col_id].getCenters()[1]
-					tmp_devide += DropList[list_len - col_id].getRadius()
-					final_R += DropList[list_len - col_id].getRadius() * DropList[list_len - col_id].getRadius() 
-				final_x = int(round(final_x/tmp_devide))
-				final_y = int(round(final_y/tmp_devide))
-				final_R = int(round(math.sqrt(final_R)))
-				# rebuild drop after handled the collisions
-				newDrop = Raindrop(drop_key, (final_x, final_y), final_R)
-				drop_key = drop_key+1
-				listFinalDrops.append(newDrop)
-			# no collision
-			else:
-				drop.setKey(drop_key)
-				drop_key = drop_key+1
-				listFinalDrops.append(drop)
-	
+    """
+    This function handle the collision of the drops
+    :param DropList: list of raindrop class objects
+    """
+    listFinalDrops = []
+    Checked_list = []
+    list_len = len(DropList)
+    # because latter raindrops in raindrop list should has more colision information
+    # so reverse list
+    DropList.reverse()
+    drop_key = 1
+    for drop in DropList:
+        # if the drop has not been handle
+        if drop.getKey() not in Checked_list:
+            # if drop has collision with other drops
+            if drop.getIfColli():
+                # get collision list
+                collision_list = drop.getCollisionList()
+                # first get radius and center to decide how  will the collision do
+                final_x = drop.getCenters()[0] * drop.getRadius()
+                final_y = drop.getCenters()[1] * drop.getRadius()
+                tmp_devide = drop.getRadius()
+                final_R = drop.getRadius() * drop.getRadius()
+                for col_id in collision_list:
+                    col_id = int(col_id)
+                    Checked_list.append(col_id)
+                    # list start from 0
+                    final_x += (
+                        DropList[list_len - col_id].getRadius()
+                        * DropList[list_len - col_id].getCenters()[0]
+                    )
+                    final_y += (
+                        DropList[list_len - col_id].getRadius()
+                        * DropList[list_len - col_id].getCenters()[1]
+                    )
+                    tmp_devide += DropList[list_len - col_id].getRadius()
+                    final_R += (
+                        DropList[list_len - col_id].getRadius()
+                        * DropList[list_len - col_id].getRadius()
+                    )
+                final_x = int(round(final_x / tmp_devide))
+                final_y = int(round(final_y / tmp_devide))
+                final_R = int(round(math.sqrt(final_R)))
+                # rebuild drop after handled the collisions
+                newDrop = Raindrop(drop_key, (final_x, final_y), final_R)
+                drop_key = drop_key + 1
+                listFinalDrops.append(newDrop)
+            # no collision
+            else:
+                drop.setKey(drop_key)
+                drop_key = drop_key + 1
+                listFinalDrops.append(drop)
 
-	return listFinalDrops
+    return listFinalDrops
 
 
-
-def generate_label(h, w, chosen_pos, cfg, prev_shape=None, prev_size=None,type_drop=None):
+def generate_label(
+    h, w, chosen_pos, cfg, prev_shape=None, prev_size=None, type_drop=None
+):
     """
     This function generates a list of raindrop class objects and a label map of these drops in the image.
     :param h: image height
@@ -91,14 +95,17 @@ def generate_label(h, w, chosen_pos, cfg, prev_shape=None, prev_size=None,type_d
 
     # Random drops position
     if chosen_pos is None:
-        ran_pos = [(int(random.random() * imgw), int(random.random() * imgh)) for _ in range(drop_num)]
+        ran_pos = [
+            (int(random.random() * imgw), int(random.random() * imgh))
+            for _ in range(drop_num)
+        ]
     else:
         ran_pos = chosen_pos
 
     listRainDrops = []
     lisShapes = []
     lisSizes = []
-    
+
     for key, pos in enumerate(ran_pos):
         if prev_size is None:
             radius = random.randint(minR, maxR)
@@ -111,7 +118,7 @@ def generate_label(h, w, chosen_pos, cfg, prev_shape=None, prev_size=None,type_d
         lisShapes.append(shape)
         lisSizes.append(radius)
         key = key + 1
-        if type_drop=="snowflake":
+        if type_drop == "snowflake":
             drop = SnowFlake(key, pos, radius, shape)
         else:
             drop = Raindrop(key, pos, radius, shape)
@@ -168,8 +175,6 @@ def generate_label(h, w, chosen_pos, cfg, prev_shape=None, prev_size=None,type_d
     #         listFinalDrops = CheckCollision(listFinalDrops)
 
     return listFinalDrops, lisShapes, lisSizes
-    
-    
 
 
 def generateDrops(bg_img, cfg, listFinalDrops):
@@ -181,7 +186,7 @@ def generateDrops(bg_img, cfg, listFinalDrops):
     """
     edge_ratio = cfg["edge_darkratio"]
 
-    label_map = np.zeros_like(bg_img)[:,:,0]
+    label_map = np.zeros_like(bg_img)[:, :, 0]
     imgh, imgw, _ = bg_img.shape
 
     alpha_map = np.zeros_like(label_map).astype(np.float64)
@@ -205,11 +210,18 @@ def generateDrops(bg_img, cfg, listFinalDrops):
 
         drop_alpha = drop.getAlphaMap()
 
-        alpha_map_slice = alpha_map[iy - ROI_HU:iy + ROI_HD, ix - ROI_WL: ix + ROI_WR]
-        drop_alpha_slice = drop_alpha[3 * radius - ROI_HU:3 * radius + ROI_HD, 2 * radius - ROI_WL: 2 * radius + ROI_WR]
+        alpha_map_slice = alpha_map[
+            iy - ROI_HU : iy + ROI_HD, ix - ROI_WL : ix + ROI_WR
+        ]
+        drop_alpha_slice = drop_alpha[
+            3 * radius - ROI_HU : 3 * radius + ROI_HD,
+            2 * radius - ROI_WL : 2 * radius + ROI_WR,
+        ]
 
         if alpha_map_slice.shape == drop_alpha_slice.shape:
-            alpha_map[iy - ROI_HU:iy + ROI_HD, ix - ROI_WL: ix + ROI_WR] += drop_alpha_slice
+            alpha_map[
+                iy - ROI_HU : iy + ROI_HD, ix - ROI_WL : ix + ROI_WR
+            ] += drop_alpha_slice
 
     alpha_map = alpha_map / np.max(alpha_map) * 255.0
 
@@ -245,7 +257,7 @@ def generateDrops(bg_img, cfg, listFinalDrops):
         output = drop.getTexture()
         tmp_output = np.asarray(output).astype(np.float64)[:, :, -1]
         tmp_alpha_map = tmp_alpha_map * (tmp_output / 255)
-        tmp_alpha_map = Image.fromarray(tmp_alpha_map.astype('uint8'))
+        tmp_alpha_map = Image.fromarray(tmp_alpha_map.astype("uint8"))
 
         edge = ImageEnhance.Brightness(output)
         edge = edge.enhance(edge_ratio)
@@ -255,5 +267,3 @@ def generateDrops(bg_img, cfg, listFinalDrops):
         bg_img = np.asarray(PIL_bg_img)
 
     return bg_img
-
-

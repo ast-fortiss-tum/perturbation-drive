@@ -79,6 +79,7 @@ def _fit_distribution(length=50):
     print("woke up")
     return "succes"
 
+
 if __name__ == "__main__":
     try:
         for _ in range(50):

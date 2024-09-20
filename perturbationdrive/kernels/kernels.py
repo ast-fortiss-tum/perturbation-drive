@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.ndimage import zoom as scizoom
 
+
 def diamond_square(size, roughness):
     """
     Generate a fog pattern using the Diamond-Square algorithm.
@@ -67,6 +68,7 @@ def diamond_square(size, roughness):
 
     return grid
 
+
 def create_disk_kernel(radius):
     """Create a disk-shaped kernel with the given radius."""
     y, x = np.ogrid[-radius : radius + 1, -radius : radius + 1]
@@ -76,6 +78,7 @@ def create_disk_kernel(radius):
     # Normalize the kernel so that the sum of its elements is 1.
     kernel /= kernel.sum()
     return kernel
+
 
 def create_motion_blur_kernel(size, angle):
     """
@@ -97,6 +100,7 @@ def create_motion_blur_kernel(size, angle):
     # Normalize the kernel
     kernel /= kernel.sum()
     return kernel
+
 
 def clipped_zoom(img, zoom_factor):
     h, w = img.shape[:2]

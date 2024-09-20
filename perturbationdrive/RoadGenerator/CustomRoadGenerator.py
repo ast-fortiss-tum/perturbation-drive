@@ -3,7 +3,6 @@
 # by V. Riccio and P. Tonella
 # https://doi.org/10.1145/3368089.3409730
 import copy
-from random import randint
 from typing import List, Tuple, Union
 from shapely.geometry import Point
 

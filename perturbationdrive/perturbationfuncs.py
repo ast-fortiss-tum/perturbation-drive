@@ -1,7 +1,10 @@
 import numpy as np
 import cv2
 from io import BytesIO
-from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.dropgenerator import generateDrops, generate_label
+from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.dropgenerator import (
+    generateDrops,
+    generate_label,
+)
 from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.config import cfg
 from .kernels.kernels import (
     diamond_square,
@@ -18,6 +21,7 @@ from .utils.utilFuncs import (
 
 def empty(scale, img):
     return img
+
 
 def _check_scale(func):
     """
@@ -142,6 +146,7 @@ def glass_blur(scale, image):
     glass_blurred_image = image[coord_y, coord_x]
     return glass_blurred_image
 
+
 @_check_scale
 def motion_blur(scale, image, size=10, angle=45):
     """
@@ -159,6 +164,7 @@ def motion_blur(scale, image, size=10, angle=45):
     # Convolve the image with the kernel.
     blurred_image = cv2.filter2D(image, -1, kernel)
     return blurred_image
+
 
 @_check_scale
 def zoom_blur(scale, img):
@@ -186,6 +192,7 @@ def zoom_blur(scale, img):
     img = (img + out) / (len(c) + 1)
     return np.clip(img, 0, 1) * 255
 
+
 @_check_scale
 def increase_brightness(scale, image):
     """
@@ -206,6 +213,7 @@ def increase_brightness(scale, image):
     brightened_image = cv2.cvtColor(hsv_image, cv2.COLOR_HSV2RGB)
     return brightened_image
 
+
 @_check_scale
 def contrast(scale, img):
     """
@@ -220,6 +228,7 @@ def contrast(scale, img):
     factor = [1.1, 1.2, 1.3, 1.5, 1.7][scale]
     pivot = 127.5
     return np.clip(pivot + (img - pivot) * factor, 0, 255)
+
 
 @_check_scale
 def elastic(scale, img):
@@ -253,6 +262,7 @@ def elastic(scale, img):
     )
     return distorted_image
 
+
 @_check_scale
 def pixelate(scale, img):
     """
@@ -268,6 +278,7 @@ def pixelate(scale, img):
     h, w = img.shape[:2]
     img = cv2.resize(img, (int(w * factor), int(h * factor)), cv2.INTER_AREA)
     return cv2.resize(img, (w, h), cv2.INTER_NEAREST)
+
 
 @_check_scale
 def jpeg_filter(scale, image):
@@ -292,6 +303,7 @@ def jpeg_filter(scale, image):
         np.frombuffer(jpeg_stream.read(), np.uint8), cv2.IMREAD_COLOR
     )
     return jpeg_artifact_image
+
 
 @_check_scale
 def shear_image(scale, image):
@@ -318,6 +330,7 @@ def shear_image(scale, image):
 
     return sheared
 
+
 @_check_scale
 def translate_image(scale, image):
     """
@@ -341,6 +354,7 @@ def translate_image(scale, image):
 
     translated = cv2.warpAffine(image, M, (cols, rows))
     return translated
+
 
 @_check_scale
 def scale_image(scale, image):
@@ -385,6 +399,7 @@ def scale_image(scale, image):
 
     return scalled_image
 
+
 @_check_scale
 def rotate_image(scale, image):
     """
@@ -407,6 +422,7 @@ def rotate_image(scale, image):
     rotated = cv2.warpAffine(image, M, (cols, rows), borderValue=(0, 0, 0))
 
     return rotated
+
 
 @_check_scale
 def fog_mapping(scale, image):
@@ -442,6 +458,7 @@ def fog_mapping(scale, image):
 
     return foggy
 
+
 @_check_scale
 def splatter_mapping(scale, image):
     """
@@ -472,6 +489,7 @@ def splatter_mapping(scale, image):
         splattered[mask] = [0, 0, 0]  # Obscuring the region with black color
 
     return splattered
+
 
 @_check_scale
 def dotted_lines_mapping(scale, image):
@@ -509,6 +527,7 @@ def dotted_lines_mapping(scale, image):
             current_y += direction[1] * distance_between_dots
 
     return dotted
+
 
 @_check_scale
 def zigzag_mapping(scale, image):
@@ -549,6 +568,7 @@ def zigzag_mapping(scale, image):
             step += 1
     return zigzag
 
+
 @_check_scale
 def canny_edges_mapping(scale, image):
     """
@@ -581,6 +601,7 @@ def canny_edges_mapping(scale, image):
 
     return merged_image
 
+
 @_check_scale
 def speckle_noise_filter(scale, image):
     """
@@ -601,6 +622,7 @@ def speckle_noise_filter(scale, image):
     # Apply speckle noise by multiplying original image with noise pattern
     speckled = (image * noise).clip(0, 255).astype(np.uint8)
     return speckled
+
 
 @_check_scale
 def false_color_filter(scale, image):
@@ -645,6 +667,7 @@ def false_color_filter(scale, image):
 
     return false_color
 
+
 @_check_scale
 def high_pass_filter(scale, image):
     """
@@ -669,6 +692,7 @@ def high_pass_filter(scale, image):
 
     sharpened = np.clip(sharpened, 0, 255).astype("uint8")
     return sharpened
+
 
 @_check_scale
 def low_pass_filter(scale, image):
@@ -708,6 +732,7 @@ def low_pass_filter(scale, image):
 
     return low_pass_rgb
 
+
 @_check_scale
 def phase_scrambling(scale, image):
     """
@@ -733,6 +758,7 @@ def phase_scrambling(scale, image):
     scrambled_rgb = cv2.merge([scrambled_R, scrambled_G, scrambled_B])
 
     return scrambled_rgb
+
 
 @_check_scale
 def histogram_equalisation(scale, image):
@@ -767,6 +793,7 @@ def histogram_equalisation(scale, image):
 
     return equalised_rgb
 
+
 @_check_scale
 def reflection_filter(scale, image):
     """
@@ -796,6 +823,7 @@ def reflection_filter(scale, image):
 
     return reflected_img
 
+
 @_check_scale
 def white_balance_filter(scale, image):
     """
@@ -811,6 +839,7 @@ def white_balance_filter(scale, image):
     return cv2.addWeighted(
         image, 1 - severity, simple_white_balance(image.copy()), severity, 0
     )
+
 
 @_check_scale
 def sharpen_filter(scale, image):
@@ -833,6 +862,7 @@ def sharpen_filter(scale, image):
     # Convolve the image with the sharpening kernel
     sharpened = cv2.filter2D(image, -1, kernel)
     return cv2.addWeighted(image, weight, sharpened, 1 - weight, 0)
+
 
 @_check_scale
 def grayscale_filter(scale, image):
@@ -857,6 +887,7 @@ def grayscale_filter(scale, image):
     )
 
     return grayed_img
+
 
 @_check_scale
 def posterize_filter(scale, image):
@@ -884,6 +915,7 @@ def posterize_filter(scale, image):
         posterized[:, :, i] = color_levels[image[:, :, i]]
 
     return posterized
+
 
 @_check_scale
 def cutout_filter(scale, image):
@@ -914,6 +946,7 @@ def cutout_filter(scale, image):
         image[x : x + patch_size_x, y : y + patch_size_y, :] = 0  # set to black
 
     return image
+
 
 @_check_scale
 def sample_pairing_filter(scale, image):
@@ -946,6 +979,7 @@ def sample_pairing_filter(scale, image):
 
     return blended
 
+
 @_check_scale
 def gaussian_blur(scale, image):
     """
@@ -964,6 +998,7 @@ def gaussian_blur(scale, image):
     blurred = cv2.GaussianBlur(image, kernel_size, 0)
 
     return blurred
+
 
 @_check_scale
 def saturation_filter(scale, image):
@@ -988,6 +1023,7 @@ def saturation_filter(scale, image):
 
     return saturated
 
+
 @_check_scale
 def saturation_decrease_filter(scale, image):
     """
@@ -1010,6 +1046,7 @@ def saturation_decrease_filter(scale, image):
     saturated = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
 
     return saturated
+
 
 @_check_scale
 def fog_filter(scale, image):
@@ -1039,6 +1076,7 @@ def fog_filter(scale, image):
     # Blend the fog overlay with the original image
     foggy_image = cv2.addWeighted(image, 1 - intensity, fog_overlay, intensity, 0)
     return foggy_image
+
 
 @_check_scale
 def frost_filter(scale, image):
@@ -1074,6 +1112,7 @@ def frost_filter(scale, image):
     frosted_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     return frosted_image
 
+
 @_check_scale
 def snow_filter(scale, image):
     """
@@ -1108,6 +1147,7 @@ def snow_filter(scale, image):
     frosted_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     return frosted_image
 
+
 @_check_scale
 def dynamic_snow_filter(scale, image, iterator):
     """
@@ -1138,6 +1178,7 @@ def dynamic_snow_filter(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
+
 @_check_scale
 def static_snow_filter(scale, image, snow_overlay):
     """
@@ -1165,6 +1206,7 @@ def static_snow_filter(scale, image, snow_overlay):
     image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
+
 
 @_check_scale
 def dynamic_rain_filter(scale, image, iterator):
@@ -1196,6 +1238,7 @@ def dynamic_rain_filter(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
+
 def dynamic_raindrop_filter(scale, image, iterator):
     """
     Apply a dynamic rain dropeffect to the image using an overlay image iterator.
@@ -1212,12 +1255,8 @@ def dynamic_raindrop_filter(scale, image, iterator):
     overlay = next(iterator)
     overlay = shift_color(overlay, [71, 253, 135], [255, 255, 255])
 
-
     # Load the next frame from the iterator
-    if (
-        overlay.shape[0] != image.shape[0]
-        or overlay.shape[1] != image.shape[1]
-    ):
+    if overlay.shape[0] != image.shape[0] or overlay.shape[1] != image.shape[1]:
         overlay = cv2.resize(overlay, (image.shape[1], image.shape[0]))
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
     bgr = overlay[:, :, :3]
@@ -1226,6 +1265,7 @@ def dynamic_raindrop_filter(scale, image, iterator):
     image[mask] = (1.0 - intensity) * image[mask] + intensity * bgr[mask]
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
+
 
 @_check_scale
 def static_rain_filter(scale, image, rain_overlay):
@@ -1254,6 +1294,7 @@ def static_rain_filter(scale, image, rain_overlay):
     image[mask] = (1.0 - intensity) * image[mask] + intensity * bgr[mask]
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
+
 
 @_check_scale
 def object_overlay(scale, img1):
@@ -1314,6 +1355,7 @@ def object_overlay(scale, img1):
 
     return img1
 
+
 @_check_scale
 def dynamic_object_overlay(scale, image, iterator):
     """
@@ -1345,6 +1387,7 @@ def dynamic_object_overlay(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
+
 @_check_scale
 def static_object_overlay(scale, image, rain_overlay):
     """
@@ -1373,6 +1416,7 @@ def static_object_overlay(scale, image, rain_overlay):
     image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
+
 
 @_check_scale
 def dynamic_sun_filter(scale, image, iterator):
@@ -1405,6 +1449,7 @@ def dynamic_sun_filter(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
+
 @_check_scale
 def static_sun_filter(scale, image, rain_overlay):
     """
@@ -1433,6 +1478,7 @@ def static_sun_filter(scale, image, rain_overlay):
     image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
+
 
 @_check_scale
 def dynamic_lightning_filter(scale, image, iterator):
@@ -1465,6 +1511,7 @@ def dynamic_lightning_filter(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
+
 @_check_scale
 def static_lightning_filter(scale, image, rain_overlay):
     """
@@ -1492,6 +1539,7 @@ def static_lightning_filter(scale, image, rain_overlay):
     image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
+
 
 @_check_scale
 def dynamic_smoke_filter(scale, image, iterator):
@@ -1524,6 +1572,7 @@ def dynamic_smoke_filter(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
+
 @_check_scale
 def static_smoke_filter(scale, image, rain_overlay):
     """
@@ -1550,6 +1599,7 @@ def static_smoke_filter(scale, image, rain_overlay):
     image[mask] = (1 - intensity) * image[mask] + intensity * bgr[mask]
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
+
 
 @_check_scale
 def perturb_high_attention_regions(
@@ -1578,6 +1628,7 @@ def perturb_high_attention_regions(
     image[mask] = noise_img[mask]
     return image
 
+
 @_check_scale
 def perturb_highest_n_attention_regions(
     saliency_map, image, perturbation, n=30, scale=0
@@ -1594,6 +1645,7 @@ def perturb_highest_n_attention_regions(
     # Now apply the mask: replace the original image pixels with noisy pixels where mask is True
     image[mask] = noise_img[mask]
     return image
+
 
 @_check_scale
 def perturb_lowest_n_attention_regions(
@@ -1623,6 +1675,7 @@ def perturb_lowest_n_attention_regions(
     image[mask] = noise_img[mask]
     return image
 
+
 @_check_scale
 def perturb_random_n_attention_regions(
     saliency_map, image, perturbation, n=30, scale=0
@@ -1642,10 +1695,11 @@ def perturb_random_n_attention_regions(
     image[mask] = noise_img[mask]
     return image
 
+
 def clamp_values(tuples_list, min1, max1, min2, max2):
     """
     Adjusts the values in each tuple to be within the specified range.
-    
+
     :param tuples_list: List of tuples to adjust
     :param min1: Minimum limit for the first element of the tuple
     :param max1: Maximum limit for the first element of the tuple
@@ -1663,15 +1717,20 @@ def clamp_values(tuples_list, min1, max1, min2, max2):
         clamped_list.append((val1, val2))
     return clamped_list
 
-def effects_attention_regions(
-    saliency_map,scale, image,type
-):
+
+def effects_attention_regions(saliency_map, scale, image, type):
     mask = saliency_map > np.percentile(saliency_map, 90)
     coordinates = np.argwhere(mask)
-    selected_coords = coordinates[np.random.choice(coordinates.shape[0], scale+1, replace=False)]
+    selected_coords = coordinates[
+        np.random.choice(coordinates.shape[0], scale + 1, replace=False)
+    ]
     selected_coords_tuples = [tuple(row) for row in selected_coords]
-    selected_coords_tuples=clamp_values(selected_coords_tuples, 5, image.shape[1]-5, 5, image.shape[0]-5)
-    List_of_Drops, _,_  = generate_label(image.shape[1], image.shape[0], selected_coords_tuples,cfg)
+    selected_coords_tuples = clamp_values(
+        selected_coords_tuples, 5, image.shape[1] - 5, 5, image.shape[0] - 5
+    )
+    List_of_Drops, _, _ = generate_label(
+        image.shape[1], image.shape[0], selected_coords_tuples, cfg
+    )
     output_image = generateDrops(image, cfg, List_of_Drops)
     return output_image
 

@@ -22,20 +22,20 @@ def getActivationMap(model, img_array, layer_name="conv2d_5"):
     """
     out_layer = model.get_layer(layer_name)
     activation_model = tf.keras.models.Model(
-    			inputs=model.inputs,
-    			outputs=out_layer.output)
+        inputs=model.inputs, outputs=out_layer.output
+    )
     inputs = tf.cast(img_array, tf.float32)
     activations = activation_model(inputs)
 
     output = np.abs(activations)
-    output = np.sum(output, axis = -1).squeeze()
+    output = np.sum(output, axis=-1).squeeze()
 
-    #resize and convert to image 
+    # resize and convert to image
     (w, h) = (img_array.shape[2], img_array.shape[1])
     output = cv2.resize(output, (w, h))
     output /= output.max()
     output *= 255
-    return output.astype('uint8')
+    return output.astype("uint8")
 
 
 def getSaliencyMap(model, img, _=None):

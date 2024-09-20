@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Union, Tuple
+from typing import Union, Tuple
 from ..AutomatedDrivingSystem import ADS
 from .Scenario import Scenario, ScenarioOutcome
 from ..imageperturbations import ImagePerturbation

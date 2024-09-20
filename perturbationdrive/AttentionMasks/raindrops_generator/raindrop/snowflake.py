@@ -1,12 +1,8 @@
-import cv2
-import math
 import numpy as np
-from PIL import Image, ImageDraw, ImageEnhance
-import random
-from random import randint
-from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.config import cfg
+from PIL import Image, ImageDraw
 
-class SnowFlake():
+
+class SnowFlake:
     def __init__(self, key, centerxy=None, radius=None, shape=None):
         """
         :param key: a unique key identifying a snowflake
@@ -14,12 +10,12 @@ class SnowFlake():
         :param radius: radius of a snowflake
         :param shape: int from 0 to 2 defining snowflake shape type
         """
-        self.key = key        
-        self.ifcol = False    
+        self.key = key
+        self.ifcol = False
         self.col_with = []
         self.center = centerxy
         self.radius = radius
-        self.shape = shape            
+        self.shape = shape
         self.type = "default"
         self.labelmap = np.zeros((self.radius * 2, self.radius * 2))
         self.alphamap = np.zeros((self.radius * 2, self.radius * 2))
@@ -36,7 +32,7 @@ class SnowFlake():
         tmp = np.expand_dims(self.alphamap, axis=-1)
         white_blob = np.ones_like(tmp) * 255  # Create a white blob
         tmp = np.concatenate((white_blob, tmp), axis=2)
-        self.texture = Image.fromarray(tmp.astype('uint8'), 'RGBA')
+        self.texture = Image.fromarray(tmp.astype("uint8"), "RGBA")
 
     def _create_label(self):
         self._createWhiteBlob()
@@ -45,7 +41,7 @@ class SnowFlake():
         """
         Create a simple white blob as the snowflake Alpha Map
         """
-        img = Image.fromarray(np.uint8(self.labelmap), 'L')
+        img = Image.fromarray(np.uint8(self.labelmap), "L")
         draw = ImageDraw.Draw(img)
 
         # Draw a white blob
@@ -73,7 +69,7 @@ class SnowFlake():
 
     def getCenters(self):
         return self.center
-        
+
     def getRadius(self):
         return self.radius
 
@@ -85,6 +81,6 @@ class SnowFlake():
 
     def getCollisionList(self):
         return self.col_with
-    
+
     def getUseLabel(self):
         return self.use_label

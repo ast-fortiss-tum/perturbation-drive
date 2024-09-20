@@ -1,8 +1,7 @@
-from abc import ABC
-from typing import Callable, List, Union, Tuple
+from typing import List, Union, Tuple
 from dataclasses import dataclass
 
-from numpy import ndarray, uint8
+from numpy import ndarray
 
 
 @dataclass

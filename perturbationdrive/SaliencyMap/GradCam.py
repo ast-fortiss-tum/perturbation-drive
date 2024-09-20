@@ -3,9 +3,10 @@ import tensorflow as tf
 import numpy as np
 import cv2
 
+
 def gradCam(model, img_array, layer_name="conv2d_5"):
     """
-    Creates a grad-cam heatmap for a given model and a layer name contained with that model. 
+    Creates a grad-cam heatmap for a given model and a layer name contained with that model.
     We recommend using the last convolutional layer of the model. Eg in terms of the underlying Dave2 model
     the `conv2d_5` layer.
 
@@ -30,7 +31,7 @@ def gradCam(model, img_array, layer_name="conv2d_5"):
     with tf.GradientTape() as tape:
         inputs = tf.cast(img_array, tf.float32)
         (convOutputs, predictions) = gradModel(inputs)
-        loss = predictions[:, ]
+        loss = predictions[:,]
     # use automatic differentiation to compute the gradients
     grads = tape.gradient(loss, convOutputs)
 
@@ -58,7 +59,7 @@ def gradCam(model, img_array, layer_name="conv2d_5"):
     # [0, 1], scale the resulting values to the range [0, 255],
     # and then convert to an unsigned 8-bit integer
     numer = heatmap - np.min(heatmap)
-    denom = (heatmap.max() - heatmap.min())
+    denom = heatmap.max() - heatmap.min()
     heatmap = numer / denom
 
     # heatmap = (heatmap * 255).astype("uint8")

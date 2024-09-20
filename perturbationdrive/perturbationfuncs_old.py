@@ -1562,7 +1562,9 @@ def perturb_random_n_attention_regions(
     if n < 0 or n > 100:
         raise ValueError("The n value needs to be in the range of [0, 100]")
     # Create a binary mask from the array
-    mask = np.random.choice([True, False], size=saliency_map.shape, p=[n / 100, 1 - n / 100])
+    mask = np.random.choice(
+        [True, False], size=saliency_map.shape, p=[n / 100, 1 - n / 100]
+    )
     # Apply the gaussian noise to the whole image
     noise_img = perturbation(scale, image)
     # Now apply the mask: replace the original image pixels with noisy pixels where mask is True

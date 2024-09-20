@@ -199,7 +199,11 @@ class PerturbationDrive:
         waypoints = None
         if not road_generator is None:
             # TODO: Insert here all kwargs needed for specific generator
-            waypoints = road_generator.generate(starting_pos=self.simulator.initial_pos,angles=road_angles,seg_lengths=road_segments)
+            waypoints = road_generator.generate(
+                starting_pos=self.simulator.initial_pos,
+                angles=road_angles,
+                seg_lengths=road_segments,
+            )
 
         # grid search loop
         while True:
@@ -232,7 +236,6 @@ class PerturbationDrive:
             else:
                 index += 1
 
-            
             if len(perturbations) == 0:
                 # all perturbations resulted in failures
                 # we will still have one perturbation here because we never
