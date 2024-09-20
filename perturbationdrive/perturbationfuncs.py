@@ -10,18 +10,34 @@ from .kernels.kernels import (
 from .utils.utilFuncs import (
     round_to_nearest_odd,
     scramble_channel,
-    equalise_power,
     simple_white_balance,
 )
 
 
+def _check_scale(func):
+    """
+    A decorator that checks if the scale value is in the range of [0, 4]
+
+    Raises:
+        - ValueError: If the scale value is not in the range of [0, 4]
+    """
+
+    def wrapper(scale, *args, **kwargs):
+        if scale < 0 or scale > 4:
+            raise ValueError("The scale value needs to be in the range of [0, 4]")
+        return func(scale, *args, **kwargs)
+
+    return wrapper
+
+
+@_check_scale
 def gaussian_noise(scale, img):
     """
     Adds unfirom distributed gausian noise to an image
 
     Parameters:
         - img (numpy array): The input image.
-         - scale int: The severity of the perturbation on a scale from 0 to 4
+        - scale int: The severity of the perturbation on a scale from 0 to 4
 
     Returns: numpy array
     """
@@ -37,6 +53,7 @@ def gaussian_noise(scale, img):
     )
 
 
+@_check_scale
 def poisson_noise(scale, img):
     """
     Adds poisson noise to an image.
@@ -52,6 +69,7 @@ def poisson_noise(scale, img):
     return np.clip(np.random.poisson(x * factor) / float(factor), 0, 1) * 255
 
 
+@_check_scale
 def impulse_noise(scale, img):
     """
     Add salt and pepper noise to an image.
@@ -94,6 +112,7 @@ def defocus_blur(scale, image):
     return blurred_image
 
 
+@_check_scale
 def glass_blur(scale, image):
     """
     Applies glass blur effect to the given image.
@@ -118,7 +137,7 @@ def glass_blur(scale, image):
     glass_blurred_image = image[coord_y, coord_x]
     return glass_blurred_image
 
-
+@_check_scale
 def motion_blur(scale, image, size=10, angle=45):
     """
     Apply motion blur to the given image.
@@ -136,7 +155,7 @@ def motion_blur(scale, image, size=10, angle=45):
     blurred_image = cv2.filter2D(image, -1, kernel)
     return blurred_image
 
-
+@_check_scale
 def zoom_blur(scale, img):
     """
     Applies a zoom blur effect on an image.\n
@@ -162,7 +181,7 @@ def zoom_blur(scale, img):
     img = (img + out) / (len(c) + 1)
     return np.clip(img, 0, 1) * 255
 
-
+@_check_scale
 def increase_brightness(scale, image):
     """
     Increase the brightness of the image using HSV color space
@@ -182,7 +201,7 @@ def increase_brightness(scale, image):
     brightened_image = cv2.cvtColor(hsv_image, cv2.COLOR_HSV2RGB)
     return brightened_image
 
-
+@_check_scale
 def contrast(scale, img):
     """
     Increase or decrease the conrast of the image
@@ -197,7 +216,7 @@ def contrast(scale, img):
     pivot = 127.5
     return np.clip(pivot + (img - pivot) * factor, 0, 255)
 
-
+@_check_scale
 def elastic(scale, img):
     """
     Applies an elastic deformation on the image.
@@ -229,7 +248,7 @@ def elastic(scale, img):
     )
     return distorted_image
 
-
+@_check_scale
 def pixelate(scale, img):
     """
     Pixelates the image
@@ -245,7 +264,7 @@ def pixelate(scale, img):
     img = cv2.resize(img, (int(w * factor), int(h * factor)), cv2.INTER_AREA)
     return cv2.resize(img, (w, h), cv2.INTER_NEAREST)
 
-
+@_check_scale
 def jpeg_filter(scale, image):
     """
     Introduce JPEG compression artifacts to the image.
@@ -269,7 +288,7 @@ def jpeg_filter(scale, image):
     )
     return jpeg_artifact_image
 
-
+@_check_scale
 def shear_image(scale, image):
     """
     Apply horizontal shear to an image with different severities.
@@ -294,7 +313,7 @@ def shear_image(scale, image):
 
     return sheared
 
-
+@_check_scale
 def translate_image(scale, image):
     """
     Apply translation to an image with different severities in both x and y directions.
@@ -318,7 +337,7 @@ def translate_image(scale, image):
     translated = cv2.warpAffine(image, M, (cols, rows))
     return translated
 
-
+@_check_scale
 def scale_image(scale, image):
     """
     Apply scaling to an image with different severities while maintaining source dimensions.
@@ -361,7 +380,7 @@ def scale_image(scale, image):
 
     return scalled_image
 
-
+@_check_scale
 def rotate_image(scale, image):
     """
     Apply rotation to an image with different severities while maintaining source dimensions.
@@ -384,7 +403,7 @@ def rotate_image(scale, image):
 
     return rotated
 
-
+@_check_scale
 def fog_mapping(scale, image):
     """
     Apply fog effect to an image with different severities using Diamond-Square algorithm.
@@ -418,7 +437,7 @@ def fog_mapping(scale, image):
 
     return foggy
 
-
+@_check_scale
 def splatter_mapping(scale, image):
     """
     Apply splatter effect to an image with different severities.
@@ -449,7 +468,7 @@ def splatter_mapping(scale, image):
 
     return splattered
 
-
+@_check_scale
 def dotted_lines_mapping(scale, image):
     """
     Apply dotted lines effect to an image with different severities.
@@ -486,7 +505,7 @@ def dotted_lines_mapping(scale, image):
 
     return dotted
 
-
+@_check_scale
 def zigzag_mapping(scale, image):
     """
     Apply zigzag effect to an image with different severities.
@@ -525,7 +544,7 @@ def zigzag_mapping(scale, image):
             step += 1
     return zigzag
 
-
+@_check_scale
 def canny_edges_mapping(scale, image):
     """
     Apply Canny edge detection to an image with different severities.
@@ -557,7 +576,7 @@ def canny_edges_mapping(scale, image):
 
     return merged_image
 
-
+@_check_scale
 def speckle_noise_filter(scale, image):
     """
     Apply speckle noise to an image with different severities.
@@ -578,7 +597,7 @@ def speckle_noise_filter(scale, image):
     speckled = (image * noise).clip(0, 255).astype(np.uint8)
     return speckled
 
-
+@_check_scale
 def false_color_filter(scale, image):
     """
     Apply false color effect to an image with different severities.
@@ -621,7 +640,7 @@ def false_color_filter(scale, image):
 
     return false_color
 
-
+@_check_scale
 def high_pass_filter(scale, image):
     """
     Apply high pass filter to an image with different severities.
@@ -646,7 +665,7 @@ def high_pass_filter(scale, image):
     sharpened = np.clip(sharpened, 0, 255).astype("uint8")
     return sharpened
 
-
+@_check_scale
 def low_pass_filter(scale, image):
     """
     Apply low pass filter to an image with different severities while preserving color.
@@ -684,7 +703,7 @@ def low_pass_filter(scale, image):
 
     return low_pass_rgb
 
-
+@_check_scale
 def phase_scrambling(scale, image):
     """
     Apply power scrambling (phase scrambling) to an image with different severities.
@@ -710,7 +729,7 @@ def phase_scrambling(scale, image):
 
     return scrambled_rgb
 
-
+@_check_scale
 def histogram_equalisation(scale, image):
     """
     Apply histogram equalisation to an image with different severities while
@@ -743,7 +762,7 @@ def histogram_equalisation(scale, image):
 
     return equalised_rgb
 
-
+@_check_scale
 def reflection_filter(scale, image):
     """
     Apply a reflection effect to an image with different intensity.
@@ -772,7 +791,7 @@ def reflection_filter(scale, image):
 
     return reflected_img
 
-
+@_check_scale
 def white_balance_filter(scale, image):
     """
     Apply a white balance effect to an image with different intensities.
@@ -788,7 +807,7 @@ def white_balance_filter(scale, image):
         image, 1 - severity, simple_white_balance(image.copy()), severity, 0
     )
 
-
+@_check_scale
 def sharpen_filter(scale, image):
     """
     Apply a sharpening effect to an image with different severities using a
@@ -810,7 +829,7 @@ def sharpen_filter(scale, image):
     sharpened = cv2.filter2D(image, -1, kernel)
     return cv2.addWeighted(image, weight, sharpened, 1 - weight, 0)
 
-
+@_check_scale
 def grayscale_filter(scale, image):
     """
     Apply a grayscale effect to an image with different intensities.
@@ -834,7 +853,7 @@ def grayscale_filter(scale, image):
 
     return grayed_img
 
-
+@_check_scale
 def posterize_filter(scale, image):
     """
     Reduces the number of distinct colors while mainting essential image features
@@ -861,7 +880,7 @@ def posterize_filter(scale, image):
 
     return posterized
 
-
+@_check_scale
 def cutout_filter(scale, image):
     """
     Creates random cutouts on the picture and makes the random cutouts black
@@ -891,7 +910,7 @@ def cutout_filter(scale, image):
 
     return image
 
-
+@_check_scale
 def sample_pairing_filter(scale, image):
     """
     Randomly sample to regions of the image together
@@ -922,7 +941,7 @@ def sample_pairing_filter(scale, image):
 
     return blended
 
-
+@_check_scale
 def gaussian_blur(scale, image):
     """
     Applies gaussian blur to the image
@@ -941,7 +960,7 @@ def gaussian_blur(scale, image):
 
     return blurred
 
-
+@_check_scale
 def saturation_filter(scale, image):
     """
     Increases the saturation of the image
@@ -964,7 +983,7 @@ def saturation_filter(scale, image):
 
     return saturated
 
-
+@_check_scale
 def saturation_decrease_filter(scale, image):
     """
     Decreases the saturation of the image
@@ -987,7 +1006,7 @@ def saturation_decrease_filter(scale, image):
 
     return saturated
 
-
+@_check_scale
 def fog_filter(scale, image):
     """
     Apply a fog effect to the image.
@@ -1016,7 +1035,7 @@ def fog_filter(scale, image):
     foggy_image = cv2.addWeighted(image, 1 - intensity, fog_overlay, intensity, 0)
     return foggy_image
 
-
+@_check_scale
 def frost_filter(scale, image):
     """
     Apply a frost effect to the image using an overlay image.
@@ -1050,7 +1069,7 @@ def frost_filter(scale, image):
     frosted_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     return frosted_image
 
-
+@_check_scale
 def snow_filter(scale, image):
     """
     Apply a snow effect to the image using an overlay image.
@@ -1084,7 +1103,7 @@ def snow_filter(scale, image):
     frosted_image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
     return frosted_image
 
-
+@_check_scale
 def dynamic_snow_filter(scale, image, iterator):
     """
     Apply a dynamic snow effect to the image using an overlay image iterator.
@@ -1114,7 +1133,7 @@ def dynamic_snow_filter(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def static_snow_filter(scale, image, snow_overlay):
     """
     Apply a static snow effect to the image using an overlay image iterator.
@@ -1142,7 +1161,7 @@ def static_snow_filter(scale, image, snow_overlay):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def dynamic_rain_filter(scale, image, iterator):
     """
     Apply a dynamic rain effect to the image using an overlay image iterator.
@@ -1172,7 +1191,7 @@ def dynamic_rain_filter(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def static_rain_filter(scale, image, rain_overlay):
     """
     Apply a dynamic rain effect to the image using an overlay image iterator.
@@ -1200,8 +1219,17 @@ def static_rain_filter(scale, image, rain_overlay):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def object_overlay(scale, img1):
+    """
+    Apply an overlay effect to the image using an overlay image read from
+    the file system. The overlay image is placed at the center of the input image.
+    The file resides at the path "./perturbationdrive/OverlayImages/Logo_of_the_Technical_University_of_Munichpng.png"
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+    """
     c = [10, 5, 3, 2, 1.5]
     overlay_path = "./perturbationdrive/OverlayImages/Logo_of_the_Technical_University_of_Munichpng.png"
     img2 = cv2.imread(overlay_path)
@@ -1250,7 +1278,7 @@ def object_overlay(scale, img1):
 
     return img1
 
-
+@_check_scale
 def dynamic_object_overlay(scale, image, iterator):
     """
     Apply a dynamic bird flying effect to the image using an overlay image iterator.
@@ -1281,7 +1309,7 @@ def dynamic_object_overlay(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def static_object_overlay(scale, image, rain_overlay):
     """
     Apply a dynamic bird flying effect to the image using an overlay image iterator.
@@ -1310,7 +1338,7 @@ def static_object_overlay(scale, image, rain_overlay):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def dynamic_sun_filter(scale, image, iterator):
     """
     Apply a dynamic sun effect to the image using an overlay image iterator.
@@ -1341,7 +1369,7 @@ def dynamic_sun_filter(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def static_sun_filter(scale, image, rain_overlay):
     """
     Apply a dynamic sun effect to the image using an overlay image iterator.
@@ -1370,7 +1398,7 @@ def static_sun_filter(scale, image, rain_overlay):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def dynamic_lightning_filter(scale, image, iterator):
     """
     Apply a dynamic lightning effect to the image using an overlay image iterator.
@@ -1401,7 +1429,7 @@ def dynamic_lightning_filter(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def static_lightning_filter(scale, image, rain_overlay):
     """
     Apply a dynamic lightning effect to the image using an overlay image iterator.
@@ -1429,7 +1457,7 @@ def static_lightning_filter(scale, image, rain_overlay):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def dynamic_smoke_filter(scale, image, iterator):
     """
     Apply a dynamic smoke effect to the image using an overlay image iterator.
@@ -1460,7 +1488,7 @@ def dynamic_smoke_filter(scale, image, iterator):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def static_smoke_filter(scale, image, rain_overlay):
     """
     Apply a dynamic smoke effect to the image using an overlay image iterator.
@@ -1487,7 +1515,7 @@ def static_smoke_filter(scale, image, rain_overlay):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
-
+@_check_scale
 def perturb_high_attention_regions(
     saliency_map, image, perturbation, boundary=0.5, scale=0
 ):
@@ -1514,7 +1542,7 @@ def perturb_high_attention_regions(
     image[mask] = noise_img[mask]
     return image
 
-
+@_check_scale
 def perturb_highest_n_attention_regions(
     saliency_map, image, perturbation, n=30, scale=0
 ):
@@ -1531,12 +1559,19 @@ def perturb_highest_n_attention_regions(
     image[mask] = noise_img[mask]
     return image
 
-
+@_check_scale
 def perturb_lowest_n_attention_regions(
     saliency_map, image, perturbation, n=30, scale=0
 ):
     """
     Perturbs the lowest n% of the regions of an image where the saliency map has an value greater than threshold
+
+    Parameters:
+        - saliency_map (numpy array): Two dimensional saliency map
+        - img (numpy array): The input image. Needs to have the same dimensions as the image
+        - perturbation func: The perturbation to apply to the image
+        - n int=30: The percentage of the lowest saliency regions to perturb
+        - scale int=0: The severity of the perturbation on a scale from 0 to 4
     """
     if n < 0 or n > 100:
         raise ValueError("The threshold value needs to be in the range of [0, 100]")
@@ -1552,7 +1587,7 @@ def perturb_lowest_n_attention_regions(
     image[mask] = noise_img[mask]
     return image
 
-
+@_check_scale
 def perturb_random_n_attention_regions(
     saliency_map, image, perturbation, n=30, scale=0
 ):
@@ -1562,7 +1597,9 @@ def perturb_random_n_attention_regions(
     if n < 0 or n > 100:
         raise ValueError("The n value needs to be in the range of [0, 100]")
     # Create a binary mask from the array
-    mask = np.random.choice([True, False], size=saliency_map.shape, p=[n / 100, 1 - n / 100])
+    mask = np.random.choice(
+        [True, False], size=saliency_map.shape, p=[n / 100, 1 - n / 100]
+    )
     # Apply the gaussian noise to the whole image
     noise_img = perturbation(scale, image)
     # Now apply the mask: replace the original image pixels with noisy pixels where mask is True
