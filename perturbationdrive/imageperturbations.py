@@ -2,7 +2,13 @@ import numpy as np
 import cv2
 import os
 import itertools
+import skimage.exposure
+from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.dropgenerator import generateDrops, generate_label
+import random
+
+from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.config import cfg
 from perturbationdrive.perturbationfuncs import (
+    empty,
     gaussian_noise,
     poisson_noise,
     impulse_noise,
@@ -45,6 +51,7 @@ from perturbationdrive.perturbationfuncs import (
     snow_filter,
     dynamic_snow_filter,
     dynamic_rain_filter,
+    dynamic_raindrop_filter,
     object_overlay,
     dynamic_object_overlay,
     dynamic_sun_filter,
@@ -54,6 +61,7 @@ from perturbationdrive.perturbationfuncs import (
     perturb_highest_n_attention_regions,
     perturb_lowest_n_attention_regions,
     perturb_random_n_attention_regions,
+    effects_attention_regions,
     static_lightning_filter,
     static_smoke_filter,
     static_sun_filter,
@@ -111,7 +119,7 @@ class ImagePerturbation:
         for filter, (path, iterator_name, color, thres) in FILTER_PATHS.items():
             if filter in self._fns:
                 print(
-                    f"{5* '-'} Loading Dynamic Masks - This can take a couple of seconds {5* '-'}"
+                    f"{5* '-'} Loading Dynamic Masks - This can take some time {5* '-'}"
                 )
                 frames = _loadMaskFrames(
                     path=path,
@@ -149,9 +157,11 @@ class ImagePerturbation:
         self.saliency_threshold = attention_map.get("threshold", 0.5)
         self.grad_cam_layer = attention_map.get("layer", "conv2d_5")
         self.attention_perturbation = attention_map.get(
-            "attention_perturbation", "perturb_high_attention_regions"
+            "attention_perturbation", "no_usage"
         )
-
+        self.iteration=0
+        self.previous_points=[]
+        self.previous_sizes=[]
         print(f"{5* '-'} Finished Perturbation-Controller set up {5* '-'}")
 
     def perturbation(
@@ -197,7 +207,20 @@ class ImagePerturbation:
         elif "styling" in func.__name__ or "sim2" in func.__name__:
             # apply either style transfer or cycle gan
             pertub_image = func(self, intensity, image)
-        elif self.attention_func != None:
+        elif "attention" in func.__name__ and self.attention_func != None and "dynamic" in func.__name__:
+            img_array = preprocess_image_saliency(image)
+            map = self.attention_func(self.model, img_array, self.grad_cam_layer)
+            pertub_image = func(self, map, intensity, image, perturbation_name)
+        elif "attention" in func.__name__ and self.attention_func != None:
+            img_array = preprocess_image_saliency(image)
+            map = self.attention_func(self.model, img_array, self.grad_cam_layer)
+            pertub_image = func(map, intensity, image,perturbation_name)
+        elif "attention" in func.__name__:
+            print("ERROR NO ATTENTION ON ATTENTION BASED PERTURBATION")
+            return cv2.resize(image, (self.width, self.height))
+        elif "effects"  in func.__name__ and "dynamic" in func.__name__:
+            pertub_image = func(self, intensity, image,perturbation_name)
+        elif self.attention_perturbation != "no_usage":
             # preprocess image and get map
             img_array = preprocess_image_saliency(image)
             map = self.attention_func(self.model, img_array, self.grad_cam_layer)
@@ -332,6 +355,230 @@ class ImagePerturbation:
         return True if ("sim2real" in func_names or "sim2sim" in func_names) else False
 
 
+
+    def effects_attention_regions_dynamic(
+        self,saliency_map,scale, image,name
+    ):
+        cfg = {
+            'maxR': 30,
+            'minR': 1,
+            'maxDrops': 100,
+            'minDrops': 1,
+            'edge_darkratio': 0.4,
+            'return_label': False,
+            'label_thres': 128,
+            'A': (1, 4.5),
+            'B': (3, 1),
+            'C': (1, 3),
+            'D': (3, 3)
+        }
+        coords_tuples=[]
+        shapes = None
+        sizes = None
+        
+        sizes_static = [2,3,4,3,4,5,2,3,1]
+        coords_tuples_static=[(0,200),(10,130),(30,80),(70,40),(140,180),(200,30),(250,190),(300,40),(150,80)]
+
+        coords_tuples=[]
+        sizes=[]
+        for i in range((1+scale)*2):
+            coords_tuples.append((random.randint(1,300),random.randint(0,200)))
+            sizes.append(random.randint(1,(1+scale)*5))
+        coords_tuples=coords_tuples+coords_tuples_static
+        sizes=sizes+sizes_static
+        
+        
+        if len(self.previous_points)!=0 and len(self.previous_points)==len(coords_tuples):
+            
+            shapes=self.previous_shapes
+            sizes = self.previous_sizes
+            
+            if self.iteration%2==0:
+                coords_tuples=[]
+                direction_x=random.randint(-1,1)
+                for i,value in enumerate(self.previous_points):
+                    x,y=value
+                    x=x+direction_x
+                    direction_y=random.randint(0,1)
+                    if sizes[i]<6:
+                        y=y+direction_y*3
+                    elif sizes[i]<12:
+                        y=y+direction_y
+                    else:
+                        y=y+direction_y*2
+                    coords_tuples.append((x,y))
+            else:
+                coords_tuples=self.previous_points
+
+            for i,value in enumerate(coords_tuples):
+                x,y=value
+                size=sizes[i]
+                if x>310 or x<2:
+                    x=random.randint(30,290)
+                if y>235:
+                    if i<(1+scale)*2:
+                        max_coords = np.unravel_index(np.argmax(saliency_map), saliency_map.shape)
+                        x=max_coords[0]
+                        y=max_coords[1]
+                        size=random.randint((1+scale)+10,30)
+                    else:
+                        y=random.randint(0,40)
+                        size=random.randint(1,5)
+                elif y>200:
+                    if random.randint(0,5)==4:
+                        size=max(1,min(size+random.randint(-2,0),30))
+                elif y>180:
+                    if random.randint(0,5)==4:
+                        size=max(1,min(size+random.randint(-1,0),30))
+                coords_tuples[i]=(x,y)
+                sizes[i]=size
+
+            if self.iteration%30==0:
+                    sizes = []
+                    for i,value in enumerate(self.previous_sizes):
+                        sizes.append(max(1,min(value+random.randint(-1,1),30)))
+        List_of_Drops, self.previous_shapes, self.previous_sizes  = generate_label(image.shape[0], image.shape[1], coords_tuples,cfg,shapes,sizes)
+        output_image = generateDrops(image, cfg, List_of_Drops)
+        self.previous_points=coords_tuples
+        self.iteration+=1
+        return output_image
+    
+
+        
+
+
+    
+    def effects_regions_dynamic(
+        self,scale, image,name
+    ):
+        cfg = {
+            'maxR': 30,
+            'minR': 1,
+            'maxDrops': 100,
+            'minDrops': 1,
+            'edge_darkratio': 0.4,
+            'return_label': False,
+            'label_thres': 128,
+            'A': (1, 4.5),
+            'B': (3, 1),
+            'C': (1, 3),
+            'D': (3, 3)
+        }
+        coords_tuples=[]
+        shapes = None
+        sizes = None
+        if "snowflake" in name:
+            sizes=[]
+            coords_tuples=[]
+            for i in range(100*(scale+1)):
+                sizes.append(1)
+                coords_tuples.append((random.randint(20,300),random.randint(20,220)))
+        else:
+            sizes = [2,3,4,3,4,5,2,3,1]
+            coords_tuples=[(0,200),(10,130),(30,80),(70,40),(140,180),(200,30),(250,190),(300,40),(150,80)]
+        # coords_tuples=[(300,1)]
+        
+        if len(self.previous_points)!=0 and len(self.previous_points)==len(coords_tuples):
+            
+            shapes=self.previous_shapes
+            sizes = self.previous_sizes
+            
+            if self.iteration%1==0:
+                coords_tuples=[]
+                direction_x=random.randint(-1,1)
+                for i,value in enumerate(self.previous_points):
+                    if "snowflake" not in name:
+                        x,y=value
+                        x=x+direction_x
+                        direction_y=random.randint(0,1)
+                        if sizes[i]<6:
+                            y=y+direction_y*3
+                        elif sizes[i]<12:
+                            y=y+direction_y
+                        else:
+                            y=y+direction_y*2
+                    else:
+                        x,y=value
+                        if x<160:
+                            x=x-5
+                        elif x>160:
+                            x=x+5
+                        elif x==160:
+                            x=x+random.randint(-1,1)
+                        if y<120:
+                            y=y-4
+                        elif y>120:
+                            y=y+4
+                        else:
+                            y=y+random.randint(-5,5)
+                    coords_tuples.append((x,y))
+            else:
+                coords_tuples=self.previous_points
+
+            for i,value in enumerate(coords_tuples):
+                x,y=value
+                size=sizes[i]
+                if "snowflake" not in name:
+                    if x>310 or x<2:
+                        x=random.randint(30,290)
+                    if y>235:
+                        print("here!")
+                        y=random.randint(0,40)
+                        size=random.randint(1,(scale+1)*5)
+                    elif y>200:
+                        if random.randint(0,5)==4:
+                            size=max(1,min(size+random.randint(-2,0),30))
+                    elif y>180:
+                        if random.randint(0,5)==4:
+                            size=max(1,min(size+random.randint(-1,0),30))
+                else:
+                    if (x>310 or x<2) and (y>239 or y<2):
+                        x,y = (random.randint(20,300),random.randint(20,220))
+                        
+                coords_tuples[i]=(x,y)
+                sizes[i]=size
+
+            if self.iteration%30==0:
+                    sizes = []
+                    for i,value in enumerate(self.previous_sizes):
+                        if "snowflake" not in name:
+                            sizes.append(max(1,min(value+random.randint(-1,1),30)))
+                        else:
+                            sizes.append(max(1,min(value+random.randint(-1,1),3)))
+        
+        List_of_Drops, self.previous_shapes, self.previous_sizes  = generate_label(image.shape[0], image.shape[1], coords_tuples,cfg,shapes,sizes)
+        output_image = generateDrops(image, cfg, List_of_Drops)
+        self.previous_points=coords_tuples
+        self.iteration+=1
+        return output_image
+
+
+def find_third_point(p1, p2, n):
+    
+    # Convert points to NumPy arrays for easier calculations
+    p1 = np.array(p1)
+    p2 = np.array(p2)
+
+    p2[0]=p2[0]+random.randint(-10,10)
+    p2[1]=p2[1]+random.randint(-10,10)
+
+    # Calculate the direction vector from p1 to p2
+    direction = p2 - p1
+
+    # Calculate the length of the direction vector
+    length = np.linalg.norm(direction)
+
+    # Normalize the direction vector to get the unit vector
+    unit_vector = direction / length
+
+    # Scale the unit vector by the distance n
+    scaled_vector = unit_vector * n
+
+    # Calculate the third point by adding the scaled vector to p1
+    p3 = p1 + scaled_vector
+    p3=[int(p3[0]),int(p3[1])]
+    return tuple(p3)
+
 def _loadMaskFrames(
     path: str,
     isGreenScreen=True,
@@ -436,9 +683,57 @@ def _remove_green_pixels(image, target_green_rgb, threshold=40):
 
     return image
 
+def clamp_values(tuples_list, min1, max1, min2, max2):
+    """
+    Adjusts the values in each tuple to be within the specified range.
+    
+    :param tuples_list: List of tuples to adjust
+    :param min1: Minimum limit for the first element of the tuple
+    :param max1: Maximum limit for the first element of the tuple
+    :param min2: Minimum limit for the second element of the tuple
+    :param max2: Maximum limit for the second element of the tuple
+    :return: List of tuples with values adjusted to be within the specified range
+    """
+    clamped_list = []
+    for t in tuples_list:
+        # Clamp the first value
+        val1 = max(min(t[0], max1), min1)
+        # Clamp the second value
+        val2 = max(min(t[1], max2), min2)
+        # Add the clamped tuple to the new list
+        clamped_list.append((val1, val2))
+    return clamped_list
+
+
+def _removeGreenScreen(image):
+    """
+    Removes green screen background by setting transparency to 0 using LAB channels
+
+    Returns: Mathlike
+    """
+    # convert to LAB
+    lab = cv2.cvtColor(image, cv2.COLOR_BGR2LAB)
+    # extract A channel
+    A = lab[:, :, 1]
+    # threshold A channel
+    thresh = cv2.threshold(A, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)[1]
+    # blur threshold image
+    blur = cv2.GaussianBlur(
+        thresh, (0, 0), sigmaX=5, sigmaY=5, borderType=cv2.BORDER_DEFAULT
+    )
+    # stretch so that 255 -> 255 and 127.5 -> 0
+    mask = skimage.exposure.rescale_intensity(
+        blur, in_range=(127.5, 255), out_range=(0, 255)
+    ).astype(np.uint8)
+    # add mask to image as alpha channel
+    image = cv2.cvtColor(image, cv2.COLOR_BGR2BGRA)
+    image[:, :, 3] = mask
+    return image
+
 
 # Mapping of function names to function objects
 FUNCTION_MAPPING = {
+    "empty": empty,
     "gaussian_noise": gaussian_noise,
     "poisson_noise": poisson_noise,
     "impulse_noise": impulse_noise,
@@ -475,6 +770,7 @@ FUNCTION_MAPPING = {
     "snow_filter": snow_filter,
     "dynamic_snow_filter": dynamic_snow_filter,
     "dynamic_rain_filter": dynamic_rain_filter,
+    "dynamic_raindrop_filter": dynamic_raindrop_filter,
     "object_overlay": object_overlay,
     "dynamic_object_overlay": dynamic_object_overlay,
     "dynamic_sun_filter": dynamic_sun_filter,
@@ -505,6 +801,10 @@ FUNCTION_MAPPING = {
     "composition_vii": ImagePerturbation.composition_vii_styling,
     "sim2real": ImagePerturbation.sim2real,
     "sim2sim": ImagePerturbation.sim2sim,
+    "effects_attention_rain": effects_attention_regions,
+    "effects_attention_rain_dynamic": ImagePerturbation.effects_attention_regions_dynamic,
+    "effects_rain_dynamic": ImagePerturbation.effects_regions_dynamic,
+    "effects_snowflake_dynamic": ImagePerturbation.effects_regions_dynamic
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name
@@ -526,6 +826,12 @@ FILTER_PATHS = {
         "_rain_iterator",
         [3, 129, 8],
         40,
+    ),
+    dynamic_raindrop_filter: (
+        "./perturbationdrive/OverlayMasks/test.mp4",
+        "_raindrop_iterator",
+        [8, 255, 18],
+        45,
     ),
     dynamic_object_overlay: (
         "./perturbationdrive/OverlayMasks/birds.mp4",
@@ -590,6 +896,7 @@ STATIC_PATHS = {
 ITERATOR_MAPPING = {
     dynamic_snow_filter: "_snow_iterator",
     dynamic_rain_filter: "_rain_iterator",
+    dynamic_raindrop_filter: "_raindrop_iterator",
     dynamic_sun_filter: "_sun_iterator",
     dynamic_lightning_filter: "_lightning_iterator",
     dynamic_object_overlay: "_bird_iterator",

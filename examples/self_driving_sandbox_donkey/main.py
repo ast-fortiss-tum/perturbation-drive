@@ -70,7 +70,7 @@ def go(
     port: int,
     pert_funcs: List[str] = [],
     attention: Dict[str, Any] = {},
-    simulator_exe_path: str = "./sim/donkey-sim.app",
+    simulator_exe_path: str = "./sim/binary_greenscreen.app",
 ):
     try:
         simulator = SDSandboxSimulator(
