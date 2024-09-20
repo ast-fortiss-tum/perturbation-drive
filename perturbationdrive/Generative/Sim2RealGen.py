@@ -12,7 +12,7 @@ from ..utils import download_file
 class Sim2RealGen:
     def __init__(self) -> None:
         if not os.path.exists("perturbationdrive/Generative/donkey_sim2real.h5"):
-            # download and move file
+            # download and move file. Note that the link is valid until 1.1.2030
             print("Fetching generative model real2sim")
             download_file(
                 "https://syncandshare.lrz.de/dl/fiHFK1MTb6aAK2JE2osQeL/donkey_real2sim.h5",
@@ -23,6 +23,7 @@ class Sim2RealGen:
         )
         if not os.path.exists("perturbationdrive/Generative/donkey_real2sim.h5"):
             print("Fetching generative model sim2real")
+            # Note that the link is valid until 1.1.2030
             download_file(
                 "https://syncandshare.lrz.de/dl/fi5udoYWWeHS5zajmjXGha/donkey_sim2real.h5",
                 "perturbationdrive/Generative",
