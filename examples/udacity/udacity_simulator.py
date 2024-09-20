@@ -91,8 +91,8 @@ class UdacitySimulator(PerturbationSimulator):
 
             # action loop
             while not done:
-                if time.time() - start_time > 62:
-                    self.logger.info("SDSandBox: Timeout after 120s")
+                if time.time() - start_time > 300:
+                    self.logger.info("Udacity: Timeout after 300s")
                     timeout = True
                     break
 

@@ -161,6 +161,8 @@ class PerturbationDrive:
         perturbation_functions: List[str],
         attention_map: Dict = {},
         road_generator: Union[RoadGenerator, None] = None,
+        road_angles: List[int] = None,
+        road_segments: List[int] = None,
         log_dir: Union[str, None] = "logs.json",
         overwrite_logs: bool = True,
         image_size: Tuple[float, float] = (240, 320),
@@ -197,26 +199,12 @@ class PerturbationDrive:
         waypoints = None
         if not road_generator is None:
             # TODO: Insert here all kwargs needed for specific generator
-            waypoints = road_generator.generate(starting_pos=self.simulator.initial_pos)
+            waypoints = road_generator.generate(starting_pos=self.simulator.initial_pos,angles=road_angles,seg_lengths=road_segments)
 
         # grid search loop
         while True:
+            print(perturbations)
             # check if we leave the loop, increment the index and scale
-            index += 1
-            if len(perturbations) == 1:
-                # all perturbations resulted in failures
-                # we will still have one perturbation here because we never
-                # drop the empty perturbation
-                break
-            if index == len(perturbations):
-                # we increment the scale, so start with the first perturbation again
-                index = 0
-                scale += 1
-
-            if scale > 4:
-                # we went through all scales
-                break
-
             # get the perturbation function for the scenario
             perturbation = perturbations[index]
             print(
@@ -232,12 +220,32 @@ class PerturbationDrive:
             outcome = self.simulator.simulate_scanario(
                 self.ads, scenario=scenario, perturbation_controller=image_perturbation
             )
+            # print(outcome)
             outcomes.append(outcome)
 
             # check if we drop the scenario, we never remove the empty perturbation
             # for comparison reasons
             if not outcome.isSuccess and not perturbation == "":
                 perturbations.remove(perturbation)
+            elif perturbation == "":
+                perturbations.remove(perturbation)
+            else:
+                index += 1
+
+            
+            if len(perturbations) == 0:
+                # all perturbations resulted in failures
+                # we will still have one perturbation here because we never
+                # drop the empty perturbation
+                break
+            if index == len(perturbations):
+                # we increment the scale, so start with the first perturbation again
+                index = 0
+                scale += 1
+
+            if scale > 4:
+                # we went through all scales
+                break
 
         # TODO: print command line summary of benchmarking process
         del image_perturbation
@@ -265,12 +273,14 @@ class PerturbationDrive:
 
         If log_dir is none, we return the scenario outcomes
         """
+        print(attention_map)
+
         # get all perturbations to set up this object
         perturbations: List[str] = []
-        for sccenario in scenarios:
-            perturbations.append(sccenario.perturbation_function)
+        for scenario in scenarios:
+            perturbations.append(scenario.perturbation_function)
 
-        iamge_perturbation = ImagePerturbation(
+        image_perturbation = ImagePerturbation(
             funcs=perturbations, attention_map=attention_map, image_size=image_size
         )
         # sim is setup in main to get starting pos
@@ -279,12 +289,12 @@ class PerturbationDrive:
         # iterate over all scenarios
         for scenario in scenarios:
             outcome = self.simulator.simulate_scanario(
-                self.ads, scenario=scenario, perturbation_controller=iamge_perturbation
+                self.ads, scenario=scenario, perturbation_controller=image_perturbation
             )
             outcomes.append(outcome)
             time.sleep(2.0)
 
-        del iamge_perturbation
+        del image_perturbation
         del perturbations
         # tear sim down
         if log_dir is not None:

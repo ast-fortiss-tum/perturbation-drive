@@ -28,6 +28,8 @@ class ScenarioOutcome:
     speeds: List[float]
     actions: List[List[float]]
     scenario: Union[Scenario, None]
+    original_images: List[ndarray]
+    perturbed_images: List[ndarray]
     isSuccess: bool
     timeout: bool
 

@@ -1,6 +1,8 @@
 import numpy as np
 import cv2
 from io import BytesIO
+from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.dropgenerator import generateDrops, generate_label
+from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.config import cfg
 from .kernels.kernels import (
     diamond_square,
     create_disk_kernel,
@@ -14,6 +16,9 @@ from .utils.utilFuncs import (
     simple_white_balance,
 )
 
+
+def empty(scale, img):
+    return img
 
 def gaussian_noise(scale, img):
     """
@@ -1099,7 +1104,7 @@ def dynamic_snow_filter(scale, image, iterator):
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     snow_overlay = next(iterator)
-    snow_overlay = _shift_color(snow_overlay, [71, 253, 135], [255, 255, 255])
+    snow_overlay = shift_color(snow_overlay, [71, 253, 135], [255, 255, 255])
 
     if (
         snow_overlay.shape[0] != image.shape[0]
@@ -1127,7 +1132,7 @@ def static_snow_filter(scale, image, snow_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    snow_overlay = _shift_color(snow_overlay, [71, 253, 135], [255, 255, 255])
+    snow_overlay = shift_color(snow_overlay, [71, 253, 135], [255, 255, 255])
 
     if (
         snow_overlay.shape[0] != image.shape[0]
@@ -1156,7 +1161,7 @@ def dynamic_rain_filter(scale, image, iterator):
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     rain_overlay = next(iterator)
-    rain_overlay = _shift_color(rain_overlay, [31, 146, 59], [191, 35, 0])
+    rain_overlay = shift_color(rain_overlay, [31, 146, 59], [191, 35, 0])
 
     # Load the next frame from the iterator
     if (
@@ -1167,6 +1172,37 @@ def dynamic_rain_filter(scale, image, iterator):
     # Extract the 3 channels (BGR) and the alpha (transparency) channel
     bgr = rain_overlay[:, :, :3]
     mask = rain_overlay[:, :, 3] != 0
+    # mash the mask areas together
+    image[mask] = (1.0 - intensity) * image[mask] + intensity * bgr[mask]
+    image = np.clip(image, 0, 255).astype(np.uint8)
+    return image
+
+def dynamic_raindrop_filter(scale, image, iterator):
+    """
+    Apply a dynamic rain dropeffect to the image using an overlay image iterator.
+
+    Parameters:
+        - img (numpy array): The input image.
+        - scale int: The severity of the perturbation on a scale from 0 to 4
+        - iterator cycle: Cyclic iterator over all the frames of the dynamic overlay mask
+
+    Returns: numpy array:
+    """
+    intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
+    # Load the next frame from the iterator
+    overlay = next(iterator)
+    overlay = shift_color(overlay, [71, 253, 135], [255, 255, 255])
+
+
+    # Load the next frame from the iterator
+    if (
+        overlay.shape[0] != image.shape[0]
+        or overlay.shape[1] != image.shape[1]
+    ):
+        overlay = cv2.resize(overlay, (image.shape[1], image.shape[0]))
+    # Extract the 3 channels (BGR) and the alpha (transparency) channel
+    bgr = overlay[:, :, :3]
+    mask = overlay[:, :, 3] != 0
     # mash the mask areas together
     image[mask] = (1.0 - intensity) * image[mask] + intensity * bgr[mask]
     image = np.clip(image, 0, 255).astype(np.uint8)
@@ -1185,7 +1221,7 @@ def static_rain_filter(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    rain_overlay = _shift_color(rain_overlay, [31, 146, 59], [191, 35, 0])
+    rain_overlay = shift_color(rain_overlay, [31, 146, 59], [191, 35, 0])
 
     if (
         rain_overlay.shape[0] != image.shape[0]
@@ -1265,7 +1301,7 @@ def dynamic_object_overlay(scale, image, iterator):
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
-    rain_overlay = _shift_color(rain_overlay, [175, 221, 202], [0, 0, 0])
+    rain_overlay = shift_color(rain_overlay, [175, 221, 202], [0, 0, 0])
 
     # Resize the frost overlay to match the input image dimensions
     if (
@@ -1294,7 +1330,7 @@ def static_object_overlay(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    rain_overlay = _shift_color(rain_overlay, [175, 221, 202], [0, 0, 0])
+    rain_overlay = shift_color(rain_overlay, [175, 221, 202], [0, 0, 0])
 
     # Resize the frost overlay to match the input image dimensions
     if (
@@ -1325,7 +1361,7 @@ def dynamic_sun_filter(scale, image, iterator):
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
-    rain_overlay = _shift_color(rain_overlay, [223, 234, 212], [28, 202, 255])
+    rain_overlay = shift_color(rain_overlay, [223, 234, 212], [28, 202, 255])
 
     # Resize the frost overlay to match the input image dimensions
     if (
@@ -1355,7 +1391,7 @@ def static_sun_filter(scale, image, rain_overlay):
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
-    rain_overlay = _shift_color(rain_overlay, [223, 234, 212], [28, 202, 255])
+    rain_overlay = shift_color(rain_overlay, [223, 234, 212], [28, 202, 255])
 
     if (
         rain_overlay.shape[0] != image.shape[0]
@@ -1385,7 +1421,7 @@ def dynamic_lightning_filter(scale, image, iterator):
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
-    rain_overlay = _shift_color(rain_overlay, [5, 122, 101], [8, 152, 188])
+    rain_overlay = shift_color(rain_overlay, [5, 122, 101], [8, 152, 188])
 
     # Resize the frost overlay to match the input image dimensions
     if (
@@ -1414,7 +1450,7 @@ def static_lightning_filter(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    rain_overlay = _shift_color(rain_overlay, [5, 122, 101], [8, 152, 188])
+    rain_overlay = shift_color(rain_overlay, [5, 122, 101], [8, 152, 188])
 
     if (
         rain_overlay.shape[0] != image.shape[0]
@@ -1444,7 +1480,7 @@ def dynamic_smoke_filter(scale, image, iterator):
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
     # Load the next frame from the iterator
     rain_overlay = next(iterator)
-    rain_overlay = _shift_color(rain_overlay, [30, 112, 65], [132, 132, 132])
+    rain_overlay = shift_color(rain_overlay, [30, 112, 65], [132, 132, 132])
 
     # Resize the frost overlay to match the input image dimensions
     if (
@@ -1473,7 +1509,7 @@ def static_smoke_filter(scale, image, rain_overlay):
     Returns: numpy array:
     """
     intensity = [0.15, 0.25, 0.4, 0.6, 0.85][scale]
-    rain_overlay = _shift_color(rain_overlay, [30, 112, 65], [132, 132, 132])
+    rain_overlay = shift_color(rain_overlay, [30, 112, 65], [132, 132, 132])
     if (
         rain_overlay.shape[0] != image.shape[0]
         or rain_overlay.shape[1] != image.shape[1]
@@ -1569,8 +1605,41 @@ def perturb_random_n_attention_regions(
     image[mask] = noise_img[mask]
     return image
 
+def clamp_values(tuples_list, min1, max1, min2, max2):
+    """
+    Adjusts the values in each tuple to be within the specified range.
+    
+    :param tuples_list: List of tuples to adjust
+    :param min1: Minimum limit for the first element of the tuple
+    :param max1: Maximum limit for the first element of the tuple
+    :param min2: Minimum limit for the second element of the tuple
+    :param max2: Maximum limit for the second element of the tuple
+    :return: List of tuples with values adjusted to be within the specified range
+    """
+    clamped_list = []
+    for t in tuples_list:
+        # Clamp the first value
+        val1 = max(min(t[0], max1), min1)
+        # Clamp the second value
+        val2 = max(min(t[1], max2), min2)
+        # Add the clamped tuple to the new list
+        clamped_list.append((val1, val2))
+    return clamped_list
 
-def _shift_color(image, source_color, target_color):
+def effects_attention_regions(
+    saliency_map,scale, image,type
+):
+    mask = saliency_map > np.percentile(saliency_map, 90)
+    coordinates = np.argwhere(mask)
+    selected_coords = coordinates[np.random.choice(coordinates.shape[0], scale+1, replace=False)]
+    selected_coords_tuples = [tuple(row) for row in selected_coords]
+    selected_coords_tuples=clamp_values(selected_coords_tuples, 5, image.shape[1]-5, 5, image.shape[0]-5)
+    List_of_Drops, _,_  = generate_label(image.shape[1], image.shape[0], selected_coords_tuples,cfg)
+    output_image = generateDrops(image, cfg, List_of_Drops)
+    return output_image
+
+
+def shift_color(image, source_color, target_color):
     # Check if the image has an alpha channel
     has_alpha = image.shape[2] == 4
 
