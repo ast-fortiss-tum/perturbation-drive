@@ -602,11 +602,32 @@ The `GridSearchConfig` class provides a configuration for the grid search method
 Example:
 
 ```Python
-from perturbationdrive import PerturbationDrive, RandomRoadGenerator, GridSearchConfig
+from perturbationdrive import (
+    PerturbationDrive,
+    CustomRoadGenerator,
+    GridSearchConfig,
+    RoadGenerationFrequency,
+)
+from examples.self_driving_sandbox_donkey.sdsandbox_simulator import SDSandboxSimulator
+from examples.models.dave2_agent import Dave2Agent
 
 # setup demo objects
-simulator = ExampleSimulator()
-ads = ExampleADS()
+simulator = SDSandboxSimulator(
+    simulator_exe_path="./examples/self_driving_sandbox_donkey/sim/donkey-sim.app",
+    host="127.0.0.1",
+    port=9091,
+    show_image_cb=True,
+)
+ads = Dave2Agent(model_path="./examples/models/checkpoints/dave_90k_v1.h5")
+attention_map = {
+    "map": "grad_cam",
+    "model": ads.model,
+    "threshold": 0.1,
+    "layer": "conv2d_5",
+}
+road_angles = [0, -35, 0, -17, -35, 35, 6, -22]
+road_segments = [25, 25, 25, 25, 25, 25, 25, 25]
+road_generator = CustomRoadGenerator(num_control_nodes=len(road_angles))
 
 benchmarking_object = PerturbationDrive(
     simulator=simulator,
@@ -614,10 +635,21 @@ benchmarking_object = PerturbationDrive(
 )
 config = GridSearchConfig(
     perturbation_functions=["gaussian_noise", "impulse_noise"],
+
 )
 # perform grid search as end to end test
 benchmarking_object.grid_seach(
-    config=config
+    config=config,
+    attention_map=attention_map,
+    road_generator=road_generator,
+    road_angles=road_angles,
+    road_segments=road_segments,
+    road_generation_frequency=RoadGenerationFrequency.ONCE,
+    log_dir=f"./logs/example_logs.json",
+    overwrite_logs=True,
+    image_size=(240, 320),
+    drop_perturbation=(lambda outcome: (not outcome.isSuccess) or outcome.timeout),
+    increment_perturbation_scale=(lambda outcomes: True),
 )
 ```
 

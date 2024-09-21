@@ -102,6 +102,8 @@ try:
         log_dir=f"./logs/donkey_logs_{time}.json",
         overwrite_logs=True,
         image_size=(240, 320),  # images are resized to these values
+        drop_perturbation=(lambda outcome: (not outcome.isSuccess) or outcome.timeout),
+        increment_perturbation_scale=(lambda outcomes: True),
     )
     # "dynamic_raindrop_filter","effects_attention_rain",
     benchmarking_obj.grid_seach(config=config)
