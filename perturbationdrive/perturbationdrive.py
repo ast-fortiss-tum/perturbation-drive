@@ -1,3 +1,4 @@
+from enum import Enum
 from .Simulator.Simulator import PerturbationSimulator
 from .AutomatedDrivingSystem.ADS import ADS
 from .imageperturbations import ImagePerturbation, get_functions_from_module
@@ -5,12 +6,103 @@ from .Simulator.Scenario import Scenario, ScenarioOutcome, OfflineScenarioOutcom
 from .RoadGenerator.RoadGenerator import RoadGenerator
 from .utils.logger import ScenarioOutcomeWriter, OfflineScenarioOutcomeWriter
 
-from typing import List, Union, Dict, Tuple
+from typing import List, Union, Dict, Tuple, Type, Callable
 import copy
 import os
 import json
 import cv2
 import time
+from collections import defaultdict
+from dataclasses import dataclass, field
+
+
+class RoadGenerationFrequency(Enum):
+    """
+    Enum to control the frequency of road generation within the grid search
+
+    - NEVER: Never generate a road
+    - ONCE: Generate a road once before the grid search
+    - AFTER_EARCH_INTENSITY_ITERATION: Generate a road after each intensity iteration
+    - ALWAYS: Generate a road after each perturbation function
+    """
+
+    NEVER = 0
+    ONCE = 1
+    AFTER_EARCH_INTENSITY_ITERATION = 2
+    ALWAYS = 3
+
+
+@dataclass
+class GridSearchConfig:
+    """
+    Configuration to control the grid search method
+
+    :param perturbation_functions: list of perturbation functions to be used
+    :type perturbation_functions: List[str]
+    :param attention_map: attention map to be used. If None, no attention map is used
+    :type attention_map: Dict = {}
+    :param road_generator: road generator to be used. If None, no road is generated
+    :type road_generator: Union[RoadGenerator, None] = None
+    :param road_angles: angles for the road generator
+    :type road_angles: List[int] = None
+    :param road_segments: segments for the road generator
+    :type road_segments: List[int] = None
+    :param road_generation_frequency: frequency of road generation
+    :type road_generation_frequency: Type[RoadGenerationFrequency] = RoadGenerationFrequency.ONCE
+    :param log_dir: directory to save the logs. If None, no logs are saved
+    :type log_dir: Union[str, None] = "logs.json"
+    :param overwrite_logs: whether to overwrite existing logs
+    :type overwrite_logs: bool = True
+    :param image_size: size of the image returned by the simulator
+    :type image_size: Tuple[float, float] = (240, 320)
+    :param perturbation_class: class to be used for perturbation. Default is ImagePerturbation but can be any subclass of ImagePerturbation
+    :type perturbation_class: Type[ImagePerturbation] = ImagePerturbation
+    :param drop_perturbation: lambda function to evaluate whether to drop the perturbation after simulating a scenario. Default is to drop the perturbation if the scenario is not successful or if it times out. Receives the ScenarioOutcome of the simulation and returns a boolean
+    :type drop_perturbation: Callable[[ScenarioOutcome], bool] = lambda outcome: (not outcome.isSuccess) or outcome.timeout
+    :param evaluate_scenario_outcomes: lambda function to evaluate whether to increment the perturbation scale after all perturbations have been applied on a scale level. Default is to always increment the scale. Receives the list of all prior ScenarioOutcome and returns a boolean
+    :type evaluate_scenario_outcomes: Callable[[List[ScenarioOutcome]], bool] = lambda outcomes: True
+    """
+
+    perturbation_functions: List[str]
+    attention_map: Dict = field(default_factory=dict)
+    road_generator: Union[RoadGenerator, None] = None
+    road_angles: List[int] = field(default_factory=list)
+    road_segments: List[int] = field(default_factory=list)
+    road_generation_frequency: Type[RoadGenerationFrequency] = (
+        RoadGenerationFrequency.ONCE
+    )
+    log_dir: Union[str, None] = "logs.json"
+    overwrite_logs: bool = True
+    image_size: Tuple[float, float] = (240, 320)
+    perturbation_class: Type[ImagePerturbation] = ImagePerturbation
+    drop_perturbation: Callable[[ScenarioOutcome], bool] = (
+        lambda outcome: (not outcome.isSuccess) or outcome.timeout
+    )
+    increment_perturbation_scale: Callable[[List[ScenarioOutcome]], bool] = (
+        lambda outcomes: True
+    )
+
+    def __post_init__(self):
+        assert len(self.road_angles) == len(
+            self.road_segments
+        ), "Road angles and segments must have the same length"
+        # assert that the perturbation class is a subclass of ImagePerturbation
+        assert issubclass(
+            self.perturbation_class, ImagePerturbation
+        ), "Perturbation class must be a subclass of ImagePerturbation"
+        # assert that perturbation functions is not empty
+        assert len(self.perturbation_functions) > 0, "Perturbation functions is empty"
+        # populate all perturbations
+        if len(self.perturbation_functions) == 0:
+            perturbation_fns = get_functions_from_module(
+                "perturbationdrive.perturbationfuncs"
+            )
+            self.perturbation_functions = list(
+                map(lambda f: f.__name__, perturbation_fns)
+            )
+        # add the empty perturbation if it is not in the list
+        if "" not in self.perturbation_functions:
+            self.perturbation_functions.append("")
 
 
 class PerturbationDrive:
@@ -158,57 +250,53 @@ class PerturbationDrive:
 
     def grid_seach(
         self,
-        perturbation_functions: List[str],
-        attention_map: Dict = {},
-        road_generator: Union[RoadGenerator, None] = None,
-        road_angles: List[int] = None,
-        road_segments: List[int] = None,
-        log_dir: Union[str, None] = "logs.json",
-        overwrite_logs: bool = True,
-        image_size: Tuple[float, float] = (240, 320),
+        config: GridSearchConfig,
     ) -> Union[None, List[ScenarioOutcome]]:
         """
-        Basically, what we hace done in image perturbations up until now but in a single nice function wrapped
+        Run a grid search over all perturbation functions given in the config and finds the maximum perturbation scale.
 
-        If log_dir is none, we return the scenario outcomes
+
+        The road generator receives the following keyword parameters:
+        - starting_pos: Tuple[float, float, float, float] the starting position of the road
+        - angles: List[int] the angles for the road
+        - seg_lengths: List[int] the segment lengths for the road
+        - prior_results: List[ScenarioOutcome] the prior results of the grid search
+
+
+        :param config: configuration for the grid search
+        :type config: GridSearchConfig
+        :return: list of scenario outcomes if log_dir is None, else None
+        :return type: Union[None, List[ScenarioOutcome]]
         """
-        image_perturbation = ImagePerturbation(
-            funcs=perturbation_functions,
-            attention_map=attention_map,
-            image_size=image_size,
+        image_perturbation = config.perturbation_class(
+            funcs=config.perturbation_functions,
+            attention_map=config.attention_map,
+            image_size=config.image_size,
         )
         scale = 0
         index = 0
         outcomes: List[ScenarioOutcome] = []
-        perturbations: List[str] = copy.deepcopy(perturbation_functions)
-        # populate all perturbations
-        if len(perturbations) == 0:
-            perturbation_fns = get_functions_from_module(
-                "perturbationdrive.perturbationfuncs"
-            )
-            perturbations = list(map(lambda f: f.__name__, perturbation_fns))
-        # we append the empty perturbation here
-        perturbations.append("")
-
+        perturbations: List[str] = copy.deepcopy(config.perturbation_functions)
         # set up simulator
         self.simulator.connect()
-        # wait 1 seconds for connection to build up
+        # wait 1 seconds for connection to become stable
         time.sleep(1)
 
         # set up initial road
         waypoints = None
-        if not road_generator is None:
-            # TODO: Insert here all kwargs needed for specific generator
-            waypoints = road_generator.generate(
+        if (
+            not config.road_generator is None
+            and config.road_generation_frequency != RoadGenerationFrequency.NEVER
+        ):
+            waypoints = config.road_generator.generate(
                 starting_pos=self.simulator.initial_pos,
-                angles=road_angles,
-                seg_lengths=road_segments,
+                angles=config.road_angles,
+                seg_lengths=config.road_segments,
+                prior_results=[],
             )
 
         # grid search loop
         while True:
-            print(perturbations)
-            # check if we leave the loop, increment the index and scale
             # get the perturbation function for the scenario
             perturbation = perturbations[index]
             print(
@@ -224,43 +312,68 @@ class PerturbationDrive:
             outcome = self.simulator.simulate_scanario(
                 self.ads, scenario=scenario, perturbation_controller=image_perturbation
             )
-            # print(outcome)
+            print(
+                f"{5 * '-'} Finished Scenario: Perturbation {perturbation} on {scale} {5 * '-'}"
+            )
+            print(
+                f"{5 * '-'} Outcome: Success: {outcome.isSuccess}, Timeout: {outcome.timeout} {5 * '-'}"
+            )
             outcomes.append(outcome)
 
-            # check if we drop the scenario, we never remove the empty perturbation
-            # for comparison reasons
-            if not outcome.isSuccess and not perturbation == "":
+            # let the callback decide if we drop the perturbation
+            if config.drop_perturbation(outcome):
                 perturbations.remove(perturbation)
-            elif perturbation == "":
-                perturbations.remove(perturbation)
+                print(f"{5 * '-'} Removed Perturbation: {perturbation} {5 * '-'}")
             else:
                 index += 1
-
+            # check if we leave the loop, increment the index and scale
             if len(perturbations) == 0:
                 # all perturbations resulted in failures
-                # we will still have one perturbation here because we never
-                # drop the empty perturbation
                 break
             if index == len(perturbations):
                 # we increment the scale, so start with the first perturbation again
                 index = 0
-                scale += 1
+                if config.increment_perturbation_scale(outcomes):
+                    scale += 1
+                    print(
+                        f"{5 * '-'} Incremented Perturbation Scale to {scale} {5 * '-'}"
+                    )
+                if (
+                    config.road_generation_frequency
+                    == RoadGenerationFrequency.AFTER_EARCH_INTENSITY_ITERATION
+                ):
+                    waypoints = config.road_generator.generate(
+                        starting_pos=self.simulator.initial_pos,
+                        angles=config.road_angles,
+                        seg_lengths=config.road_segments,
+                        prior_results=outcomes,
+                    )
 
             if scale > 4:
                 # we went through all scales
                 break
+            if config.road_generation_frequency == RoadGenerationFrequency.ALWAYS:
+                waypoints = config.road_generator.generate(
+                    starting_pos=self.simulator.initial_pos,
+                    angles=config.road_angles,
+                    seg_lengths=config.road_segments,
+                    prior_results=outcomes,
+                )
 
-        # TODO: print command line summary of benchmarking process
+        self._print_summary(outcomes)
+
         del image_perturbation
         del scenario
-        del road_generator
+        del config.road_generator
 
         # tear down the simulator
         self.simulator.tear_down()
-        if log_dir is None:
+        if config.log_dir is None:
             return outcomes
         else:
-            scenario_writer = ScenarioOutcomeWriter(log_dir, overwrite_logs)
+            scenario_writer = ScenarioOutcomeWriter(
+                config.log_dir, config.overwrite_logs
+            )
             scenario_writer.write(outcomes)
 
     def simulate_scenarios(
@@ -305,3 +418,42 @@ class PerturbationDrive:
             scenario_writer.write(outcomes)
             del scenario_writer
         return outcomes
+
+    def _print_summary(self, scenario_outcomes: List[ScenarioOutcome]):
+        """
+        Print a summary of the outcomes
+        """
+        # Dictionary to store data in the form {(perturbation_function, perturbation_scale): (success_count, timeout_count)}
+        table = defaultdict(lambda: (0, 0))
+
+        # Populate the table with success and timeout counts
+        for outcome in scenario_outcomes:
+            if outcome.scenario:  # Ensure scenario is not None
+                key = (
+                    outcome.scenario.perturbation_function,
+                    outcome.scenario.perturbation_scale,
+                )
+                success, timeout = table[key]
+
+                if outcome.isSuccess:
+                    success += 1
+                if outcome.timeout:
+                    timeout += 1
+
+                table[key] = (success, timeout)
+        # Find all unique perturbations and scales for formatting the table
+        perturbations = sorted(set(perturb for perturb, _ in table.keys()))
+        scales = sorted(set(scale for _, scale in table.keys()))
+
+        # Print the table
+        print(f"{'Perturbation':<20}", end="")
+        for scale in scales:
+            print(f"{scale:>10}", end="")
+        print()
+
+        for perturbation in perturbations:
+            print(f"{perturbation:<20}", end="")
+            for scale in scales:
+                success, timeout = table.get((perturbation, scale), (0, 0))
+                print(f"{success}/{timeout:>10}", end="")
+            print()

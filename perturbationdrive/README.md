@@ -542,32 +542,67 @@ The class has the following attributes
 
 ### PerturbationDrive.grid_search
 
-Performs grid search over the whole space of the perturbation functions selected. For each perturbation function specified as parameter we find the highest perturbation intensity on which the ADS manages to drive the track defined by the RoadGenerator.
-For each perturbation intensity level, also the empty perturbation is tested to compare the performance on corrupted input to the performance on normal input.
+Performs a grid search over the search space of perturbations and roads configured as search parameters to find failure cases and determine space within the ADS performs well. The grid search method is highly customizable via the `GridSearchConfig` and follows the following control flow:
+
+1) Initializes the perturbation controller class provided in the config. Per default, the `ImagePerturbation` class is used but any valid subclass can be used.
+2) Established a connection to the simulator and waits for the connection to establish.
+3) Constructs the initial road waypoints based on the road generator provided in the config. If no road generator is provided, the default road of the simulator is used.
+    - The `generate` method of the road generator receives the following parameters: 1. The initial position of the ADS in the simulator. 2. The `road_angles` and `road_lengths` lists of the config. 3. A list of prior simulation results of the grid search. For the initial road generation, this list is empty.
+4) Initializes the index pointing to the current perturbation (out of all perturbations provided in the config) with 0 and sets the perturbation scale to 0.
+5) Performs the grid search controll flow
+    1) Simulates the scenario with the current perturbation (based on the index) and road.
+    2) Calls the `config.drop_perturbation(outcome)` lambda function to determine if the perturbation should be dropped from the list of perturbations. If the function returns True, the perturbation is removed from the list else the index is incremented.
+    3) If the index is equal to the length of the perturbation list, then
+        1) The `config.increment_perturbation_scale(outcomes)` lambda function is called to determine if the perturbation scale should be incremented. If the function returns True, the perturbation scale is incremented and the index is reset to 0 else the index is reset to 0 and the scale not incremented.
+        2) If the `config.road_generation_frequency` is set to `RoadGenerationFrequency.AFTER_EARCH_INTENSITY_ITERATION` then the `generate` method of the road generator is called to generate a new road based on the current simulation results.
+    4) If either the perturbation scale is equal to 5 or all perturbations have been droped, the grid search loop is terminated.
+    5) If the `config.road_generation_frequency` is set to `RoadGenerationFrequency.AFTER_EARCH_INTENSITY_ITERATION` then the `generate` method of the road generator is called to generate a new road based on the current simulation results.
+6) Prints a summary of the grid search results to the terminal.
+7) Tears down the simulator connection.
+8) If a log directory is provided, the results are written to the log file else the simulation outcomes are returned.
 
 Parameters:
 
+- `config: GridSearchConfig`
+    The configuration of the grid search allowing to highly customize the grid search to ones desire. The configuration is detailed in the following section.
+
+Returns:
+
+- `Union[None, List[ScenarioOutcome]]` Returns the results of all simulated scenarios if the `config.log_dir` is None, otherwise returns None.
+
+#### GridSearchConfig
+
+The `GridSearchConfig` class provides a configuration for the grid search method of the `PerturbationDrive` class. The class has the following parameters:
+
 - `perturbation_functions: List[str]`
-    The set of perturbations functions to use. If this list is empty, all perturbation functions detailed in the table in [Image Perturbations](#image-perturbations) are used.
+    List of perturbation functions to use. If this list is empty, all perturbation functions detailed in the table in [Image Perturbations](#image-perturbations) are used. Further, the empty perturbation is always included in the list.
 - `attention_map: dict(map: str, model: tf.model, threshold: float, layer: str) = {}`
     Determines if the input image is perturbed on the attention map of the SUT or not. If the dict is empty, the input image is not perturbed based on the attention map. The parameters are identical to the [ImagePerturbation class](#imageperturbationclass).
 - `road_generator: Union[RoadGenerator, None] = None`
-    The generator which generates the road for the grid search. If no road generator is suplied, the default road of the simulator is choosen.
+    Road generator to generate new roads for the scenarios. If no road generator is provided, the default road of the simulator is used.
+- `road_angles: List[int] = []`
+    List of angles between the adjacent waypoints of the road. This list of waypoints is forwarded to the road_generator in road_generate.generate function calls.
+- `road_lengths: List[int] = []`
+    List of segment lengths between the adjacent waypoints of the road. This list of waypoints is forwarded to the road_generator in road_generate.generate function calls.
+- `road_generation_frequency: RoadGenerationFrequency = RoadGenerationFrequency.ONCE`
+    Frequency of generating new roads. The frequency can be set to `RoadGenerationFrequency.NEVER` (Never generate a road), `RoadGenerationFrequency.ONCE` (Generate a road once before the grid search), `RoadGenerationFrequency.AFTER_EARCH_INTENSITY_ITERATION` (Generate a road after each scale iteration) or `RoadGenerationFrequency.ALWAYS` (Generate a road after each perturbation function).
 - `log_dir: Union[str, None] = "logs.json"`
     Optional directory to log the `ScenarioOutcome`s of each individual `Scenario`. If this param is None, the results are not written to a log file and returned from this method. If this is not None, the logs are written to the file and the `ScenarioOutcome` is not returned from this method.
 - `overwrite_logs: bool = True`
     Boolean variable indicating if existing log files should be overwritten, if the `log_dir` already exists. If this is false and the file already exists, the `ScenarioOutcome`s are not written or returned and discarded.
 - `image_size: Tuple[float, float] = (240, 320)`
     Image size of the input images during the scenario.
+- `drop_perturbation: Callable[[ScenarioOutcome], bool] = lambda outcome: (not outcome.isSuccess) or outcome.timeout`
+    Lambda function to determine if a perturbation should be dropped from the list of perturbations. The function receives a `ScenarioOutcome` and returns a boolean value. If the function returns True, the perturbation is removed from the list else the perturbation is kept.
+- `increment_perturbation_scale: Callable[[List[ScenarioOutcome]], bool] = lambda outcomes: True`
+    Lambda function to determine if the perturbation scale should be incremented after iterating over each perturbation on the current perturbation scale. The function receives a list of `ScenarioOutcome`s and returns a boolean value. If the function returns True, the perturbation scale is incremented else the perturbation scale is not incremented.
 
-Returns:
-
-- `Union[None, List[ScenarioOutcome]]` Returns the results of all simulated scenarios if the `log_dir` is None, otherwise returns None.
+#### GridSearch Example
 
 Example:
 
 ```Python
-from perturbationdrive import PerturbationDrive, RandomRoadGenerator
+from perturbationdrive import PerturbationDrive, RandomRoadGenerator, GridSearchConfig
 
 # setup demo objects
 simulator = ExampleSimulator()
@@ -576,33 +611,15 @@ ads = ExampleADS()
 benchmarking_object = PerturbationDrive(
     simulator=simulator,
     ads=ads,
-    perturbation_functions=["gaussian_noise", "impulse_noise"],
-    attention_map={},
-    road_generator=RandomRoadGenerator(),
-    image_size=(240,240)
 )
-
+config = GridSearchConfig(
+    perturbation_functions=["gaussian_noise", "impulse_noise"],
+)
 # perform grid search as end to end test
 benchmarking_object.grid_seach(
-    perturbation_functions=["gaussian_noise", "impulse_noise"],
-    attention_map={},
-    road_generator=RandomRoadGenerator(),
-    log_dir="./logs/grid_search.json",
-    overwrite_logs=False,
-    image_size=(240,240)
+    config=config
 )
 ```
-
-The grid search method implemets the following control flow
-
-1. The grid_search method executes a grid search over different perturbations and scales to assess the performance of an ADS in various scenarios. The method follows these steps:
-2. Initialize Image Perturbation: Based on the provided perturbation functions, attention map, and image size.
-3. Perturbation and Scenario Setup: Iterates over the perturbation functions and scales, generating new scenarios each time. An empty perturbation is always included for comparison.
-4. Simulator Setup and Connection: Connects to the simulator and waits for the connection to establish.
-5. Road Generation: If a road_generator is provided, generates new roads using the starting position from the simulator.
-6. Grid Search Loop: Iterates over the perturbations and scales. For each iteration, a new Scenario is created and simulated. The outcome is then evaluated, and unsuccessful perturbations (except the empty one) are removed from the list.
-7. Logging and Returning Outcomes: If a log directory is specified, the outcomes are written to the logs. Otherwise, the list of outcomes is returned.
-8. Simulator Teardown: Disconnects and tears down the simulator setup.
 
 ### PerturbationDrive.simulate_scenarios
 

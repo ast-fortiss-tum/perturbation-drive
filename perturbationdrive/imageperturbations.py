@@ -99,6 +99,9 @@ class ImagePerturbation:
         Default attention_perturbation is `perturb_high_attention_regions`, other possible values are `perturb_highest_n_attention_regions`, `perturb_lowest_n_attention_regions` and `perturb_random_n_attention_regions`.
     :type attention_map: dict(map: str, model: tf.model, threshold: float, layer: str, attention_perturbation: str).
     :default attention_map={}: The treshold can be empty and is 0.5 per default. The default layer for the GradCam Map is `conv2d_5`
+
+    :param image_size: The size of the image we want to perturb (height, width)
+    :type image_size: tuple(float, float) = (240, 320)
     """
 
     def __init__(

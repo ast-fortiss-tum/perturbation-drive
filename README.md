@@ -165,8 +165,13 @@ ads = ExampleADS()
 # create a new perturbation controller
 benchmarking_object = PerturbationDrive(simulator=simulator, ads=ads)
 
+# configure the grid search
+config = GridSearchConfig(
+    perturbation_functions = ["poisson_noise", "gaussian_noise"],
+)
+
 # perform grid search as end to end test
-benchmarking_object.grid_seach()
+benchmarking_object.grid_seach(config=config)
 
 # simulate scenarios as end to end test
 benchmarking_obj.simulate_scenarios(scenarios=getDemoScenarios())

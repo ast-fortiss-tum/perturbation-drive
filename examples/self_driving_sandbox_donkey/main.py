@@ -7,7 +7,7 @@ from experiment.search_configuration import DefaultSearchConfiguration
 
 from utils import log_utils
 import argparse
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any
 import traceback
 
 from sdsandbox_simulator import SDSandboxSimulator
@@ -19,6 +19,8 @@ from examples.open_sbt.sdsandbox_open_sbt import SDSandBox_OpenSBTWrapper
 from perturbationdrive import (
     PerturbationDrive,
     RandomRoadGenerator,
+    GridSearchConfig,
+    RoadGenerationFrequency,
 )
 
 
@@ -79,15 +81,18 @@ def go(
         ads = ExampleAgent()
         road_generator = RandomRoadGenerator(num_control_nodes=8)
         benchmarking_obj = PerturbationDrive(simulator, ads)
-
-        # start the benchmarking
-        benchmarking_obj.grid_seach(
+        config = GridSearchConfig(
             perturbation_functions=pert_funcs,
             attention_map=attention,
             road_generator=road_generator,
+            road_generation_frequency=RoadGenerationFrequency.ONCE,
             log_dir="./examples/self_driving_sandbox_donkey/logs.json",
             overwrite_logs=True,
-            image_size=(240, 320),  # images are resized to these values
+            image_size=(240, 320),
+        )
+        # start the benchmarking
+        benchmarking_obj.grid_seach(
+            config=config,
         )
         print(f"{5 * '#'} Finished Running SDSandBox Sim {5 * '#'}")
     except Exception as e:
@@ -114,7 +119,7 @@ if __name__ == "__main__":
         type=str,
         default="./examples/self_driving_sandbox_donkey/sim/donkey-sim.app",
         help="sim executable path",
-    )    
+    )
     parser.add_argument(
         "--attention_map", type=str, default="", help="which attention map to use"
     )
@@ -143,11 +148,11 @@ if __name__ == "__main__":
     )
 
     print(f"{5 * '#'} Started Running SDSandBox Sim {5 * '#'}")
-    #go(
+    # go(
     #   host=args.host,
     #   port=args.port,
     #   pert_funcs=args.perturbation,
     #   attention=attention,
     #  simulator_exe_path=args.sim_exe,
-    #)
+    # )
     open_sbt()

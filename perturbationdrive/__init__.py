@@ -90,7 +90,7 @@ from .Generative.Sim2RealGen import Sim2RealGen
 from .Generative.TrainCycleGan import train_cycle_gan
 from .evaluatelogs import fix_csv_logs, plot_driven_distance
 from .utils.timeout import MpTimeoutError, timeout_func, async_raise
-from .perturbationdrive import PerturbationDrive
+from .perturbationdrive import PerturbationDrive, GridSearchConfig, RoadGenerationFrequency
 
 # imports related to all abstract concept
 from .AutomatedDrivingSystem.ADS import ADS

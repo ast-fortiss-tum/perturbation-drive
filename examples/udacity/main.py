@@ -23,6 +23,8 @@ from examples.open_sbt.udacity_open_sbt import Udacity_OpenSBTWrapper
 from perturbationdrive import (
     PerturbationDrive,
     RandomRoadGenerator,
+    GridSearchConfig,
+    RoadGenerationFrequency,
 )
 
 
@@ -85,15 +87,17 @@ def go(
         ads = ExampleAgent()
         road_generator = RandomRoadGenerator(num_control_nodes=8)
         benchmarking_obj = PerturbationDrive(simulator, ads)
-
-        # start the benchmarking
-        benchmarking_obj.grid_seach(
+        config = GridSearchConfig(
             perturbation_functions=pert_funcs,
             attention_map=attention,
             road_generator=road_generator,
             log_dir="./examples/udacity/logs.json",
             overwrite_logs=True,
-            image_size=(240, 320),  # images are resized to these values
+            image_size=(240, 320),
+        )
+        # start the benchmarking
+        benchmarking_obj.grid_seach(
+            config=config,
         )
         print(f"{5 * '#'} Finished Running Udacity Sim {5 * '#'}")
     except Exception as e:

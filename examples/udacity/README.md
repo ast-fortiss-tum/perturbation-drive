@@ -155,7 +155,7 @@ Also note, that the example agent behaves randomly.
 
 ```Python
 from examples.udacity.udacity_simulator import UdacitySimulator
-from perturbationdrive import PerturbationDrive, RandomRoadGenerator
+from perturbationdrive import PerturbationDrive, RandomRoadGenerator, GridSearchConfig
 import traceback
 from examples.models.example_agent import ExampleAgent
 
@@ -170,12 +170,9 @@ try:
     benchmarking_obj = PerturbationDrive(simulator, ads)
     # start the benchmarking
     benchmarking_obj.grid_seach(
-        perturbation_functions=["gaussian_noise"],
-        attention_map={},
-        road_generator=road_generator,
-        log_dir="./examples/udacity/logs.json",
-        overwrite_logs=True,
-        image_size=(240, 320),  # images are resized to these values
+        config=GridSearchConfig(
+            perturbation_functions=["gaussian_noise", "poisson_noise"],
+        )
     )
     print(f"{5 * '#'} Finished Running Udacity Sim {5 * '#'}")
 except Exception as e:
