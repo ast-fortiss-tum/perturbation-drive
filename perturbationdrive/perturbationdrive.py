@@ -426,7 +426,7 @@ class PerturbationDrive:
         Print a summary of the outcomes
         """
         # Dictionary to store data in the form {(perturbation_function, perturbation_scale): (success_count, timeout_count)}
-        table = defaultdict(lambda: (0, 0))
+        table = defaultdict(lambda: (0, 0, 0))
 
         # Populate the table with success and timeout counts
         for outcome in scenario_outcomes:
@@ -435,27 +435,31 @@ class PerturbationDrive:
                     outcome.scenario.perturbation_function,
                     outcome.scenario.perturbation_scale,
                 )
-                success, timeout = table[key]
+                success, timeout, total = table[key]
 
                 if outcome.isSuccess:
                     success += 1
                 if outcome.timeout:
                     timeout += 1
+                total += 1
 
-                table[key] = (success, timeout)
+                table[key] = (success, timeout, total)
         # Find all unique perturbations and scales for formatting the table
         perturbations = sorted(set(perturb for perturb, _ in table.keys()))
         scales = sorted(set(scale for _, scale in table.keys()))
 
         # Print the table
-        print(f"{'Perturbation':<20}", end="")
+        print(f"{'Perturbation':<40}", end="")
         for scale in scales:
-            print(f"{scale:>10}", end="")
+            print(f"{scale:<20}", end="")
         print()
 
         for perturbation in perturbations:
-            print(f"{perturbation:<20}", end="")
+            if perturbation == "":
+                print(f"{'Empty Perturbation':<40}", end="")
+            else:
+                print(f"{perturbation:<40}", end="")
             for scale in scales:
-                success, timeout = table.get((perturbation, scale), (0, 0))
-                print(f"{success}/{timeout:>10}", end="")
+                success, timeout, total = table.get((perturbation, scale), (0, 0, 0))
+                print(f"{success}/{timeout} (Total: {total:<20})", end="")
             print()
