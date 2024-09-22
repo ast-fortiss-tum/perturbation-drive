@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 from PIL import ImageEnhance
 from .snowflake import SnowFlake
+from .raindrop import Raindrop
 
 """
 This module contain two functions:

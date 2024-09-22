@@ -66,8 +66,8 @@ class GridSearchConfig:
     perturbation_functions: List[str]
     attention_map: Dict = field(default_factory=dict)
     road_generator: Union[RoadGenerator, None] = None
-    road_angles: List[int] = field(default_factory=list)
-    road_segments: List[int] = field(default_factory=list)
+    road_angles: Union[List[int], None] = field(default_factory=list)
+    road_segments: Union[List[int], None] = field(default_factory=list)
     road_generation_frequency: Type[RoadGenerationFrequency] = (
         RoadGenerationFrequency.ONCE
     )
@@ -83,9 +83,11 @@ class GridSearchConfig:
     )
 
     def __post_init__(self):
-        assert len(self.road_angles) == len(
-            self.road_segments
-        ), "Road angles and segments must have the same length"
+        if not self.road_angles is None and not self.road_segments is None:
+            # assert that road angles and segments have the same length
+            assert len(self.road_angles) == len(
+                self.road_segments
+            ), "Road angles and segments must have the same length"
         # assert that the perturbation class is a subclass of ImagePerturbation
         assert issubclass(
             self.perturbation_class, ImagePerturbation
