@@ -1,4 +1,4 @@
-from perturbationdrive import ADS
+from perturbationdrive import ADS, download_file
 
 import tensorflow as tf
 from tensorflow import keras
@@ -14,9 +14,20 @@ class Dave2Agent(ADS):
     Example agent using Dave2 architecture
     """
 
-    def __init__(self, model_path: str = "./examples/models/checkpoints/dave_90k_v1.h5"):
+    def __init__(
+        self, model_path: str = "./examples/models/checkpoints/dave_90k_v1.h5"
+    ):
         if not (os.path.exists(model_path) and os.path.isfile(model_path)):
             print(f"{5 * '+'} Warning: ADS file does not exists {5 * '+'}")
+            # check if the user wants to use the pretrained `dave_90k_v1.h5` model
+            # This link is valud until 1.1.2030
+            if model_path.endswith("dave_90k_v1.h5"):
+                print(f"{5 * '+'} Warning: Loading the pretrained model now {5 * '+'}")
+                model_path = download_file(
+                    "https://syncandshare.lrz.de/dl/fi9cS5gzMX4w6hUvhKgpf6/dave_90k_v1.h5",
+                    "./examples/models/checkpoints/",
+                )
+                print(f"{5 * '+'} Pretrained model loaded {5 * '+'}")
         self.model = load_model(model_path, compile=False)
         print(f"Using model: {model_path}")
         self.model.compile(loss="sgd", metrics=["mse"])

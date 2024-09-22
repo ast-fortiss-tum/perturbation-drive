@@ -75,8 +75,18 @@ def simple_white_balance(img):
     return img
 
 
-def download_file(url, target_folder):
-    """Downloads file from url and moves it to target folder"""
+def download_file(url: str, target_folder: str) -> str:
+    """
+    Downloads file from url and moves it to target folder
+
+    :param url: URL of the file to download
+    :type url: str
+    :param target_folder: Folder to move the downloaded file to
+    :type target_folder: str
+    :return: Path to the downloaded file
+    """
+    # Ensure the target folder exists
+    os.makedirs(target_folder, exist_ok=True)
     local_filename = os.path.join(target_folder, url.split("/")[-1])
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
