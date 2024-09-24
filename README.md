@@ -212,7 +212,7 @@ Create a new virtual environment using Python >= 3.6. This can be done for examp
 2. Create a new environment
 
     ```Shell
-    micromamba create -n myenv python=3.6
+    micromamba create -n myenv python=3.9
     ```
 
 3. Activate the environment
@@ -241,6 +241,10 @@ Create a new virtual environment using Python >= 3.6. This can be done for examp
     ```Shell
     micromamba deactivate myenv
     ```
+
+### Troubleshooting
+
+Depending on your setup you might to need to exclude some libraries (i.e. `tensorflow-metal`)
 
 ## Results
 
