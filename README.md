@@ -206,7 +206,7 @@ Clone this library from [GitHub](https://github.com/HannesLeonhard/PerturbationD
     gh repo clone HannesLeonhard/PerturbationDrive
     ```
 
-Create a new virtual environment using Python >= 3.6. This can be done for example via [Micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html).
+Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the preferred version). This can be done for example via [Micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html).
 
 1. Install Micromamba. If you currently do not have Micromamba install it and set it up locally.
 2. Create a new environment
