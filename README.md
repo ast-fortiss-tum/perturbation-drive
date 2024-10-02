@@ -186,24 +186,24 @@ Refer to the [Interface with PerturbationDrive](https://github.com/HannesLeonhar
 
 ## Installing locally
 
-Clone this library from [GitHub](https://github.com/HannesLeonhard/PerturbationDrive/tree/main).
+Clone this library from [GitHub].
 
 * HTTPS
 
     ```Shell
-    git clone https://github.com/HannesLeonhard/PerturbationDrive.git
+    git clone https://github.com/xxx
     ```
 
 * SSH
 
     ```Shell
-    git clone git@github.com:HannesLeonhard/PerturbationDrive.git
+    git clone git@github.com:xxx
     ```
 
 * GitHub CLI
 
     ```Shell
-    gh repo clone HannesLeonhard/PerturbationDrive
+    gh repo clone xxxxx
     ```
 
 Create a new virtual environment using Python >= 3.6. This can be done for example via [Micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html).
