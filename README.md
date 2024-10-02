@@ -241,9 +241,3 @@ Create a new virtual environment using Python >= 3.6. This can be done for examp
     ```Shell
     micromamba deactivate myenv
     ```
-
-## Results
-
-This sections provides references to the empirical evaluations resulting from this framework.
-
-* [Benchmarking Robustness In Self Driving Cars: A system-level framework](https://drive.google.com/file/d/1J5TalKyyUU8AtOZKAFU79JmZI5T_KrWO/view)
