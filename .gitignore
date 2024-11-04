@@ -226,7 +226,6 @@ benchmark*.json
 ### Models should be downloaded on demand via curl ###
 *.keras
 *.t7
-*.h5
 
 # udacity sim
 udacity_sim.app
