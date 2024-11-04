@@ -21,12 +21,13 @@ class PerturbationDrive:
     def __init__(
         self,
         simulator: PerturbationSimulator,
-        ads: ADS,
+        ads: Union[ADS, None],
     ):
         assert isinstance(
             simulator, PerturbationSimulator
         ), "Simulator must be a subclass of PerturbationSimulator"
-        assert isinstance(ads, ADS), "ADS must be a subclass of ADS"
+        if ads is not None:
+            assert isinstance(ads, ADS), "ADS must be a subclass of ADS"
         self.simulator = simulator
         self.ads = ads
 
@@ -166,33 +167,51 @@ class PerturbationDrive:
         log_dir: Union[str, None] = "logs.json",
         overwrite_logs: bool = True,
         image_size: Tuple[float, float] = (240, 320),
+        test_model: bool=False,
+        perturb: bool=False,
+        weather: Union[str, None] = "Sun",
+        weather_intensity: Union[int, None] = 90
     ) -> Union[None, List[ScenarioOutcome]]:
         """
         Basically, what we hace done in image perturbations up until now but in a single nice function wrapped
 
         If log_dir is none, we return the scenario outcomes
         """
-        image_perturbation = ImagePerturbation(
-            funcs=perturbation_functions,
-            attention_map=attention_map,
-            image_size=image_size,
-        )
+        if perturb:
+            image_perturbation = ImagePerturbation(
+                funcs=perturbation_functions,
+                attention_map=attention_map,
+                image_size=image_size,
+            )
+            
+        else:
+            image_perturbation=None
         scale = 0
         index = 0
-        outcomes: List[ScenarioOutcome] = []
-        perturbations: List[str] = copy.deepcopy(perturbation_functions)
-        # populate all perturbations
-        if len(perturbations) == 0:
-            perturbation_fns = get_functions_from_module(
-                "perturbationdrive.perturbationfuncs"
-            )
-            perturbations = list(map(lambda f: f.__name__, perturbation_fns))
+        # outcomes: List[ScenarioOutcome] = []
+        if log_dir is None:
+            print("No log directory")
+        else:
+            scenario_writer = ScenarioOutcomeWriter(log_dir, overwrite_logs)
+        
+        perturbations: List[str] = []
+        
+        if perturb:
+            perturbations: List[str] = copy.deepcopy(perturbation_functions)
+            # populate all perturbations
+            if len(perturbations) == 0:
+                perturbation_fns = get_functions_from_module(
+                    "perturbationdrive.perturbationfuncs"
+                )
+                perturbations = list(map(lambda f: f.__name__, perturbation_fns))
+        
         # we append the empty perturbation here
         perturbations.append("")
+        
 
         # set up simulator
         self.simulator.connect()
-        # wait 1 seconds for connection to build up
+        # wait 1 second for connection to build up
         time.sleep(1)
 
         # set up initial road
@@ -204,12 +223,11 @@ class PerturbationDrive:
         # grid search loop
         while True:
             print(perturbations)
-            # check if we leave the loop, increment the index and scale
-            # get the perturbation function for the scenario
             perturbation = perturbations[index]
             print(
                 f"{5 * '-'} Running Scenario: Perturbation {perturbation} on {scale} {5 * '-'}"
             )
+            
             scenario = Scenario(
                 waypoints=waypoints,
                 perturbation_function=perturbation,
@@ -218,20 +236,17 @@ class PerturbationDrive:
 
             # simulate the scenario
             outcome = self.simulator.simulate_scanario(
-                self.ads, scenario=scenario, perturbation_controller=image_perturbation
+                self.ads, scenario=scenario, perturbation_controller=image_perturbation, perturb=perturb, model_drive=test_model, weather=weather, intensity=weather_intensity
             )
-            # print(outcome)
-            outcomes.append(outcome)
+            
 
             # check if we drop the scenario, we never remove the empty perturbation
             # for comparison reasons
-            if not outcome.isSuccess and not perturbation == "":
-                perturbations.remove(perturbation)
-            elif perturbation == "":
+            if not outcome.isSuccess or perturb==False:
                 perturbations.remove(perturbation)
             else:
                 index += 1
-
+            scenario_writer.write([outcome])
             
             if len(perturbations) == 0:
                 # all perturbations resulted in failures
@@ -246,6 +261,7 @@ class PerturbationDrive:
             if scale > 4:
                 # we went through all scales
                 break
+            
 
         # TODO: print command line summary of benchmarking process
         del image_perturbation
@@ -254,11 +270,6 @@ class PerturbationDrive:
 
         # tear down the simulator
         self.simulator.tear_down()
-        if log_dir is None:
-            return outcomes
-        else:
-            scenario_writer = ScenarioOutcomeWriter(log_dir, overwrite_logs)
-            scenario_writer.write(outcomes)
 
     def simulate_scenarios(
         self,
@@ -289,7 +300,7 @@ class PerturbationDrive:
         # iterate over all scenarios
         for scenario in scenarios:
             outcome = self.simulator.simulate_scanario(
-                self.ads, scenario=scenario, perturbation_controller=image_perturbation
+                self.ads, scenario=scenario, perturbation_controller=image_perturbation, perturb=True, model_drive=True
             )
             outcomes.append(outcome)
             time.sleep(2.0)

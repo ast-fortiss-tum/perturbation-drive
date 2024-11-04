@@ -14,11 +14,9 @@ from .utils.utilFuncs import (
     scramble_channel,
     equalise_power,
     simple_white_balance,
+    clamp_values
 )
 
-
-def empty(scale, img):
-    return img
 
 def gaussian_noise(scale, img):
     """
@@ -1236,6 +1234,7 @@ def static_rain_filter(scale, image, rain_overlay):
     image = np.clip(image, 0, 255).astype(np.uint8)
     return image
 
+# check maps
 
 def object_overlay(scale, img1):
     c = [10, 5, 3, 2, 1.5]
@@ -1605,26 +1604,6 @@ def perturb_random_n_attention_regions(
     image[mask] = noise_img[mask]
     return image
 
-def clamp_values(tuples_list, min1, max1, min2, max2):
-    """
-    Adjusts the values in each tuple to be within the specified range.
-    
-    :param tuples_list: List of tuples to adjust
-    :param min1: Minimum limit for the first element of the tuple
-    :param max1: Maximum limit for the first element of the tuple
-    :param min2: Minimum limit for the second element of the tuple
-    :param max2: Maximum limit for the second element of the tuple
-    :return: List of tuples with values adjusted to be within the specified range
-    """
-    clamped_list = []
-    for t in tuples_list:
-        # Clamp the first value
-        val1 = max(min(t[0], max1), min1)
-        # Clamp the second value
-        val2 = max(min(t[1], max2), min2)
-        # Add the clamped tuple to the new list
-        clamped_list.append((val1, val2))
-    return clamped_list
 
 def effects_attention_regions(
     saliency_map,scale, image,type

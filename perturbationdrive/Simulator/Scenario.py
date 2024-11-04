@@ -27,6 +27,7 @@ class ScenarioOutcome:
     xte: List[float]
     speeds: List[float]
     actions: List[List[float]]
+    pid_actions: List[List[float]]
     scenario: Union[Scenario, None]
     original_images: List[ndarray]
     perturbed_images: List[ndarray]

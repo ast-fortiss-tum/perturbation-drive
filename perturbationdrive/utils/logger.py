@@ -10,6 +10,7 @@ import numpy as np
 from ..Simulator.Scenario import ScenarioOutcome, OfflineScenarioOutcome
 from .custom_types import LOGGING_LEVEL
 from PIL import Image
+import gc
 
 
 class CSVLogHandler(logging.FileHandler):
@@ -61,7 +62,7 @@ class ScenarioOutcomeWriter:
                 self._write = False
         self.file_path = file_path
 
-    def write(self, scenario_outcomes: List[ScenarioOutcome]):
+    def write(self, scenario_outcomes: List[ScenarioOutcome],images=False):
         """
         Write scenario outcomes to a json file
 
@@ -82,22 +83,36 @@ class ScenarioOutcomeWriter:
                 data = []
             # Append new data
             for scenario_outcome in scenario_outcomes:
-                image_folder_name=self.file_path.split(".json")[0]+"_"+str(scenario_outcome.scenario.perturbation_function)+"_"+str(scenario_outcome.scenario.perturbation_scale)
+                image_folder_name=self.file_path.split("logs_")[0]+"_"+str(scenario_outcome.scenario.perturbation_function)+"_"+str(scenario_outcome.scenario.perturbation_scale)
                 scenario_data=asdict(scenario_outcome)
                 perturbed_images = scenario_data.pop('perturbed_images', None)
                 original_images = scenario_data.pop('original_images', None)
-                image_frames=scenario_outcome.frames
-                if not os.path.exists(image_folder_name+"_original"):
-                    os.makedirs(image_folder_name+"_original")
-                # Save each image in the folder with an increasing number
-                for i, img_array in enumerate(original_images):
-                    img = Image.fromarray(img_array)
-                    frame=image_frames[i]
-                    img.save(os.path.join(image_folder_name+f"_original/{frame}.jpg"))
+                
+                
+                
+                if images:
+                    image_frames=scenario_outcome.frames
+                    if len(perturbed_images)>0:
+                        if not os.path.exists(image_folder_name+"_perturbed"):
+                            os.makedirs(image_folder_name+"_perturbed")
+                        for i, img_array in enumerate(perturbed_images):
+                            image_data_int = np.rint(img_array).astype(np.uint8)
+                            # print(image_data_int)
+                            img = Image.fromarray(image_data_int)
+                            frame=image_frames[i]
+                            img.save(os.path.join(image_folder_name+f"_perturbed/{frame}.jpg"))
+                    else:
+                        if not os.path.exists(image_folder_name+"_original"):
+                            os.makedirs(image_folder_name+"_original")
+                        for i, img_array in enumerate(original_images):
+                            img = Image.fromarray(img_array)
+                            frame=image_frames[i]
+                            img.save(os.path.join(image_folder_name+f"_original/{frame}.jpg"))
                 # print(perturbed_images)
                 data.append(scenario_data)
-
+                gc.collect()
             # Write updated data back to file
+            # print(data)
             with open(self.file_path, "w") as file:
                 json.dump(data, file, cls=NumpyEncoder, indent=4)
 

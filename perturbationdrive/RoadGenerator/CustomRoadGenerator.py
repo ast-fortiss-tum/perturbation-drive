@@ -35,7 +35,7 @@ class CustomRoadGenerator(RoadGenerator):
         num_control_nodes=8,
         max_angle=90,
         seg_length=25,
-        num_spline_nodes=20,
+        num_spline_nodes=50,
         initial_node=(0.0, 0.0, 0.0, 0.0),
     ):
         assert num_control_nodes > 1 and num_spline_nodes > 0

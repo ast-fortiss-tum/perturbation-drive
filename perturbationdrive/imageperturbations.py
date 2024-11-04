@@ -8,7 +8,6 @@ import random
 
 from perturbationdrive.AttentionMasks.raindrops_generator.raindrop.config import cfg
 from perturbationdrive.perturbationfuncs import (
-    empty,
     gaussian_noise,
     poisson_noise,
     impulse_noise,
@@ -465,7 +464,6 @@ class ImagePerturbation:
                     if x>310 or x<2:
                         x=random.randint(30,290)
                     if y>235:
-                        print("here!")
                         y=random.randint(0,40)
                         size=random.randint(1,(scale+1)*5)
                     elif y>200:
@@ -626,27 +624,6 @@ def _remove_green_pixels(image, target_green_rgb, threshold=40):
 
     return image
 
-def clamp_values(tuples_list, min1, max1, min2, max2):
-    """
-    Adjusts the values in each tuple to be within the specified range.
-    
-    :param tuples_list: List of tuples to adjust
-    :param min1: Minimum limit for the first element of the tuple
-    :param max1: Maximum limit for the first element of the tuple
-    :param min2: Minimum limit for the second element of the tuple
-    :param max2: Maximum limit for the second element of the tuple
-    :return: List of tuples with values adjusted to be within the specified range
-    """
-    clamped_list = []
-    for t in tuples_list:
-        # Clamp the first value
-        val1 = max(min(t[0], max1), min1)
-        # Clamp the second value
-        val2 = max(min(t[1], max2), min2)
-        # Add the clamped tuple to the new list
-        clamped_list.append((val1, val2))
-    return clamped_list
-
 
 def _removeGreenScreen(image):
     """
@@ -676,7 +653,6 @@ def _removeGreenScreen(image):
 
 # Mapping of function names to function objects
 FUNCTION_MAPPING = {
-    "empty": empty,
     "gaussian_noise": gaussian_noise,
     "poisson_noise": poisson_noise,
     "impulse_noise": impulse_noise,
@@ -744,10 +720,9 @@ FUNCTION_MAPPING = {
     "composition_vii": ImagePerturbation.composition_vii_styling,
     "sim2real": ImagePerturbation.sim2real,
     "sim2sim": ImagePerturbation.sim2sim,
-    "effects_attention_rain": effects_attention_regions,
-    "effects_attention_rain_dynamic": ImagePerturbation.effects_attention_regions_dynamic,
-    "effects_rain_dynamic": ImagePerturbation.effects_regions_dynamic,
-    "effects_snowflake_dynamic": ImagePerturbation.effects_regions_dynamic
+    "effects_attention_regions": effects_attention_regions,
+    "effects_attention_regions_dynamic": ImagePerturbation.effects_attention_regions_dynamic,
+    "effects_regions_dynamic": ImagePerturbation.effects_regions_dynamic
 }
 
 # mapping of dynamic perturbation functions to their image path and iterator name

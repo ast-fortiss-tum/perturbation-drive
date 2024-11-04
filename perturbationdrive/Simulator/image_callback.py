@@ -15,7 +15,7 @@ class ImageCallBack:
         self.rows = rows
         self.cols = cols
         self.window = tk.Tk()
-        self.window.title("sdsandbox image monitor")
+        self.window.title("simulator image monitor")
         self.canvas = tk.Canvas(self.window, width=cols*2, height=rows*2)
         self.canvas.pack()
         self.label_text = tk.StringVar()

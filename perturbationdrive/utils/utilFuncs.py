@@ -17,6 +17,27 @@ def round_to_nearest_odd(n):
 
     return n + 1 if n % 2 == 0 else n
 
+def clamp_values(tuples_list, min1, max1, min2, max2):
+    """
+    Adjusts the values in each tuple to be within the specified range.
+    
+    :param tuples_list: List of tuples to adjust
+    :param min1: Minimum limit for the first element of the tuple
+    :param max1: Maximum limit for the first element of the tuple
+    :param min2: Minimum limit for the second element of the tuple
+    :param max2: Maximum limit for the second element of the tuple
+    :return: List of tuples with values adjusted to be within the specified range
+    """
+    clamped_list = []
+    for t in tuples_list:
+        # Clamp the first value
+        val1 = max(min(t[0], max1), min1)
+        # Clamp the second value
+        val2 = max(min(t[1], max2), min2)
+        # Add the clamped tuple to the new list
+        clamped_list.append((val1, val2))
+    return clamped_list
+
 
 def scramble_channel(channel, severity):
     """Helper function to scramble a single color channel"""
