@@ -17,7 +17,7 @@ from examples.models.example_agent import ExampleAgent
 # Related to example
 from examples.udacity.udacity_simulator import UdacitySimulator
 from examples.open_sbt.criticality import FitnessFunction, Criticality
-from examples.open_sbt.udacity_open_sbt import Udacity_OpenSBTWrapper
+from udacity_open_sbt import Udacity_OpenSBTWrapper
 
 # related to perturbation drive
 from perturbationdrive import (

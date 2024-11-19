@@ -20,7 +20,7 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 
 # Now you can use absolute imports
-from self_driving_sandbox_donkey import conf
+from conf import Conf
 from models import get_nvidia_model
 
 """
@@ -77,18 +77,20 @@ def generator(
     negated.
     """
     num_samples = len(samples)
-
+    
+    conf=Conf()
     while 1:  # Loop forever so the generator never terminates
+        
         samples = shuffle(samples)
         # divide batch_size in half, because we double each output by flipping image.
         for offset in range(0, num_samples, batch_size):
             batch_samples = samples[offset : offset + batch_size]
-
             images = []
             controls = []
             for fullpath in batch_samples:
                 try:
-                    frame_number = os.path.basename(fullpath).split("_")[0]
+                    frame_number = os.path.basename(fullpath).split("_")[-1].split(".")[0]
+                    
                     # check if this file exists and only continues if it does
                     json_filename = os.path.join(
                         os.path.dirname(fullpath), "record_" + frame_number + ".json"
@@ -104,7 +106,7 @@ def generator(
                     except:
                         print("failed to open", fullpath)
                         continue
-
+                    
                     # PIL Image as a numpy array
                     image = np.array(image, dtype=np.float32)
 
@@ -189,6 +191,7 @@ def make_generators(inputs, limit=None, batch_size=64):
 
 
 def go(model_name, epochs=50, inputs="./log/*.*", limit=None):
+    conf=Conf()
     print("working on model", model_name)
 
     """
@@ -211,11 +214,13 @@ def go(model_name, epochs=50, inputs="./log/*.*", limit=None):
     ]
 
     batch_size = conf.training_batch_size
+    
 
     # Train on session images
     train_generator, validation_generator, n_train, n_val = make_generators(
         inputs, limit=limit, batch_size=batch_size
     )
+
 
     if n_train == 0:
         print("no training data found")
@@ -254,16 +259,17 @@ def go(model_name, epochs=50, inputs="./log/*.*", limit=None):
 
 
 if __name__ == "__main__":
+    conf=Conf()
     parser = argparse.ArgumentParser(description="train script")
-    parser.add_argument("--model", type=str, help="model name")
+    parser.add_argument("--model", type=str,default="./checkpoints/original.h5", help="model name")
     parser.add_argument(
         "--epochs",
         type=int,
-        default=conf.training_default_epochs,
+        default=5,
         help="number of epochs",
     )
     parser.add_argument(
-        "--inputs", default="../dataset/log/*.*", help="input mask to gather images"
+        "--inputs", default="/Users/lambertenghi/Documents/GitHub/PerturbationDrive/examples/models/datasets/train_dataset/*.jpg", help="input mask to gather images"
     )
     parser.add_argument(
         "--limit", type=int, default=None, help="max number of images to train with"
@@ -271,4 +277,3 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     go(args.model, epochs=args.epochs, limit=args.limit, inputs=args.inputs)
-# python train.py ..\outputs\mymodel_aug_90_x4_e200 --epochs=200

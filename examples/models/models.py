@@ -14,7 +14,7 @@ from tensorflow.keras.regularizers import L2
 from tensorflow.keras.optimizers.experimental import SGD
 
 try:
-    from examples.models.conf import Conf
+    from conf import Conf
 except:
     print("trying to resolve conf import through relative path")
     from ..self_driving_sandbox_donkey import conf

@@ -177,6 +177,7 @@ class PerturbationDrive:
 
         If log_dir is none, we return the scenario outcomes
         """
+        print("HERE!")
         if perturb:
             image_perturbation = ImagePerturbation(
                 funcs=perturbation_functions,

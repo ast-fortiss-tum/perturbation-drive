@@ -47,9 +47,9 @@ class UdacityGymEnv_RoadGen(gym.Env):
             # files = [f for f in os.listdir("./examples/udacity/udacity_utils/sim")]
             # print(f"Files in the directory: {files}")
 
-            assert os.path.exists(self.exe_path), "Path {} does not exist".format(
-                self.exe_path
-            )
+            # assert os.path.exists(self.exe_path), "Path {} does not exist".format(
+            #     self.exe_path
+            # )
             # Start Unity simulation subprocess if needed
             self.unity_process = UnityProcess()
             self.unity_process.start(
@@ -63,7 +63,7 @@ class UdacityGymEnv_RoadGen(gym.Env):
 
         # steering + throttle, action space must be symmetric
         self.action_space = spaces.Box(
-            low=np.array([-MAX_STEERING, -1]),
+            low=np.array([-MAX_STEERING, 0]),
             high=np.array([MAX_STEERING, 1]),
             dtype=np.float32,
         )
@@ -105,6 +105,10 @@ class UdacityGymEnv_RoadGen(gym.Env):
 
     def observe(self) -> Tuple[np.ndarray, bool, Dict]:
         return self.executor.observe()
+    
+    def weather(self, weather_string: str = "Sun", intensity_in: int = 90) -> Optional[np.ndarray]:
+        self.executor.weather(weather_string=weather_string, intensity_in=intensity_in)
+        return None
 
     def close(self) -> None:
         if self.unity_process is not None:

@@ -50,15 +50,28 @@ steering = 0.0
 throttle = 0.0
 speed = 0.0
 cte = 0.0
+angle = 0.0
 cte_pid = 0.0
 hit = 0.0
 done = False
 image_array = None
 track_sent = False
+weather_sent = False
 pos_x = 0.0
 pos_y = 0.0
 pos_z = 0.0
+ori_1 = 0.0
+ori_2 = 0.0
+ori_3 = 0.0
+ori_4 = 0.0
+ori_5 = 0.0
+ori_6 = 0.0
+ori_7 = 0.0
 udacity_unreactiv = False
+weather_recieved = False
+weather="Sun"
+intensity=90
+
 
 
 @sio.on("connect")
@@ -103,6 +116,15 @@ def send_reset() -> None:
     sio.emit("reset", data={}, skip_sid=True)
     print("Reset", end="\n", flush=True)
 
+def send_weather(track_string,rate) -> None:
+    global weather_sent
+    if not weather_sent:
+        sio.emit("weather", data={"type": track_string,"rate": rate.__str__()}, skip_sid=True)
+        weather_sent = True
+        print("Weather sent", end="\n", flush=True)
+    else:
+        print("Weather already sent", end="\n", flush=True)
+
 
 @sio.on("telemetry")
 def telemetry(sid, data) -> None:
@@ -116,10 +138,22 @@ def telemetry(sid, data) -> None:
     global generated_track_string
     global done
     global cte_pid
+    global angle
     global pos_x
     global pos_y
     global pos_z
     global udacity_unreactiv
+    global weather_recieved
+    global weather_sent
+    global weather
+    global intensity
+    global ori_1
+    global ori_2
+    global ori_3
+    global ori_4
+    global ori_5
+    global ori_6
+    global ori_7
 
     if data:
         speed = float(data["speed"]) * 3.6  # conversion m/s to km/h
@@ -128,7 +162,15 @@ def telemetry(sid, data) -> None:
         pos_x = float(data["pos_x"])
         pos_y = float(data["pos_y"])
         pos_z = float(data["pos_z"])
+        ori_1 = float(data["angle1"])
+        ori_2 = float(data["angle2"])
+        ori_3 = float(data["angle3"])
+        ori_4 = float(data["angle4"])
+        ori_5 = float(data["angle5"])
+        ori_6 = float(data["angle6"])
+        ori_7 = float(data["angle7"])
         hit = data["hit"]
+        angle = data["angl"]
         deployed_track_string = data["track"]
         # The current image from the center camera of the car
         image = Image.open(BytesIO(base64.b64decode(data["image"])))
@@ -139,6 +181,8 @@ def telemetry(sid, data) -> None:
         elif generated_track_string is not None and not track_sent:
             send_track(track_string=generated_track_string)
             time.sleep(0.5)
+        elif weather_recieved and not weather_sent:
+            send_weather(weather,intensity)
         else:
             send_control(steering_angle=steering, throttle_command=throttle)
     else:
@@ -185,6 +229,7 @@ class UdacitySimController:
         global image_array
         global hit
         global cte
+        global angle
         global cte_pid
         global done
         global generated_track_string
@@ -192,6 +237,14 @@ class UdacitySimController:
         global pos_x
         global pos_y
         global pos_z
+        global ori_1
+        global ori_2
+        global ori_3
+        global ori_4
+        global ori_5
+        global ori_6
+        global ori_7
+        global weather_sent
 
         last_obs = None
         speed = 0.0
@@ -200,6 +253,7 @@ class UdacitySimController:
         self.image_array = np.zeros(self.camera_img_size)
         hit = "none"
         cte = 0.0
+        angle = 0.0
         cte_pid = 0.0
         done = False
         generated_track_string = None
@@ -207,6 +261,15 @@ class UdacitySimController:
         pos_x = 0.0
         pos_y = 0.0
         pos_z = 0.0
+        ori_1 = 0.0
+        ori_2 = 0.0
+        ori_3 = 0.0
+        ori_4 = 0.0
+        ori_5 = 0.0
+        ori_6 = 0.0
+        ori_7 = 0.0
+
+        weather_sent = False
 
         self.is_success = 0
         self.current_track = None
@@ -229,6 +292,14 @@ class UdacitySimController:
         steering = action[0][0]
         throttle = action[0][1]
 
+    def weather(self, weather_string: str = "Sun", intensity_in: int = 90):
+        global weather
+        global intensity
+        global weather_recieved
+        weather_recieved= True
+        weather = weather_string
+        intensity = intensity_in
+
     def observe(self) -> Tuple[np.ndarray, bool, Dict]:
         global last_obs
         global image_array
@@ -238,10 +309,19 @@ class UdacitySimController:
         global pos_x
         global pos_y
         global pos_z
+        global ori_1
+        global ori_2
+        global ori_3
+        global ori_4
+        global ori_5
+        global ori_6
+        global ori_7
+        
         global cte
+        global angle
 
-        # while last_obs is image_array:
-        #    time.sleep(1.0 / 120.0)
+        while last_obs is image_array:
+           time.sleep(1.0 / 120.0)
         #    print("Waiting for new image")
 
         last_obs = image_array
@@ -253,8 +333,12 @@ class UdacitySimController:
             "is_success": self.is_success,
             "track": self.current_track,
             "speed": speed,
-            "pos": (pos_x, pos_z, pos_y),
+            "pos": [pos_x, pos_z, pos_y],
+            "orientation": [ori_1, ori_2, ori_3, ori_4],
+            "orientation_euler": [ori_5,ori_6,ori_7],
             "cte": cte,
+            "cte_pid": cte,
+            "angle": angle,
         }
 
         return last_obs, done, info
