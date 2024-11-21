@@ -47,7 +47,7 @@ try:
         port=9091
     )    
     road_generator = CustomRoadGenerator(num_control_nodes=len(road_angles_list[i]))
-    ads = Dave2Agent(model_path=" /PerturbationDrive/checkpoints/original_extended3.h5")
+    ads = Dave2Agent(model_path=" /PerturbationDrive/checkpoints/original.h5")
     model = ads.model
     attention_map = {
         "map": "grad_cam",

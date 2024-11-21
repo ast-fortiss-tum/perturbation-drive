@@ -9,7 +9,7 @@ road_angles_list=[[-37, 44, 53, -60, 69, 17, -1, -32, -43, 57], [-52, 41, -20, 2
 road_segments_list=[[20, 22, 29, 24, 23, 21, 26, 27, 21, 20], [20, 26, 21, 21, 23, 20, 23, 29, 24, 27], [27, 28, 22, 20, 30, 25, 23, 23, 29, 26], [22, 29, 26, 27, 30, 27, 24, 25, 20, 27], [25, 21, 28, 20, 30, 21, 26, 29, 25, 30], [20, 20, 20, 20, 20, 20, 20, 20, 20, 20], [20, 20, 20, 20, 20, 20, 20, 20, 20, 20], [20, 20, 20, 20, 20, 20, 20, 20, 20, 20], [20, 20, 20, 20, 20, 20, 20, 20, 20, 20], [10, 10, 10, 10, 10, 10, 10, 10], [10, 10, 10, 10, 10, 10, 10, 10], [10, 10, 10, 10, 10, 10, 10, 10], [10, 10, 10, 10, 10, 10, 10, 10], [20, 20, 20, 20, 20, 20, 20, 20, 20, 20], [20, 20, 20, 20, 20, 20, 20, 20, 20, 20]]
 road_types_list=['random', 'random', 'random', 'random', 'random', 'curvy', 'curvy', 'curvy', 'curvy', 'simple', 'simple', 'simple', 'simple', 'swiggly', 'swiggly']
 weathers=["Eerie Skybox","MoonShine Skybox","StarryNight Skybox","Fog","Rain","Snow","DawnDusk Skybox"]
-model_paths=["/PerturbationDrive/checkpoints/original_extended3_extended5.h5"]
+model_paths=["/PerturbationDrive/checkpoints/original.h5"]
 
 try:
     for model_path in model_paths:

@@ -89,7 +89,7 @@ def process_json_file(input_json_path,json_folder, start_idx, output_folder):
 
 # Folder containing JSON files
 json_folder = 'output_logs/test_perturbation_extended3'
-output_folder = '/examples/models/datasets/continue_train_original5'
+output_folder = '/examples/models/datasets/continue_train_original'
 
 # Get list of all JSON files in the folder
 input_json_files = [os.path.join(json_folder, file) for file in os.listdir(json_folder) if file.endswith('.json')]
