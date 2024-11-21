@@ -76,7 +76,7 @@ road_types_list.extend(road_types_list2)
 
 try:
     
-    for i in range(len(road_angles_list)):
+    for i in range(0,len(road_angles_list)):
             simulator = UdacitySimulator(
                 simulator_exe_path="./examples/udacity/sim/udacity_sim_weather_sky_ready_angles.app",
                 host="127.0.0.1",
@@ -97,6 +97,7 @@ try:
                 overwrite_logs=True,
                 image_size=(240, 320),
                 test_model=False,
+                collect_train_data=True,
                 perturb=False
             )
             print(f"{5 * '#'} Finished Testing road {i} {5 * '#'}")

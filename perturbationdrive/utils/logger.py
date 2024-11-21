@@ -87,9 +87,6 @@ class ScenarioOutcomeWriter:
                 scenario_data=asdict(scenario_outcome)
                 perturbed_images = scenario_data.pop('perturbed_images', None)
                 original_images = scenario_data.pop('original_images', None)
-                
-                
-                
                 if images:
                     image_frames=scenario_outcome.frames
                     if len(perturbed_images)>0:

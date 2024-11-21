@@ -170,14 +170,14 @@ class PerturbationDrive:
         test_model: bool=False,
         perturb: bool=False,
         weather: Union[str, None] = "Sun",
-        weather_intensity: Union[int, None] = 90
+        weather_intensity: Union[int, None] = 90,
+        collect_train_data=False,
     ) -> Union[None, List[ScenarioOutcome]]:
         """
         Basically, what we hace done in image perturbations up until now but in a single nice function wrapped
 
         If log_dir is none, we return the scenario outcomes
         """
-        print("HERE!")
         if perturb:
             image_perturbation = ImagePerturbation(
                 funcs=perturbation_functions,
@@ -187,6 +187,7 @@ class PerturbationDrive:
             
         else:
             image_perturbation=None
+
         scale = 0
         index = 0
         # outcomes: List[ScenarioOutcome] = []
@@ -247,7 +248,7 @@ class PerturbationDrive:
                 perturbations.remove(perturbation)
             else:
                 index += 1
-            scenario_writer.write([outcome])
+            scenario_writer.write([outcome],images=collect_train_data)
             
             if len(perturbations) == 0:
                 # all perturbations resulted in failures

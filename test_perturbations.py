@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-image_path = '/Users/lambertenghi/Documents/GitHub/PerturbationDrive/0001_0.png'
+image_path = '0001_0.png'
 image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
 
 intensity = 2

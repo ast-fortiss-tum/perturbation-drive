@@ -279,7 +279,7 @@ if __name__ == "__main__":
         help="number of epochs",
     )
     parser.add_argument(
-        "--inputs", default="/Users/lambertenghi/Documents/GitHub/PerturbationDrive/examples/models/datasets/continue_train_original5/*.jpg", help="input mask to gather images"
+        "--inputs", default="/examples/models/datasets/continue_train_original5/*.jpg", help="input mask to gather images"
     )
     parser.add_argument(
         "--limit", type=int, default=None, help="max number of images to train with"
