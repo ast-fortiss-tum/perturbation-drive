@@ -256,7 +256,7 @@ This section provides references to the empirical evaluations resulting from thi
 
 This repository contains the code attached to the paper "Benchmarking Image Perturbations for Testing Automated Driving Assistance Systems" by S.C. Lambertenghi, H. Leonhard, A. Stocco, published in the proceedings of the 18th IEEE International Conference on Software Testing, Verification and Validation (ICST 2025).
 
-A preprint of the paper can be found on [[arXiv](https://arxiv.org/abs/2501.12269)].
+A preprint of the paper can be found on [arXiv](https://arxiv.org/abs/2501.12269).
 
 If you use our work in your research, or it helps it, or if you simply like it, please cite it in your publications. 
 Here is an example BibTeX entry:
