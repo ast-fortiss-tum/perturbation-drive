@@ -1,12 +1,12 @@
-# Perturbation Drive
+# PerturbationDrive
 
-A library to test the robustness and ability to generalize to unseen roads of Self-Driving-Cars via image perturbations and road generators.
+A library to test the robustness and ability to generalize to unseen roads of self-driving cars via image perturbations and road generators.
 
-This library is split up into three sections:
+This library has three main modules:
 
 1) A collection of the most common perturbation functions which can be used by itself.
 2) A benchmarking controller to benchmark the robustness of models to common image perturbations. This controller can be used for end-to-end tests and offline testing.
-3) Modular simulator integration. New simulators can be integrated by implementing a predefined interface and this project shows the example integration of the [Self Driving Sandbox Donkey](https://docs.donkeycar.com/guide/deep_learning/simulator/) (here often referred as SDSandbox) and [Udacity](https://github.com/udacity/self-driving-car-sim) Simulator. Note, that the simualtors used in this project have been adapted minimally to suits the scope of this project.
+3) Modular simulator integration. New simulators can be integrated by implementing a predefined interface and this project shows the example integration of the [Self Driving Sandbox Donkey](https://docs.donkeycar.com/guide/deep_learning/simulator/) (here often referred to as SDSandbox) and [Udacity](https://github.com/udacity/self-driving-car-sim) Simulator. Note, that the simulators used in this project have been adapted minimally to suit the scope of this project.
 
 ![PerturbationDrive Overview Library Architecture](./docAssets/perturbationDriveOverview.png "PerturbationDrive Overview")
 
@@ -14,7 +14,7 @@ This library is split up into three sections:
 
 You can install the library via the instructions detailed in section [Installing locally](#installing-locally).
 
-After installing this library you can use all perturbationdrive classes and functions via top level imports. See this examples for the usage.
+After installing this library you can use all perturbationdrive classes and functions via top-level imports. See these examples for the usage.
 
 ```Python
 from perturbationdrive import (
@@ -38,7 +38,7 @@ from examples.udacity.udacity_simulator import UdacitySimulator
 
 ## Project Structure
 
-The projct has the following structure. Please note that this only provides a high level overview and does not detail all files and scripts.
+The project has the following structure. Please note that this only provides a high-level overview and does not detail all files and scripts.
 
 ```bash
 perturbationdrive/
@@ -119,9 +119,9 @@ Read the README in the `perturbationdrive/` directory for more details on perfor
 
 ## Benchmarking Self-Driving Cars
 
-The benchmarking is performed by the `PerturbationDrive` class. This class can perform either offline evaluation of a dataset, perform gird search over the entire search space or simulate a list of specific scenarions.
+The benchmarking is performed by the `PerturbationDrive` class. This class can perform either offline evaluation of a dataset, perform a grid search over the entire search space, or simulate a list of specific scenarios.
 
-A benchmarking object can be created by instanciating a new `PerturbationDrive` object. Each object needs to be constructed with the simulator under test and the system under test. The system under test is an `Autonomous Driving System (ADS)`. Note that this example snippet is minimal and does not provide a full example. For full examples refer to the [Simulator Integration Section](#simulator-integration).
+A benchmarking object can be created by instantiating a new `PerturbationDrive` object. Each object needs to be constructed with the simulator under test and the system under test. The system under test is an `Autonomous Driving System (ADS)`. Note that this example snippet is minimal and does not provide a full example. For full examples refer to the [Simulator Integration Section](#simulator-integration).
 
 ```Python
 # setup demo objects
@@ -141,11 +141,11 @@ benchmarking_obj.simulate_scenarios(scenarios=getDemoScenarios())
 benchmarking_obj.offline_perturbation(dataset_path="./dataset/")
 ```
 
-Read the README in the `perturbationdrive/` directory for more documentation on running end to end or model based tests based on image perturbations.
+Read the README in the `perturbationdrive/` directory for more documentation on running end-to-end or model-based tests based on image perturbations.
 
 ## Simulator Integration
 
-The simulator provides an easy to use interface for running simulations with this library, with or without image perturbations. A simulator integration can be achieved by creating a subclass from the simulator and implementing all class methods. All class methods are depicted in the following class signature.
+The simulator provides an easy-to-use interface for running simulations with this library, with or without image perturbations. A simulator integration can be achieved by creating a subclass from the simulator and implementing all class methods. All class methods are depicted in the following class signature.
 
 ```Python
 class PerturbationSimulator(ABC):
@@ -174,7 +174,7 @@ class PerturbationSimulator(ABC):
         # tears down the connection to the simulator binary
 ```
 
-Read the README in the `perturbationdrive/simulator/` directory for more documentaion on simulator integration. Also view the example integrations in `examples/self_driving_sandbox_donkey/` and `examples/udacity/`.
+Read the README in the `perturbationdrive/simulator/` directory for more documentation on simulator integration. Also, have a look at the example integrations in `examples/self_driving_sandbox_donkey/` and `examples/udacity/`.
 
 ### Minimal SDSandbox Example
 
@@ -236,7 +236,7 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
 
     After local installation, the library can imported via `import perturbationdrive` within any Python script.
 
-6. Deactivate environment after use
+6. Deactivate the environment after use
 
     ```Shell
     micromamba deactivate myenv
@@ -248,6 +248,27 @@ Depending on your setup you might to need to exclude some libraries (i.e. `tenso
 
 ## Results
 
-This sections provides references to the empirical evaluations resulting from this framework.
+This section provides references to the empirical evaluations resulting from this framework.
 
 * [Benchmarking Robustness In Self Driving Cars: A system-level framework](https://drive.google.com/file/d/1J5TalKyyUU8AtOZKAFU79JmZI5T_KrWO/view)
+
+## Citation
+
+This repository contains the code attached to the paper "Benchmarking Image Perturbations for Testing Automated Driving Assistance Systems" by S.C. Lambertenghi, H. Leonhard, A. Stocco, published in the proceedings of the 18th IEEE International Conference on Software Testing, Verification and Validation (ICST 2025).
+
+A preprint of the paper can be found on [[arXiv](https://arxiv.org/abs/2501.12269)].
+
+If you use our work in your research, or it helps it, or if you simply like it, please cite it in your publications. 
+Here is an example BibTeX entry:
+
+```
+@inproceedings{2025-Lambertenghi-ICST, 
+  author = {Stefano Carlo Lambertenghi and Hannes Leonhard and Andrea Stocco},
+  title = {Benchmarking Image Perturbations for Testing Automated Driving Assistance Systems},
+  booktitle = {Proceedings of the 18th IEEE International Conference on Software Testing, Verification and Validation},
+  series = {ICST '25},
+  publisher = {IEEE},
+  year = {2025}
+}
+```
+
