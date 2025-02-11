@@ -8,6 +8,8 @@ This library is split up into three sections:
 2) A benchmarking controller to benchmark the robustness of models to common image perturbations. This controller can be used for end-to-end tests and offline testing.
 3) Modular simulator integration. New simulators can be integrated by implementing a predefined interface and this project shows the example integration of the [Self Driving Sandbox Donkey](https://docs.donkeycar.com/guide/deep_learning/simulator/) (here often referred as SDSandbox) and [Udacity](https://github.com/udacity/self-driving-car-sim) Simulator. Note, that the simualtors used in this project have been adapted minimally to suits the scope of this project.
 
+Please contact the authors to recieve the custom simulators
+
 ![PerturbationDrive Overview Library Architecture](./docAssets/perturbationDriveOverview.png "PerturbationDrive Overview")
 
 ## Installation
