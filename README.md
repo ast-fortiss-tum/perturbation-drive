@@ -252,14 +252,7 @@ Currently we probide pre-compiled binaries for Mac (ARM/M silicon) and Linux(x86
 
 Depending on your setup you might to need to exclude some libraries (i.e. `tensorflow-metal`)
 
-## Results
-
-This section provides references to the empirical evaluations resulting from this framework.
-
-* [Benchmarking Image Perturbations for Testing Automated Driving Assistance Systems](https://arxiv.org/pdf/2501.12269)
-* [Benchmarking Robustness In Self Driving Cars: A system-level framework](https://drive.google.com/file/d/1J5TalKyyUU8AtOZKAFU79JmZI5T_KrWO/view)
-
-## Citation
+## Results & Citation
 
 This repository contains the code attached to the paper "Benchmarking Image Perturbations for Testing Automated Driving Assistance Systems" by S.C. Lambertenghi, H. Leonhard, A. Stocco, published in the proceedings of the 18th IEEE International Conference on Software Testing, Verification and Validation (ICST 2025).
 
