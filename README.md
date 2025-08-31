@@ -256,6 +256,7 @@ Depending on your setup you might to need to exclude some libraries (i.e. `tenso
 
 This section provides references to the empirical evaluations resulting from this framework.
 
+* [Benchmarking Image Perturbations for Testing Automated Driving Assistance Systems](https://arxiv.org/pdf/2501.12269)
 * [Benchmarking Robustness In Self Driving Cars: A system-level framework](https://drive.google.com/file/d/1J5TalKyyUU8AtOZKAFU79JmZI5T_KrWO/view)
 
 ## Citation
