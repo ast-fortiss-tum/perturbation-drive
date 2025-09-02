@@ -11,7 +11,7 @@ try:
     simulator = SDSandboxSimulator(
         # TODO change path depending on OS
         simulator_exe_path="./examples/self_driving_sandbox_donkey/sim/sdsim_linux/sdsim_binary.x86_64",
-        host="127.0.0.1", 
+        host="127.0.0.1",
         port=9091,
         show_image_cb=True
     )
@@ -21,7 +21,6 @@ try:
     road_generator = CustomRoadGenerator(num_control_nodes=len(road_angles))
 
     benchmarking_obj = PerturbationDrive(simulator, ads)
-    # start the benchmarking
     time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     model = ads.model
     attention_map = {
@@ -69,28 +68,28 @@ try:
         "gaussian_blur",
         "saturation_filter",
         "saturation_decrease_filter",
-        "candy",
-        "la_muse",
-        "mosaic",
-        "feathers",
-        "the_scream",
-        "udnie",
-        "effects_attention_rain",
-        "effects_attention_rain_dynamic",
-        "effects_rain_dynamic",
-        "dynamic_snow_filter",
-        "dynamic_rain_filter",
-        "dynamic_object_overlay",
-        "dynamic_sun_filter",
-        "dynamic_lightning_filter",
-        "dynamic_smoke_filter",
-        "static_snow_filter",
-        "static_rain_filter",
-        "static_object_overlay",
-        "static_sun_filter",
-        "static_lightning_filter",
-        "static_smoke_filter",
-        "dynamic_raindrop_filter","effects_attention_rain",
+        # "candy",
+        # "la_muse",
+        # "mosaic",
+        # "feathers",
+        # "the_scream",
+        # "udnie",
+        # "effects_attention_rain",
+        # "effects_attention_rain_dynamic",
+        # "effects_rain_dynamic",
+        # "dynamic_snow_filter",
+        # "dynamic_rain_filter",
+        # "dynamic_object_overlay",
+        # "dynamic_sun_filter",
+        # "dynamic_lightning_filter",
+        # "dynamic_smoke_filter",
+        # "static_snow_filter",
+        # "static_rain_filter",
+        # "static_object_overlay",
+        # "static_sun_filter",
+        # "static_lightning_filter",
+        # "static_smoke_filter",
+        # "dynamic_raindrop_filter",
     ]
 
     benchmarking_obj.grid_seach(
@@ -99,9 +98,11 @@ try:
         road_generator=road_generator,
         road_angles=road_angles,
         road_segments=road_segments,
-        log_dir=f"./logs/donkey_logs_{time}.json",
+        log_dir=f"./donkey_logs_{time}.json",
         overwrite_logs=True,
         image_size=(240, 320),  # images are resized to these values
+        test_model=False,  #choose to run NPC or model
+        perturb=True,  
     )
     print(f"{5 * '#'} Finished Running SDSandBox Sim {5 * '#'}")
 except Exception as e:

@@ -9,20 +9,25 @@ try:
         # TODO change path depending on OS
         simulator_exe_path="./examples/udacity/sim/udacity_linux/udacity_binary.x86_64",
         host="127.0.0.1",
-        port=9091
-    )    
+        port=9091,
+        show_image_cb=True
+    )
     ads = Dave2Agent(model_path="./examples/models/checkpoints/dave_90k_v1.h5")
-    
-    road_angles=[10,10,10,10,0,-10,-10,-10]
-    road_segments=[10,10,10,10,10,10,10,10]
+    road_angles = [0, -35, 0, -17, -35, 35, 6, -22]
+    road_segments = [25, 25, 25, 25, 25, 25, 25, 25]
     road_generator = CustomRoadGenerator(num_control_nodes=len(road_angles))
-
-
 
     benchmarking_obj = PerturbationDrive(simulator, ads)
     time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     model = ads.model
+    attention_map = {
+                "map": "grad_cam",
+                "model": model,
+                "threshold": 0.1,
+                "layer": "conv2d_5",
+            }
     
+
     perturbations = [
         "gaussian_noise",
         "poisson_noise",
@@ -66,7 +71,7 @@ try:
         # "feathers",
         # "the_scream",
         # "udnie",
-        # "effects_attention_rain",
+        "effects_attention_rain",
         # "effects_attention_rain_dynamic",
         # "effects_rain_dynamic",
         # "dynamic_snow_filter",
@@ -82,14 +87,11 @@ try:
         # "static_lightning_filter",
         # "static_smoke_filter",
         # "dynamic_raindrop_filter",
-        # "effects_attention_rain",
     ]
 
-    # start the benchmarking
-    print("WILL RUN GAUSSIAN NOISE")
     benchmarking_obj.grid_seach(
         perturbation_functions=perturbations,
-        attention_map={},
+        attention_map = attention_map,
         road_generator=road_generator,
         road_angles=road_angles,
         road_segments=road_segments,

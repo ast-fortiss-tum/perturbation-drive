@@ -2,7 +2,6 @@
 from numpy import ndarray, uint8
 import matplotlib.patches as patches
 import tensorflow as tf
-import cvxpy as cp
 from perturbationdrive import (
     PerturbationSimulator,
     ADS,
@@ -444,11 +443,6 @@ class UdacitySimulator(PerturbationSimulator):
             current_waypoint_index=0
             waypoint_list=waypoint_controller.convert_waypoints(waypoints)
             waypoint_list=waypoint_list
-            # print(len(waypoint_list))
-            
-            
-
-
             counter=0
             # action loop
             once=True
@@ -505,8 +499,6 @@ class UdacitySimulator(PerturbationSimulator):
                         throttle, _, prev_road_error, prev_angle_error, prev_speed_error, total_road_error, total_angle_error, total_speed_error  = pid_speed21(road_error, angle_error, speed_error, prev_road_error, prev_angle_error, prev_speed_error, total_road_error, total_angle_error, total_speed_error)
                 
                         
-                        # steering, _, dist, angl_diff = waypoint_controller.calculate_control(x, y, info["pos"], info["orientation"])  
-                        # print(f'Going to: {current_waypoint[0]},{current_waypoint[1]} currently at {info["pos"][0]},{info["pos"][1]} distance: {dist} angle: {angl_diff}')
                         
                             
                         

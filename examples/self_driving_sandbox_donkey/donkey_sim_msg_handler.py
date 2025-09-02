@@ -137,6 +137,7 @@ class DonkeySimMsgHandler(IMesgHandler):
             "speed": data["speed"],
             "done": data["done"],
             "image": image,
+            "orientation_euler": [data["angle5"],data["angle6"],data["angle7"]],
         }
 
     def update(
