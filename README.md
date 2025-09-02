@@ -216,21 +216,23 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
     ```Shell
     micromamba create -n myenv python=3.9
     ```
+    
 2b. Create a new environmnet
     ```Shell
     python3.9 -m venv myenv
     ```
+    
 3. Activate the environment
-
     ```Shell
     micromamba activate myenv
     ```
+    
 3b. Activate the environment
     ```Shell
     source myenv/bin/activate
     ```
+    
 4. Install all requirements (choose OS)
-
     ```Shell
     pip install -r requirements_[operating system].txt
     ```
