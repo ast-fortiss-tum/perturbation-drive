@@ -229,10 +229,10 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
     ```Shell
     source myenv/bin/activate
     ```
-4. Install all requirements
+4. Install all requirements (choose OS)
 
     ```Shell
-    pip install -r requirements.txt
+    pip install -r requirements_[operating system].txt
     ```
 
 5. (Optionally) Install this library locally.
