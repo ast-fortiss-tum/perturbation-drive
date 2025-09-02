@@ -256,6 +256,8 @@ generate_test_image.py
 # logs folder should be stored locally
 logs/
 
+examples/sim/
+
 # environment
 
 myenv
