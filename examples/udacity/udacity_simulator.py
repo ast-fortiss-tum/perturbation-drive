@@ -423,15 +423,15 @@ class UdacitySimulator(PerturbationSimulator):
             prev_speed_error = 0.0
             total_speed_error = 0.0
 
-            # reset the scene to match the scenario
-            # Road generatior ir none because we currently do not build random roads
-            self.client.weather(weather,intensity)
+            # 
             
-
+            # time.sleep(3)
             obs: ndarray[uint8] = self.client.reset(
                 skip_generation=False, track_string=waypoints
             )
             
+            self.client.weather(weather,intensity)
+            time.sleep(3)
             
             obs, done, info = self.client.observe()
             start_time = time.time()

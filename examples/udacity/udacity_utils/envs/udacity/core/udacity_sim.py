@@ -106,8 +106,8 @@ def send_track(track_string: str) -> None:
     global track_sent
     if not track_sent:
         sio.emit("track", data={"track_string": track_string}, skip_sid=True)
-        
         print("SendTrack", end="\n", flush=True)
+        track_sent=True
     else:
         print("Track already sent", end="\n", flush=True)
 
@@ -116,12 +116,14 @@ def send_reset() -> None:
     sio.emit("reset", data={}, skip_sid=True)
     print("Reset", end="\n", flush=True)
 
-def send_weather(track_string,rate) -> None:
+def send_weather(weather,track_string,rate) -> None:
     global weather_sent
     if not weather_sent:
-        sio.emit("weather", data={"type": track_string,"rate": rate.__str__()}, skip_sid=True)
+        sio.emit("weather", data={"type": weather,"rate": rate.__str__()}, skip_sid=True)
         weather_sent = True
         print("Weather sent", end="\n", flush=True)
+        sio.emit("track", data={"track_string": track_string}, skip_sid=True)
+        print("SendTrack", end="\n", flush=True)
     else:
         print("Weather already sent", end="\n", flush=True)
 
@@ -180,15 +182,11 @@ def telemetry(sid, data) -> None:
         if done:
             send_reset()
         elif generated_track_string is not None and not track_sent:
-            while udacity_unreactiv:
-                print(f"Warning: Udacity Non Reactive, in track sent\n")
             print("WARMUP please wait")
-            time.sleep(10)
             send_track(track_string=generated_track_string)
-            
-            track_sent = True
         elif weather_recieved and not weather_sent:
-            send_weather(weather,intensity)
+            send_weather(weather,generated_track_string,intensity)
+
         else:
             send_control(steering_angle=steering, throttle_command=throttle)
     else:
@@ -223,7 +221,7 @@ class UdacitySimController:
         self.logger = GlobalLog("UdacitySimController")
 
         while not is_connect:
-            time.sleep(0.3)
+            time.sleep(1)
 
     def reset(
         self, skip_generation: bool = False, track_string: Union[str, None] = None
@@ -283,7 +281,7 @@ class UdacitySimController:
         if not skip_generation and track_string is not None:
             generated_track_string = track_string
 
-        time.sleep(1)
+        time.sleep(5)
 
     def generate_track(self, track_string: Union[str, None] = None):
         global generated_track_string
