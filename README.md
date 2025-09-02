@@ -193,11 +193,11 @@ Once the binaries are downloaded or bult, they have to be saved in their respect
 
 ### Minimal SDSandbox Example
 
-Refer to the [Interface with PerturbationDrive](https://github.com/HannesLeonhard/PerturbationDrive/tree/main/examples/self_driving_sandbox_donkey#interface-with-perturbationdrive) section within the `examples/self_driving_sandbox_donkey` directory for a minimal example of running this framework with the Self Driving Sandbox Donkey Simulator.
+A minimal example code to execute tests on SDSandbox is provided in `test_sim_donkey.py`
 
 ### Minimal Udacity Example
 
-Refer to the [Interface with PerturbationDrive](https://github.com/HannesLeonhard/PerturbationDrive/blob/main/examples/udacity/README.md#interface-with-perturbationdrive) section within the `examples/udacity` directory for a minimal example of running this framework with the Udacity Simulator.
+A minimal example code to execute tests on SDSandbox is provided in `test_sim_udacity.py`
 
 ## Installing locally
 
