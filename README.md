@@ -209,19 +209,26 @@ Clone this library from [GitHub](https://github.com/HannesLeonhard/PerturbationD
 
 Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the preferred version). This can be done for example via [Micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html).
 
-1. Install Micromamba. If you currently do not have Micromamba install it and set it up locally.
+1. Install Micromamba.
+1b. Install virtualenv.
 2. Create a new environment
 
     ```Shell
     micromamba create -n myenv python=3.9
     ```
-
+2.b
+    ```Shell
+    python3.9 -m venv myenv
+    ```
 3. Activate the environment
 
     ```Shell
     micromamba activate myenv
     ```
-
+3b.
+    ```Shell
+    source myenv/bin/activate
+    ```
 4. Install all requirements
 
     ```Shell
@@ -237,7 +244,7 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
 
     After local installation, the library can imported via `import perturbationdrive` within any Python script.
 
-6. Deactivate the environment after use
+7. Deactivate the environment after use
 
     ```Shell
     micromamba deactivate myenv
