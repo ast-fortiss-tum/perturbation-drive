@@ -101,7 +101,7 @@ try:
         log_dir=f"./donkey_logs_{time}.json",
         overwrite_logs=True,
         image_size=(240, 320),  # images are resized to these values
-        test_model=False,  #choose to run NPC or model
+        test_model=True,  #choose to run NPC or model
         perturb=True,  
     )
     print(f"{5 * '#'} Finished Running SDSandBox Sim {5 * '#'}")

@@ -23,7 +23,7 @@ from typing import Union
 import numpy as np
 import time
 import math
-WAYPOINT_THRESHOLD = 0.5
+WAYPOINT_THRESHOLD = 1
 ANGLE_THRESHOLD = 0
 PID=False
 
@@ -136,7 +136,7 @@ class Waypoint_control_utils():
             # print(f"Angle to goal: {angle_y_axis_degrees}")
             angle_difference=self.angle_difference(angle_cur,angle_y_axis_degrees)
             # print(f"angle diff {angle_difference}")
-            steering = (math.radians(-angle_difference)*30)
+            steering = (math.radians(-angle_difference)*15)
             print(f"angle diff: {angle_difference}, steering: {steering}")
             throttle=distance/10
 
