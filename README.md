@@ -183,6 +183,14 @@ class PerturbationSimulator(ABC):
 Read the README in the `perturbationdrive/simulator/` directory for more documentation on simulator integration. Also, have a look at the example integrations in `examples/self_driving_sandbox_donkey/` and `examples/udacity/`.
 
 
+### Installing simulators
+Both the source and compiled binaries are available at: https://drive.google.com/drive/folders/1_8v3NfX3j_holplmxNRuszirhGfUzVv4?usp=sharing
+
+Currently we probide pre-compiled binaries for Mac (ARM/M silicon) and Linux(x86). To buld the simulator for other platforms, please use Unity 2019.3.0f1 for Udacity and Unity 2022.3.10f1 for Donkeycar.
+
+Once the binaries are downloaded or bult, they have to be saved in their respective adapter folders.
+
+
 ### Minimal SDSandbox Example
 
 Refer to the [Interface with PerturbationDrive](https://github.com/HannesLeonhard/PerturbationDrive/tree/main/examples/self_driving_sandbox_donkey#interface-with-perturbationdrive) section within the `examples/self_driving_sandbox_donkey` directory for a minimal example of running this framework with the Self Driving Sandbox Donkey Simulator.
@@ -267,14 +275,6 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
    ```Shell
    deactivate
    ```
-
-### Installing simulators
-Both the source and compiled binaries are available at: https://drive.google.com/drive/folders/1_8v3NfX3j_holplmxNRuszirhGfUzVv4?usp=sharing
-
-Currently we probide pre-compiled binaries for Mac (ARM/M silicon) and Linux(x86). To buld the simulator for other platforms, please use Unity 2019.3.0f1 for Udacity and Unity 2022.3.10f1 for Donkeycar.
-
-Once the binaries are downloaded or bult, they have to be saved in their respective adapter folders.
-
 
 ### Troubleshooting
 
