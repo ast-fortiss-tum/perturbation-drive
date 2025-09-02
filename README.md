@@ -217,11 +217,11 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
     micromamba create -n myenv python=3.9
     ```
     
-2b. Create a new environmnet
-    
-    ```Shell
-    python3.9 -m venv myenv
-    ```
+    2b. Create a new environmnet
+        
+        ```Shell
+        python3.9 -m venv myenv
+        ```
     
 3. Activate the environment
 
@@ -229,11 +229,11 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
     micromamba activate myenv
     ```
     
-3b. Activate the environment
-    
-    ```Shell
-    source myenv/bin/activate
-    ```
+    3b. Activate the environment
+        
+        ```Shell
+        source myenv/bin/activate
+        ```
     
 4. Install all requirements (choose OS)
 
@@ -241,7 +241,7 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
     pip install -r requirements_[operating system].txt
     ```
 
-6. (Optionally) Install this library locally.
+5. (Optionally) Install this library locally.
 
     ```Shell
     cd PerturbationDrive
@@ -250,11 +250,18 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
 
     After local installation, the library can imported via `import perturbationdrive` within any Python script.
 
-7. Deactivate the environment after use
+6. Deactivate the environment after use
 
     ```Shell
     micromamba deactivate myenv
     ```
+
+    
+    6b. Deactivate the environment after use
+
+        ```Shell
+        exit
+        ```
 
 ### Installing simulators
 Both the source and compiled binaries are available at: https://drive.google.com/drive/folders/1_8v3NfX3j_holplmxNRuszirhGfUzVv4?usp=sharing
