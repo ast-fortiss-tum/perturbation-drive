@@ -180,3 +180,4 @@ Werkzeug==2.3.7
 wheel==0.38.4
 wrapt==1.14.1
 zipp==3.11.0
+shapely==2.0.7

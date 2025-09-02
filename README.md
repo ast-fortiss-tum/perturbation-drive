@@ -117,6 +117,12 @@ perturbed_image = poisson_noise(0, random_image)
 
 Read the README in the `perturbationdrive/` directory for more details on performing standalone image perturbations.
 
+## Minimal perturbation examples
+
+An example script for running stand-alone perturbations is provided in `perturbation-drive/test_standalone_perturbations.py`
+
+And example script for running the perturbation manager is provided in `perturbation-drive/test_perturbation_manager.py`
+
 ## Benchmarking Self-Driving Cars
 
 The benchmarking is performed by the `PerturbationDrive` class. This class can perform either offline evaluation of a dataset, perform a grid search over the entire search space, or simulate a list of specific scenarios.
@@ -244,7 +250,6 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
 5. (Optionally) Install this library locally.
 
     ```Shell
-    cd PerturbationDrive
     pip install .
     ```
 
@@ -260,7 +265,7 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
     6b. Deactivate the environment after use
 
    ```Shell
-   exit
+   deactivate
    ```
 
 ### Installing simulators

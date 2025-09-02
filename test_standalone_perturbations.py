@@ -8,7 +8,7 @@ image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
 
 scale = 4
 functions = [
-    gaussian_noise, poisson_noise, impulse_noise, defocus_blur, glass_blur, motion_blur,
+    gaussian_noise, poisson_noise, impulse_noise, defocus_blur, motion_blur,glass_blur,
     zoom_blur, increase_brightness, contrast, elastic, pixelate, jpeg_filter, shear_image,
     translate_image, scale_image, rotate_image, fog_mapping, splatter_mapping,
     dotted_lines_mapping, zigzag_mapping, canny_edges_mapping, speckle_noise_filter,
@@ -29,19 +29,17 @@ for func in functions:
     except Exception as e:
         print(f"Error applying {func.__name__}: {e}")
 
-# Plot all perturbed images
-num_images = len(perturbed_images)
-print(num_images)
-num_cols = 10
-num_rows = 5
 
-plt.figure(figsize=(num_cols, num_rows))
+num_images = len(perturbed_images)
+num_cols = 7
+num_rows = (num_images + num_cols - 1) // num_cols  # Round up
+
+plt.figure(figsize=(num_cols * 2, num_rows * 2))  # Bigger figure
 for i, img in enumerate(perturbed_images):
     plt.subplot(num_rows, num_cols, i + 1)
     plt.imshow(img)
-    plt.title(functions[i].__name__)
+    plt.title(functions[i].__name__, fontsize=8)
     plt.axis('off')
 plt.tight_layout()
+plt.savefig("perturbed_outputs.png", dpi=300)
 plt.show()
-
-
