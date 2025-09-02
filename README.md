@@ -219,21 +219,21 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
     
     2b. Create a new environmnet
         
-        ```Shell
-        python3.9 -m venv myenv
-        ```
+   ```Shell
+   python3.9 -m venv myenv
+   ```
     
 3. Activate the environment
 
    ```Shell
     micromamba activate myenv
-    ```
+   ```
     
     3b. Activate the environment
         
-        ```Shell
-        source myenv/bin/activate
-        ```
+   ```Shell
+   source myenv/bin/activate
+   ```
     
 4. Install all requirements (choose OS)
 
@@ -259,9 +259,9 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
     
     6b. Deactivate the environment after use
 
-        ```Shell
-        exit
-        ```
+   ```Shell
+   exit
+   ```
 
 ### Installing simulators
 Both the source and compiled binaries are available at: https://drive.google.com/drive/folders/1_8v3NfX3j_holplmxNRuszirhGfUzVv4?usp=sharing
