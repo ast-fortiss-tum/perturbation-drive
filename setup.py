@@ -44,7 +44,7 @@ setup(
         "scikit-image",
         "requests",
         "Pillow",
-        "tensorflow-macos",
+        "tensorflow",
         "tensorflow-addons",
     ],
     python_requires=">=3",
