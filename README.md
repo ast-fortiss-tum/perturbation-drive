@@ -192,7 +192,7 @@ Clone this library from [GitHub](https://github.com/HannesLeonhard/PerturbationD
 * HTTPS
 
     ```Shell
-    git clone [https://github.com/HannesLeonhard/PerturbationDrive.git](https://github.com/ast-fortiss-tum/perturbation-drive.git)
+    git clone https://github.com/ast-fortiss-tum/perturbation-drive.git
     ```
 
 * SSH
