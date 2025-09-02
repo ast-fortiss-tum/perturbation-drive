@@ -6,7 +6,8 @@ from datetime import datetime
 
 try:
     simulator = UdacitySimulator(
-        simulator_exe_path="./examples/udacity/sim/udacity_sim.app",
+        # TODO change path depending on OS
+        simulator_exe_path="./examples/udacity/sim/udacity_linux/udacity_binary.x86_64",
         host="127.0.0.1",
         port=9091
     )    

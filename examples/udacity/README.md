@@ -1,12 +1,4 @@
 # Udacity Simulator Interface
-
-This directory provides an example on integrating the [Self-Driving Sandbox Donkey (also referred to as SDSandbox)](https://github.com/udacity/self-driving-car-sim) Simulator with this project.
-Please note, that this project uses a fork of the project provided by [fortiss automated software testing](https://www.fortiss.org/forschung/forschungsfelder/detail/automated-software-testing).
-
-➜ The precompilled binaries can be found in [this google drive](https://drive.google.com/drive/folders/1wljVnkjUlYF3ILLqxybKowj0M6cZatAg?usp=drive_link) or in [this GitHub Repo](https://github.com/ast-fortiss-tum/udacity-test-generation?tab=readme-ov-file#udacity-driving-simulator).
-
-Note, that the fortiss implementation and the fork are identical to the original Udacity Sim other than the default-tracks and the styling of the tracks.
-
 Before running these examples
 
 - Install all requirements for this example using `pip install -r requirements.txt`

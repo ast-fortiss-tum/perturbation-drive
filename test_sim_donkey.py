@@ -9,7 +9,8 @@ from datetime import datetime
 
 try:
     simulator = SDSandboxSimulator(
-        simulator_exe_path="./examples/self_driving_sandbox_donkey/sim/donkey-sim.app",
+        # TODO change path depending on OS
+        simulator_exe_path="./examples/self_driving_sandbox_donkey/sim/sdsim_linux/sdsim_binary.x86_64",
         host="127.0.0.1", 
         port=9091,
         show_image_cb=True
