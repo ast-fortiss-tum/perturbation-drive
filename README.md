@@ -192,19 +192,19 @@ Clone this library from [GitHub](https://github.com/HannesLeonhard/PerturbationD
 * HTTPS
 
     ```Shell
-    git clone https://github.com/HannesLeonhard/PerturbationDrive.git
+    git clone [https://github.com/HannesLeonhard/PerturbationDrive.git](https://github.com/ast-fortiss-tum/perturbation-drive.git)
     ```
 
 * SSH
 
     ```Shell
-    git clone git@github.com:HannesLeonhard/PerturbationDrive.git
+    git clone git@github.com:ast-fortiss-tum/perturbation-drive.git
     ```
 
 * GitHub CLI
 
     ```Shell
-    gh repo clone HannesLeonhard/PerturbationDrive
+    gh repo clone ast-fortiss-tum/perturbation-drive.git
     ```
 
 Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the preferred version). This can be done for example via [Micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html).
