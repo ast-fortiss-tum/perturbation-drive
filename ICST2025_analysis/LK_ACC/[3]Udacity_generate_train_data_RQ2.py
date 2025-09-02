@@ -78,7 +78,7 @@ try:
     
     for i in range(len(road_angles_list)):
             simulator = UdacitySimulator(
-                simulator_exe_path="./examples/udacity/sim/udacity_sim_weather_sky_ready_angles.app",
+                simulator_exe_path="perturbation-drive/examples/udacity/sim/udacity_linux/udacity_binary.x86_64",
                 host="127.0.0.1",
                 port=9091
             )    

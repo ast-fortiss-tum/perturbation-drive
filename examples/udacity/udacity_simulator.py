@@ -435,7 +435,7 @@ class UdacitySimulator(PerturbationSimulator):
             
             obs, done, info = self.client.observe()
             start_time = time.time()
-            target_speed=30.0
+            target_speed=2.0
             # target_speed=25.0
             prev_throttle =  0.0
             prev_steering = 0.0

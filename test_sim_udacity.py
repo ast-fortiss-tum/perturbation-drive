@@ -35,9 +35,11 @@ try:
         road_generator=road_generator,
         road_angles=road_angles,
         road_segments=road_segments,
-        log_dir=f"./logs/donkey_logs_{time}.json",
+        log_dir=f"./udacity_logs_{time}.json",
         overwrite_logs=True,
         image_size=(240, 320),  # images are resized to these values
+        test_model=False,
+        # perturb=True,
     )
     print(f"{5 * '#'} Finished Running Udacity Sim {5 * '#'}")
 except Exception as e:

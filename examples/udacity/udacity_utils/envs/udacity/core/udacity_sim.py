@@ -106,7 +106,7 @@ def send_track(track_string: str) -> None:
     global track_sent
     if not track_sent:
         sio.emit("track", data={"track_string": track_string}, skip_sid=True)
-        track_sent = True
+        
         print("SendTrack", end="\n", flush=True)
     else:
         print("Track already sent", end="\n", flush=True)
@@ -154,6 +154,7 @@ def telemetry(sid, data) -> None:
     global ori_5
     global ori_6
     global ori_7
+    global track_sent
 
     if data:
         speed = float(data["speed"]) * 3.6  # conversion m/s to km/h
@@ -179,8 +180,13 @@ def telemetry(sid, data) -> None:
         if done:
             send_reset()
         elif generated_track_string is not None and not track_sent:
+            while udacity_unreactiv:
+                print(f"Warning: Udacity Non Reactive, in track sent\n")
+            print("WARMUP please wait")
+            time.sleep(10)
             send_track(track_string=generated_track_string)
-            time.sleep(0.5)
+            
+            track_sent = True
         elif weather_recieved and not weather_sent:
             send_weather(weather,intensity)
         else:
@@ -188,7 +194,7 @@ def telemetry(sid, data) -> None:
     else:
         print("Wawrning: Udacity data is None")
     if udacity_unreactiv:
-        print(f"Warning: Udacity Non Reactive, received {data} from sid {sid}\n")
+        print(f"Warning: Udacity Non Reactive, received from sid {sid}\n")
 
 
 class UdacitySimController:
