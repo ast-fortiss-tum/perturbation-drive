@@ -268,6 +268,9 @@ Both the source and compiled binaries are available at: https://drive.google.com
 
 Currently we probide pre-compiled binaries for Mac (ARM/M silicon) and Linux(x86). To buld the simulator for other platforms, please use Unity 2019.3.0f1 for Udacity and Unity 2022.3.10f1 for Donkeycar.
 
+Once the binaries are downloaded or bult, they have to be saved in their respective adapter folders.
+
+
 ### Troubleshooting
 
 Depending on your setup you might to need to exclude some libraries (i.e. `tensorflow-metal`)

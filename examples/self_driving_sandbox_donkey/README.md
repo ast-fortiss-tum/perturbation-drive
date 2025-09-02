@@ -1,12 +1,11 @@
 # Self Driving Sandbox Donkey Simulator Interface
 
 This directory provides an example on integrating the [Self-Driving Sandbox Donkey (also referred to as SDSandbox)](https://docs.donkeycar.com/guide/deep_learning/simulator/) Simulator with this project.
-Please note, that this project uses a fork of the [fortiss automated software testing](https://www.fortiss.org/forschung/forschungsfelder/detail/automated-software-testing) implementation of the fortis [SDSandbox](https://github.com/ast-fortiss-tum/sdsandbox).
+Please note, that this project uses a fork of the [fortiss automated software testing](https://www.fortiss.org/forschung/forschungsfelder/detail/automated-software-testing) implementation of [SDSandbox](https://github.com/ast-fortiss-tum/sdsandbox).
 
-➜ The fork is available via this [GitHub Repository](https://github.com/HannesLeonhard/sdsandbox_perturbations).
 
 Note, that both the fortiss implementation and the fork are identical to the original SDSandbox Sim other than the default-tracks and the styling of the tracks.
-The [fork](https://github.com/HannesLeonhard/sdsandbox_perturbations) differs from the [fortiss SDSandbox](https://github.com/ast-fortiss-tum/sdsandbox) via the following points:
+This version differs from the [fortiss SDSandbox](https://github.com/ast-fortiss-tum/sdsandbox) via the following points:
 
 - Road Generation API: The fork offers the API interface to build custom roads via waypoints send from the client.
 - Automatic Setup: The fork offers the possibility to automatically select the `GeneratedTrack`-Scene on initial connection of a client.
