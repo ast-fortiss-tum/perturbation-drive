@@ -1,5 +1,5 @@
 import numpy as np
-import os
+from pathlib import Path
 import requests
 from typing import Tuple
 
@@ -96,15 +96,26 @@ def simple_white_balance(img):
     return img
 
 
-def download_file(url, target_folder):
-    """Downloads file from url and moves it to target folder"""
-    local_filename = os.path.join(target_folder, url.split("/")[-1])
+def download_file(url, target_path):
+    url_name = Path(url).name
+    p = Path(target_path)
+    # If target ends with a trailing slash or is an existing dir -> use it as directory
+    if str(target_path).endswith(("/", "\\")) or (p.exists() and p.is_dir()):
+        folder = p
+        folder.mkdir(parents=True, exist_ok=True)
+        local = folder / url_name
+    else:
+        # treat as full file path (parent directory may not exist yet)
+        if p.parent:
+            p.parent.mkdir(parents=True, exist_ok=True)
+        local = p
     with requests.get(url, stream=True) as r:
         r.raise_for_status()
-        with open(local_filename, "wb") as f:
+        with local.open("wb") as f:
             for chunk in r.iter_content(chunk_size=8192):
-                f.write(chunk)
-    return local_filename
+                if chunk:
+                    f.write(chunk)
+    return str(local)
 
 
 def calculate_velocities(positions, speeds) -> Tuple[float, float, float]:
