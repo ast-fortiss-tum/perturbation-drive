@@ -392,7 +392,13 @@ class SDSandboxSimulator(PerturbationSimulator):
         )
 
     def simulate_scanario(
-        self, agent: Union[ADS,None], scenario: Scenario, perturbation_controller: Union[ImagePerturbation,None], perturb=False, model_drive=False, weather="Sun", intensity=90
+        self, agent: Union[ADS,None], 
+        scenario: Scenario, 
+        perturbation_controller: Union[ImagePerturbation,None], 
+        perturb=False, 
+        model_drive=False, 
+        weather=None, 
+        intensity=None
     ) -> ScenarioOutcome:
         try:
             waypoints = scenario.waypoints
@@ -425,7 +431,8 @@ class SDSandboxSimulator(PerturbationSimulator):
             # reset the scene to match the scenario
             self.client.msg_handler.reset_scenario(waypoints)
             self.logger.info(f"Reset the scenario")
-            print("Donkeysim does not support weather yet")
+            if weather:
+                print("Donkeysim does not support weather yet")
             time.sleep(2.0)
             start_time = time.time()
             target_speed=2.0
@@ -484,22 +491,20 @@ class SDSandboxSimulator(PerturbationSimulator):
                     x, y = current_waypoint
                     pose = [obs["pos_x"], obs["pos_y"], obs["pos_z"]]
                     
-                    steering, throttle, dist, angl_diff,angle = waypoint_controller.calculate_control(x, y, pose, rotation)  
-                    # dist=1
-                    if dist <= WAYPOINT_THRESHOLD:
-                        current_waypoint_index += 1
-                        if  current_waypoint_index < len(waypoint_list):
-                            current_waypoint = waypoint_list[current_waypoint_index]
-                        x, y = current_waypoint
-                        pose = [obs["pos_x"], obs["pos_y"], obs["pos_z"]]
-                        steering,throttle , dist, angl_diff,angle = waypoint_controller.calculate_control(x, y, pose, rotation)  
-                        print(angl_diff)
-                    throttle, _, prev_road_error, prev_angle_error, prev_speed_error, total_road_error, total_angle_error, total_speed_error  = pid_speed21(road_error, angle_error, speed_error, prev_road_error, prev_angle_error, prev_speed_error, total_road_error, total_angle_error, total_speed_error)
-            
-                    
-                      
-                            
-                        
+                    if any(rotation):
+                        steering, throttle, dist, angl_diff,angle = waypoint_controller.calculate_control(x, y, pose, rotation)  
+                        # dist=1
+                        if dist <= WAYPOINT_THRESHOLD:
+                            current_waypoint_index += 1
+                            if  current_waypoint_index < len(waypoint_list):
+                                current_waypoint = waypoint_list[current_waypoint_index]
+                            x, y = current_waypoint
+                            pose = [obs["pos_x"], obs["pos_y"], obs["pos_z"]]
+                            steering,throttle , dist, angl_diff,angle = waypoint_controller.calculate_control(x, y, pose, rotation)  
+                            print(angl_diff)
+                        throttle, _, prev_road_error, prev_angle_error, prev_speed_error, total_road_error, total_angle_error, total_speed_error  = pid_speed21(road_error, angle_error, speed_error, prev_road_error, prev_angle_error, prev_speed_error, total_road_error, total_angle_error, total_speed_error)
+                    else:
+                        steering, throttle = 0, 0                                              
                     pid_actions = tf.constant([[steering, throttle]], dtype=tf.float32)
 
                     if model_drive:

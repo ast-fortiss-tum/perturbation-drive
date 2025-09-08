@@ -128,6 +128,13 @@ class DonkeySimMsgHandler(IMesgHandler):
         image = cv2.imdecode(img_array, cv2.IMREAD_UNCHANGED)
         # Convert BGR to RGB
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+        # Add angle keys if note given 
+        if not hasattr(data, "angle5"):
+            data["angle5"] = None
+        if not hasattr(data, "angle6"):
+            data["angle6"] = None
+        if not hasattr(data, "angle7"):
+            data["angle7"] = None
         # stack the image into the image array so we can use it later
         self.sim_data = {
             "xte": data["cte"],

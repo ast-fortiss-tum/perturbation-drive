@@ -33,7 +33,14 @@ class PerturbationSimulator(ABC):
 
     @abstractmethod
     def simulate_scanario(
-        self, agent: ADS, scenario: Scenario, perturbation_controller: ImagePerturbation
+        self, 
+        agent: ADS, 
+        scenario: Scenario, 
+        perturbation_controller: ImagePerturbation, 
+        perturb=True, 
+        model_drive=True, 
+        weather=None, 
+        intensity=None,
     ) -> ScenarioOutcome:
         """
         Simulates the given list of scenarions.
