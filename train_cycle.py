@@ -1,6 +1,6 @@
 from perturbationdrive import train_cycle_gan
 
-train_cycle_gan.train(
+train_cycle_gan(
     input_dir="./relative/path/to/folder",
     output_dir="./relative/path/to/folder",
     image_extension_input="jpg",
