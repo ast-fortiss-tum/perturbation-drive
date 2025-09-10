@@ -6,6 +6,7 @@ import os
 from typing import List
 import sys
 import numpy as np
+import tensorflow as tf
 
 from ..Simulator.Scenario import ScenarioOutcome, OfflineScenarioOutcome
 from .custom_types import LOGGING_LEVEL
@@ -209,6 +210,15 @@ class GlobalLog:
 
 class NumpyEncoder(json.JSONEncoder):
     def default(self, obj):
+        # numpy scalar
+        if isinstance(obj, (np.integer,)):
+            return int(obj)
+        if isinstance(obj, (np.floating,)):
+            return float(obj)
         if isinstance(obj, np.ndarray):
             return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
+        # TF tensor
+        if isinstance(obj, tf.Tensor):
+            return obj.numpy().tolist() if obj.shape else obj.numpy().item()
+        # fallback to parent
+        return super().default(obj)

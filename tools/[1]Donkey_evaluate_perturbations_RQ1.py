@@ -32,7 +32,7 @@ try:
     
 
 
-    # "dynamic_raindrop_filter","effects_attention_rain",
+    # "dynamic_raindrop_filter","effects_attention_regions",
     benchmarking_obj.grid_seach(
         perturbation_functions=[],
         attention_map = {},

@@ -7,7 +7,7 @@ from datetime import datetime
 try:
     simulator = UdacitySimulator(
         # TODO change path depending on OS
-        simulator_exe_path="./examples/udacity/sim/udacity_linux/udacity_binary.x86_64",
+        simulator_exe_path="./examples/udacity/sim/udacity_sim_weather_sky_ready_angles_fortuna.app",
         host="127.0.0.1",
         port=9091,
         show_image_cb=True
@@ -71,8 +71,8 @@ try:
         # "feathers",
         # "the_scream",
         # "udnie",
-        "effects_attention_rain",
-        # "effects_attention_rain_dynamic",
+        "effects_attention_regions",
+        # "effects_attention_regions_dynamic",
         # "effects_rain_dynamic",
         # "dynamic_snow_filter",
         # "dynamic_rain_filter",

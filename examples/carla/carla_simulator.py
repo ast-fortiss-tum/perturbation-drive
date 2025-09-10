@@ -119,6 +119,10 @@ class CarlaSimulator(PerturbationSimulator):
         agent: ADS,
         scenario: Scenario,
         perturbation_controller: ImagePerturbation,
+        perturb=True, 
+        model_drive=True, 
+        weather=None, 
+        intensity=None,
     ) -> ScenarioOutcome:
         """
         Minimal loop:
