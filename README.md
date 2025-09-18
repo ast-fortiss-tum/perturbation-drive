@@ -256,6 +256,12 @@ Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the
     pip install -r requirements_[operating system].txt
     ```
 
+4. (alternative)  In case requirements install fails, please try to use:
+
+   ```Shell
+    pip install -r requirements_other.txt
+    ```
+
 5. (Optionally) Install this library locally.
 
     ```Shell
