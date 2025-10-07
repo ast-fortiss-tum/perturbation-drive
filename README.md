@@ -224,6 +224,8 @@ Clone this library from [GitHub](https://github.com/HannesLeonhard/PerturbationD
 
 Create a new virtual environment using Python >= 3.9 (although Python 3.9 is the preferred version). This can be done for example via [Micromamba](https://mamba.readthedocs.io/en/latest/user_guide/micromamba.html).
 
+Some users report that python 3.9.13 version https://www.python.org/ftp/python/3.9.13/python-3.9.13-macos11.pkg with universal2 installer is working better. this one includes tkinter.
+
 1. Install Micromamba.
 1b. Install virtualenv.
 2. Create a new environment
