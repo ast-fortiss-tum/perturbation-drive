@@ -1,5 +1,7 @@
 # PerturbationDrive
 
+### 🏆 Recipient of the IEEE Computer Society TCSE Distinguished Paper Award at the 18th IEEE International Conference on Software Testing, Verification and Validation (ICST 2025)
+
 A library to test the robustness and ability to generalize to unseen roads of self-driving cars via image perturbations and road generators.
 
 This library has three main modules:
