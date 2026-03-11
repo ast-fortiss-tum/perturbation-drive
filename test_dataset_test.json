@@ -1,0 +1,262 @@
+[
+    {
+        "image_file_name": "0001_1.png",
+        "json_file_name": "./examples/dataset_dummy/record_0001.json",
+        "perturbation_function": "gaussian_noise",
+        "perturbation_scale": 0,
+        "ground_truth_actions": [
+            "0.0",
+            "0.01"
+        ],
+        "perturbed_image_actions": [
+            "0.0437202270976888",
+            "0.03707958652058379"
+        ],
+        "perturbed_image_error": [
+            0.0437202270976888,
+            0.027079586520583787
+        ],
+        "normal_image_actions": [
+            "-0.02918049918363029",
+            "0.09837180666590067"
+        ],
+        "normal_image_error": [
+            -0.02918049918363029,
+            0.08837180666590068
+        ]
+    },
+    {
+        "image_file_name": "0001_1.png",
+        "json_file_name": "./examples/dataset_dummy/record_0001.json",
+        "perturbation_function": "gaussian_noise",
+        "perturbation_scale": 1,
+        "ground_truth_actions": [
+            "0.0",
+            "0.01"
+        ],
+        "perturbed_image_actions": [
+            "0.017178153525336276",
+            "0.05356004797738495"
+        ],
+        "perturbed_image_error": [
+            0.017178153525336276,
+            0.04356004797738495
+        ],
+        "normal_image_actions": [
+            "0.006332263058228163",
+            "0.030975476106447554"
+        ],
+        "normal_image_error": [
+            0.006332263058228163,
+            0.020975476106447552
+        ]
+    },
+    {
+        "image_file_name": "0001_1.png",
+        "json_file_name": "./examples/dataset_dummy/record_0001.json",
+        "perturbation_function": "gaussian_noise",
+        "perturbation_scale": 2,
+        "ground_truth_actions": [
+            "0.0",
+            "0.01"
+        ],
+        "perturbed_image_actions": [
+            "-0.06028241991273056",
+            "0.07163566056943475"
+        ],
+        "perturbed_image_error": [
+            -0.06028241991273056,
+            0.06163566056943475
+        ],
+        "normal_image_actions": [
+            "-0.01139784829574457",
+            "0.0005861573585787983"
+        ],
+        "normal_image_error": [
+            -0.01139784829574457,
+            -0.009413842641421201
+        ]
+    },
+    {
+        "image_file_name": "0001_1.png",
+        "json_file_name": "./examples/dataset_dummy/record_0001.json",
+        "perturbation_function": "gaussian_noise",
+        "perturbation_scale": 3,
+        "ground_truth_actions": [
+            "0.0",
+            "0.01"
+        ],
+        "perturbed_image_actions": [
+            "0.03439457951343397",
+            "0.028962552240731323"
+        ],
+        "perturbed_image_error": [
+            0.03439457951343397,
+            0.018962552240731324
+        ],
+        "normal_image_actions": [
+            "-0.06694376109343443",
+            "0.07500184380801958"
+        ],
+        "normal_image_error": [
+            -0.06694376109343443,
+            0.06500184380801959
+        ]
+    },
+    {
+        "image_file_name": "0001_1.png",
+        "json_file_name": "./examples/dataset_dummy/record_0001.json",
+        "perturbation_function": "gaussian_noise",
+        "perturbation_scale": 4,
+        "ground_truth_actions": [
+            "0.0",
+            "0.01"
+        ],
+        "perturbed_image_actions": [
+            "0.025162492431897665",
+            "0.05657817726732604"
+        ],
+        "perturbed_image_error": [
+            0.025162492431897665,
+            0.046578177267326035
+        ],
+        "normal_image_actions": [
+            "-0.0004998660291503365",
+            "0.028586401445148592"
+        ],
+        "normal_image_error": [
+            -0.0004998660291503365,
+            0.018586401445148594
+        ]
+    },
+    {
+        "image_file_name": "0001_1.png",
+        "json_file_name": "./examples/dataset_dummy/record_0001.json",
+        "perturbation_function": "impulse_noise",
+        "perturbation_scale": 0,
+        "ground_truth_actions": [
+            "0.0",
+            "0.01"
+        ],
+        "perturbed_image_actions": [
+            "0.09444120728125169",
+            "0.09001738330269934"
+        ],
+        "perturbed_image_error": [
+            0.09444120728125169,
+            0.08001738330269935
+        ],
+        "normal_image_actions": [
+            "-0.020651405211410595",
+            "0.013875562720230617"
+        ],
+        "normal_image_error": [
+            -0.020651405211410595,
+            0.0038755627202306173
+        ]
+    },
+    {
+        "image_file_name": "0001_1.png",
+        "json_file_name": "./examples/dataset_dummy/record_0001.json",
+        "perturbation_function": "impulse_noise",
+        "perturbation_scale": 1,
+        "ground_truth_actions": [
+            "0.0",
+            "0.01"
+        ],
+        "perturbed_image_actions": [
+            "0.08693721587320799",
+            "0.011056308522895297"
+        ],
+        "perturbed_image_error": [
+            0.08693721587320799,
+            0.001056308522895297
+        ],
+        "normal_image_actions": [
+            "-0.013647681204365589",
+            "0.019620049307047995"
+        ],
+        "normal_image_error": [
+            -0.013647681204365589,
+            0.009620049307047995
+        ]
+    },
+    {
+        "image_file_name": "0001_1.png",
+        "json_file_name": "./examples/dataset_dummy/record_0001.json",
+        "perturbation_function": "impulse_noise",
+        "perturbation_scale": 2,
+        "ground_truth_actions": [
+            "0.0",
+            "0.01"
+        ],
+        "perturbed_image_actions": [
+            "-0.04444582839858657",
+            "0.025203462068675186"
+        ],
+        "perturbed_image_error": [
+            -0.04444582839858657,
+            0.015203462068675186
+        ],
+        "normal_image_actions": [
+            "0.04095179344951555",
+            "0.039971057815448886"
+        ],
+        "normal_image_error": [
+            0.04095179344951555,
+            0.029971057815448884
+        ]
+    },
+    {
+        "image_file_name": "0001_1.png",
+        "json_file_name": "./examples/dataset_dummy/record_0001.json",
+        "perturbation_function": "impulse_noise",
+        "perturbation_scale": 3,
+        "ground_truth_actions": [
+            "0.0",
+            "0.01"
+        ],
+        "perturbed_image_actions": [
+            "0.09631856233620728",
+            "0.09888298418194616"
+        ],
+        "perturbed_image_error": [
+            0.09631856233620728,
+            0.08888298418194616
+        ],
+        "normal_image_actions": [
+            "0.07756534304657808",
+            "0.04829343594698953"
+        ],
+        "normal_image_error": [
+            0.07756534304657808,
+            0.03829343594698953
+        ]
+    },
+    {
+        "image_file_name": "0001_1.png",
+        "json_file_name": "./examples/dataset_dummy/record_0001.json",
+        "perturbation_function": "impulse_noise",
+        "perturbation_scale": 4,
+        "ground_truth_actions": [
+            "0.0",
+            "0.01"
+        ],
+        "perturbed_image_actions": [
+            "-0.00565499160939191",
+            "0.06034264103161845"
+        ],
+        "perturbed_image_error": [
+            -0.00565499160939191,
+            0.05034264103161845
+        ],
+        "normal_image_actions": [
+            "0.02956415018050121",
+            "0.05189131284625651"
+        ],
+        "normal_image_error": [
+            0.02956415018050121,
+            0.04189131284625651
+        ]
+    }
+]
