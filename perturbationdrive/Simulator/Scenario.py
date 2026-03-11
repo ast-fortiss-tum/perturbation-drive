@@ -47,4 +47,6 @@ class OfflineScenarioOutcome:
     perturbation_scale: int
     ground_truth_actions: List[float]
     perturbed_image_actions: List[float]
+    perturbed_image_error: List[float]
     normal_image_actions: List[float]
+    normal_image_error: List[float]

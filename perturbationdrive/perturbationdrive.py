@@ -23,9 +23,9 @@ class PerturbationDrive:
         simulator: PerturbationSimulator,
         ads: Union[ADS, None],
     ):
-        assert isinstance(
-            simulator, PerturbationSimulator
-        ), "Simulator must be a subclass of PerturbationSimulator"
+        # assert isinstance(
+        #     simulator, PerturbationSimulator
+        # ), "Simulator must be a subclass of PerturbationSimulator"
         if ads is not None:
             assert isinstance(ads, ADS), "ADS must be a subclass of ADS"
         self.simulator = simulator
@@ -98,8 +98,8 @@ class PerturbationDrive:
                 continue
             with open(json_filename, "rt") as fp:
                 data = json.load(fp)
-            steering = float(data["user/angle"])
-            throttle = float(data["user/throttle"])
+            gt_steering = float(data["user/angle"])
+            gt_throttle = float(data["user/throttle"])
 
             try:
                 image_full_path = os.path.join(dataset_path, image_path)
@@ -130,14 +130,22 @@ class PerturbationDrive:
                             json_file_name=json_filename,
                             perturbation_function=function_str,
                             perturbation_scale=intensity,
-                            ground_truth_actions=[steering, throttle],
+                            ground_truth_actions=[str(gt_steering), str(gt_throttle)],
                             perturbed_image_actions=[
                                 steering,
                                 throttle,
                             ],
+                            perturbed_image_error=[
+                                float(steering)-gt_steering,
+                                float(throttle)-gt_throttle,
+                            ],
                             normal_image_actions=[
                                 f"{normal_image_actions[0][0]}",
                                 f"{normal_image_actions[0][1]}",
+                            ],
+                            normal_image_error=[
+                                float(normal_image_actions[0][0])-gt_steering,
+                                float(normal_image_actions[0][1])-gt_throttle,
                             ],
                         )
                     )
