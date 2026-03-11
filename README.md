@@ -236,10 +236,13 @@ Some users report that python 3.9.13 version https://www.python.org/ftp/python/3
     micromamba create -n myenv python=3.9
     ```
     
-    2b. Create a new environmnet (and if necessary install python 3.9)
+    2b. Create a new environmnet (and if necessary install python 3.9 with deadsnakes)
    ```Shell
    sudo apt update
-   sudo apt install python3.9 python3.9-venv
+   sudo apt install software-properties-common
+   sudo add-apt-repository ppa:deadsnakes/ppa
+   sudo apt update
+   sudo apt install python3.9 python3.9-venv python3.9-distutils
    ```
    ```Shell
    python3.9 -m venv myenv
