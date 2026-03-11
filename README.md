@@ -260,7 +260,7 @@ Some users report that python 3.9.13 version https://www.python.org/ftp/python/3
    source myenv/bin/activate
    ```
     
-3. Install all requirements (choose OS)
+3. Enter repo and install all requirements (choose OS)
 
    ```Shell
     pip install -r requirements_[operating system].txt
